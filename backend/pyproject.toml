@@ -19,6 +19,8 @@ dependencies = [
   "matplotlib>=3.8",
   # Linear programs for conflict detection (geometry/conflicts.py); build123d needs it too.
   "scipy>=1.11",
+  # Model availability checks against the Claude API (app/model_availability.py).
+  "httpx>=0.27",
 ]
 
 [project.optional-dependencies]
@@ -26,7 +28,6 @@ dev = [
   "pytest>=8",
   # Runs the suite in parallel in `make test`.
   "pytest-xdist>=3.5",
-  "httpx>=0.27",
   "ruff>=0.6",
   "pyyaml>=6",
   # Re-importing the exports in tests: meshes (3MF needs networkx and lxml) and the PDF.
