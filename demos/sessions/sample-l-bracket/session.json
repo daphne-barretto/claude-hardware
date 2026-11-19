@@ -1,0 +1,354 @@
+{
+  "session": {
+    "id": "sample-l-bracket",
+    "title": "L bracket",
+    "created_at": "2026-11-18T10:42:23.509104Z",
+    "board": null,
+    "status": "idle",
+    "latest_build_id": "build-1",
+    "next_revision": null,
+    "standards": "hardware_team",
+    "sample": true
+  },
+  "messages": [
+    {
+      "id": "msg-1",
+      "role": "user",
+      "text": "An L bracket with two M4 holes, one in each leg.",
+      "created_at": "2026-11-18T10:42:23.869585Z",
+      "model": "claude-opus-5-5",
+      "effort": "medium",
+      "mode": "auto",
+      "selection": null,
+      "answer": null,
+      "attachments": [],
+      "standards": null,
+      "comments": []
+    },
+    {
+      "id": "msg-2",
+      "role": "assistant",
+      "text": "I've built the L bracket. It's molded ABS, 4 mm thick and 20 mm wide, with two 40 mm legs. Each leg has an M4 clearance hole (Ø4.5 mm), 24 mm from the outside corner and centred across the width.\n\n- **Checks:** the wall thickness (at least 2 mm), draft (at least 1°) and material checks pass, and the report lists no risks.\n- **Draft:** I assumed the mould opens along the 20 mm width. The walls taper 1.5° in that direction, and the legs stay at least 2 mm thick even at the thin end.\n- **Not tested:** no check covers strength, drop or heat, so those need review by hand.\n\nYou can change the leg lengths, thickness, width, hole size and hole positions as parameters.",
+      "created_at": "2026-11-18T10:42:23.871254Z",
+      "model": null,
+      "effort": null,
+      "mode": null,
+      "selection": null,
+      "answer": null,
+      "attachments": [],
+      "standards": null,
+      "comments": []
+    }
+  ],
+  "events": [
+    {
+      "id": 1,
+      "event": {
+        "type": "user_message",
+        "message_id": "msg-1",
+        "message": {
+          "id": "msg-1",
+          "role": "user",
+          "text": "An L bracket with two M4 holes, one in each leg.",
+          "created_at": "2026-11-18T10:42:23.869585Z",
+          "model": "claude-opus-5-5",
+          "effort": "medium",
+          "mode": "auto",
+          "selection": null,
+          "answer": null,
+          "attachments": [],
+          "standards": null,
+          "comments": []
+        }
+      }
+    },
+    {
+      "id": 2,
+      "event": {
+        "type": "constraints",
+        "message_id": null,
+        "constraints": [
+          {
+            "id": "material",
+            "title": "Molded ABS",
+            "label": "Molded ABS",
+            "kind": "spec",
+            "value": "molded ABS",
+            "unit": null,
+            "check": "material",
+            "source": "standard",
+            "quote": null,
+            "message_id": null,
+            "standard_value": "molded ABS"
+          },
+          {
+            "id": "min_wall",
+            "title": "Minimum wall thickness",
+            "label": "Minimum wall thickness ≥ 2 mm",
+            "kind": "min",
+            "value": 2.0,
+            "unit": "mm",
+            "check": "wall_thickness",
+            "source": "standard",
+            "quote": null,
+            "message_id": null,
+            "standard_value": 2.0
+          },
+          {
+            "id": "min_draft",
+            "title": "Minimum draft angle",
+            "label": "Minimum draft angle ≥ 1°",
+            "kind": "min",
+            "value": 1.0,
+            "unit": "deg",
+            "check": "draft_angle",
+            "source": "standard",
+            "quote": null,
+            "message_id": null,
+            "standard_value": 1.0
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "event": {
+        "type": "message_start",
+        "message_id": "msg-2",
+        "role": "assistant"
+      }
+    },
+    {
+      "id": 4,
+      "event": {
+        "type": "progress",
+        "message_id": "msg-2",
+        "text": "Reading the constraints and the design",
+        "round": null,
+        "rounds": null
+      }
+    },
+    {
+      "id": 5,
+      "event": {
+        "type": "progress",
+        "message_id": "msg-2",
+        "text": "Writing the design · round 1 of 4",
+        "round": 1,
+        "rounds": 4
+      }
+    },
+    {
+      "id": 6,
+      "event": {
+        "type": "progress",
+        "message_id": "msg-2",
+        "text": "Rerunning the checks · round 1 of 4",
+        "round": 1,
+        "rounds": 4
+      }
+    },
+    {
+      "id": 7,
+      "event": {
+        "type": "build_ready",
+        "message_id": "msg-2",
+        "build": {
+          "id": "build-1",
+          "created_at": "2026-11-18T10:42:47.682772Z",
+          "board": null,
+          "status": "ready",
+          "checks": {
+            "pass": 3,
+            "fail": 0,
+            "untested": 3,
+            "not_applicable": 5
+          },
+          "maps": [
+            "draft",
+            "wall_thickness"
+          ],
+          "mesh_url": "/api/sessions/sample-l-bracket/builds/build-1/mesh",
+          "checks_url": "/api/sessions/sample-l-bracket/builds/build-1/checks",
+          "source_url": "/api/sessions/sample-l-bracket/builds/build-1/source",
+          "board_url": "/api/sessions/sample-l-bracket/builds/build-1/board",
+          "step_url": null,
+          "restored_from": null,
+          "failure": null
+        }
+      }
+    },
+    {
+      "id": 8,
+      "event": {
+        "type": "progress",
+        "message_id": "msg-2",
+        "text": "Finished · round 1 of 4",
+        "round": 1,
+        "rounds": 4
+      }
+    },
+    {
+      "id": 9,
+      "event": {
+        "type": "title",
+        "message_id": "msg-2",
+        "title": "L bracket",
+        "title_locked": false
+      }
+    },
+    {
+      "id": 10,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "I've built the L bracket."
+      }
+    },
+    {
+      "id": 11,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": " It's molded ABS, 4 mm thick and 20 mm wide, with two 40 mm legs."
+      }
+    },
+    {
+      "id": 12,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": " Each leg has an M4 clearance hole (Ø4.5 mm), 24 mm from the outside corner and centred across the width.\n\n"
+      }
+    },
+    {
+      "id": 13,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "- **Checks:** the wall thickness (at least 2 mm), draft (at least 1°) and material checks pass, and the report lists no risks.\n- **Draft:"
+      }
+    },
+    {
+      "id": 14,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "** I assumed the mould opens along the 20 mm width."
+      }
+    },
+    {
+      "id": 15,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": " The walls taper 1.5° in that direction, and the legs stay at least 2 mm thick even at the thin end.\n"
+      }
+    },
+    {
+      "id": 16,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "- **Not tested:** no check covers strength, drop or heat, so those need review by hand.\n\n"
+      }
+    },
+    {
+      "id": 17,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "You can change the leg lengths, thickness, width, hole size and hole positions as parameters."
+      }
+    },
+    {
+      "id": 18,
+      "event": {
+        "type": "message_end",
+        "message_id": "msg-2"
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "leg_a_length",
+      "value": 40.0,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    },
+    {
+      "name": "leg_b_length",
+      "value": 40.0,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    },
+    {
+      "name": "thickness",
+      "value": 4.0,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    },
+    {
+      "name": "width",
+      "value": 20.0,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    },
+    {
+      "name": "draft",
+      "value": 1.5,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    },
+    {
+      "name": "hole_diameter",
+      "value": 4.5,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    },
+    {
+      "name": "hole_a_offset",
+      "value": 24.0,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    },
+    {
+      "name": "hole_b_offset",
+      "value": 24.0,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    }
+  ]
+}

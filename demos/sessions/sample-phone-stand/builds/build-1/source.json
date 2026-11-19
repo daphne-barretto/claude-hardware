@@ -1,0 +1,41 @@
+{
+  "build_id": "build-1",
+  "backend": "build123d",
+  "language": "python",
+  "filename": "design.py",
+  "code": "from build123d import *\nimport math\n\ndef build(params):\n    W = params[\"width\"]\n    bd = params[\"base_depth\"]; bt = params[\"base_thickness\"]\n    ang = params[\"angle\"]; tilt = 90.0 - ang\n    rl = params[\"rest_length\"]; rt = params[\"rest_thickness\"]\n    lh = params[\"lip_height\"]; lt = params[\"lip_thickness\"]\n    seat = params[\"seat_depth\"]; rib_t = params[\"rib_thickness\"]\n\n    base = Box(bd, W, bt, align=(Align.MIN, Align.CENTER, Align.MIN))\n\n    lip = Box(lt, W, bt + lh, align=(Align.MIN, Align.CENTER, Align.MIN))\n\n    x0 = lt + seat\n    rest = Pos(x0, 0, bt) * Rot(0, tilt, 0) * Box(rt, W, rl, align=(Align.MIN, Align.CENTER, Align.MIN))\n\n    s, c = math.sin(math.radians(tilt)), math.cos(math.radians(tilt))\n    zg = bt + params[\"rib_height_ratio\"] * rl * c\n    xg = x0 + rt * c + (zg - bt) * math.tan(math.radians(tilt)) - 1.0\n    xb0 = x0 + rt / c - 1.0\n    tri = Polygon((xb0, bt - 1.0), (bd - params[\"rib_inset\"], bt - 1.0), (xg, zg), align=None)\n    rib = Pos(0, rib_t / 2, 0) * extrude(Plane.XZ * tri, rib_t)\n\n    stand = base + lip + rest + rib\n    return {\n        \"parts\": {\"stand\": stand},\n        \"features\": [\n            {\"tag\": \"stand\", \"part\": \"stand\", \"tools\": [base]},\n            {\"tag\": \"front_lip\", \"part\": \"stand\", \"tools\": [lip]},\n            {\"tag\": \"back_rest\", \"part\": \"stand\", \"tools\": [rest]},\n            {\"tag\": \"support_rib\", \"part\": \"stand\", \"tools\": [rib]},\n        ],\n        \"materials\": {\"stand\": \"molded ABS\"},\n    }\n",
+  "features": [
+    {
+      "tag": "stand",
+      "part": "stand",
+      "lines": [
+        27,
+        36
+      ]
+    },
+    {
+      "tag": "front_lip",
+      "part": "stand",
+      "lines": [
+        27,
+        36
+      ]
+    },
+    {
+      "tag": "back_rest",
+      "part": "stand",
+      "lines": [
+        27,
+        36
+      ]
+    },
+    {
+      "tag": "support_rib",
+      "part": "stand",
+      "lines": [
+        27,
+        36
+      ]
+    }
+  ]
+}

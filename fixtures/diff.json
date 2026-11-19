@@ -1,0 +1,438 @@
+{
+  "old": "build-0",
+  "new": "build-1",
+  "parameters": [
+    {
+      "name": "openings[Q4-sensor_window].rotation",
+      "change": "changed",
+      "old": 0.0,
+      "new": 90.0
+    },
+    {
+      "name": "openings[Q4-sensor_window].x",
+      "change": "changed",
+      "old": 1.9,
+      "new": 1.078
+    },
+    {
+      "name": "openings[Q4-sensor_window].y",
+      "change": "changed",
+      "old": 123.714,
+      "new": 120.738
+    },
+    {
+      "name": "openings[RST1-button].component",
+      "change": "added",
+      "old": null,
+      "new": "RST1"
+    },
+    {
+      "name": "openings[RST1-button].cut",
+      "change": "added",
+      "old": null,
+      "new": true
+    },
+    {
+      "name": "openings[RST1-button].id",
+      "change": "added",
+      "old": null,
+      "new": "RST1-button"
+    },
+    {
+      "name": "openings[RST1-button].kind",
+      "change": "added",
+      "old": null,
+      "new": "button"
+    },
+    {
+      "name": "openings[RST1-button].rotation",
+      "change": "added",
+      "old": null,
+      "new": 270.0
+    },
+    {
+      "name": "openings[RST1-button].side",
+      "change": "added",
+      "old": null,
+      "new": "top"
+    },
+    {
+      "name": "openings[RST1-button].size[0]",
+      "change": "added",
+      "old": null,
+      "new": 4.7
+    },
+    {
+      "name": "openings[RST1-button].size[1]",
+      "change": "added",
+      "old": null,
+      "new": 3.0
+    },
+    {
+      "name": "openings[RST1-button].tag",
+      "change": "added",
+      "old": null,
+      "new": "opening_RST1"
+    },
+    {
+      "name": "openings[RST1-button].x",
+      "change": "added",
+      "old": null,
+      "new": 15.302
+    },
+    {
+      "name": "openings[RST1-button].y",
+      "change": "added",
+      "old": null,
+      "new": 103.212
+    },
+    {
+      "name": "openings[SW1-button].component",
+      "change": "added",
+      "old": null,
+      "new": "SW1"
+    },
+    {
+      "name": "openings[SW1-button].cut",
+      "change": "added",
+      "old": null,
+      "new": true
+    },
+    {
+      "name": "openings[SW1-button].id",
+      "change": "added",
+      "old": null,
+      "new": "SW1-button"
+    },
+    {
+      "name": "openings[SW1-button].kind",
+      "change": "added",
+      "old": null,
+      "new": "button"
+    },
+    {
+      "name": "openings[SW1-button].rotation",
+      "change": "added",
+      "old": null,
+      "new": 270.0
+    },
+    {
+      "name": "openings[SW1-button].side",
+      "change": "added",
+      "old": null,
+      "new": "top"
+    },
+    {
+      "name": "openings[SW1-button].size[0]",
+      "change": "added",
+      "old": null,
+      "new": 4.7
+    },
+    {
+      "name": "openings[SW1-button].size[1]",
+      "change": "added",
+      "old": null,
+      "new": 3.0
+    },
+    {
+      "name": "openings[SW1-button].tag",
+      "change": "added",
+      "old": null,
+      "new": "opening_SW1"
+    },
+    {
+      "name": "openings[SW1-button].x",
+      "change": "added",
+      "old": null,
+      "new": 6.92
+    },
+    {
+      "name": "openings[SW1-button].y",
+      "change": "added",
+      "old": null,
+      "new": 103.212
+    },
+    {
+      "name": "openings[U1-antenna_keepout].x",
+      "change": "changed",
+      "old": 10.0,
+      "new": 9.968
+    },
+    {
+      "name": "openings[U1-antenna_keepout].y",
+      "change": "changed",
+      "old": 124.668,
+      "new": 124.592
+    },
+    {
+      "name": "openings[U2-vent].x",
+      "change": "changed",
+      "old": 15.8,
+      "new": 17.08
+    },
+    {
+      "name": "openings[U2-vent].y",
+      "change": "changed",
+      "old": 102.814,
+      "new": 97.37
+    },
+    {
+      "name": "retention.clamps[clamp_1].x",
+      "change": "changed",
+      "old": 20.0,
+      "new": 19.5
+    },
+    {
+      "name": "retention.clamps[clamp_1].y",
+      "change": "changed",
+      "old": 105.0,
+      "new": 107.0
+    },
+    {
+      "name": "retention.supports[support_1].x",
+      "change": "changed",
+      "old": 18.5,
+      "new": 17.5
+    },
+    {
+      "name": "retention.supports[support_1].y",
+      "change": "changed",
+      "old": 119.0,
+      "new": 118.5
+    },
+    {
+      "name": "source.revision",
+      "change": "changed",
+      "old": "1.2",
+      "new": "2.0"
+    }
+  ],
+  "features": [
+    {
+      "tag": "opening_Q4",
+      "part": "lid",
+      "change": "moved and rotated",
+      "distance": 3.0874,
+      "offset": [
+        -0.822,
+        -2.976,
+        0.0
+      ],
+      "rotation": 90.0,
+      "old": {
+        "tag": "opening_Q4",
+        "part": "lid",
+        "centroid": [
+          1.9,
+          123.714,
+          6.2545
+        ],
+        "size": [
+          2.9833,
+          1.4833,
+          4.5
+        ],
+        "volume": 17.6279,
+        "rotation": 0.0
+      },
+      "new": {
+        "tag": "opening_Q4",
+        "part": "lid",
+        "centroid": [
+          1.078,
+          120.738,
+          6.2545
+        ],
+        "size": [
+          1.4833,
+          2.9833,
+          4.5
+        ],
+        "volume": 17.6279,
+        "rotation": 90.0
+      }
+    },
+    {
+      "tag": "opening_RST1",
+      "part": "lid",
+      "change": "added",
+      "distance": null,
+      "offset": null,
+      "rotation": null,
+      "old": null,
+      "new": {
+        "tag": "opening_RST1",
+        "part": "lid",
+        "centroid": [
+          15.302,
+          103.212,
+          6.3026
+        ],
+        "size": [
+          3.1833,
+          4.8833,
+          4.5
+        ],
+        "volume": 65.7585,
+        "rotation": 90.0
+      }
+    },
+    {
+      "tag": "opening_SW1",
+      "part": "lid",
+      "change": "added",
+      "distance": null,
+      "offset": null,
+      "rotation": null,
+      "old": null,
+      "new": {
+        "tag": "opening_SW1",
+        "part": "lid",
+        "centroid": [
+          6.92,
+          103.212,
+          6.3026
+        ],
+        "size": [
+          3.1833,
+          4.8833,
+          4.5
+        ],
+        "volume": 65.7585,
+        "rotation": 90.0
+      }
+    },
+    {
+      "tag": "opening_U2",
+      "part": "lid",
+      "change": "moved",
+      "distance": 5.5925,
+      "offset": [
+        1.28,
+        -5.444,
+        0.0
+      ],
+      "rotation": 0.0,
+      "old": {
+        "tag": "opening_U2",
+        "part": "lid",
+        "centroid": [
+          15.8,
+          102.814,
+          6.2858
+        ],
+        "size": [
+          3.0833,
+          2.6833,
+          4.5
+        ],
+        "volume": 34.2559,
+        "rotation": 0.0
+      },
+      "new": {
+        "tag": "opening_U2",
+        "part": "lid",
+        "centroid": [
+          17.08,
+          97.37,
+          6.2858
+        ],
+        "size": [
+          3.0833,
+          2.6833,
+          4.5
+        ],
+        "volume": 34.2559,
+        "rotation": 0.0
+      }
+    },
+    {
+      "tag": "clamp_1",
+      "part": "lid",
+      "change": "moved",
+      "distance": 2.0616,
+      "offset": [
+        -0.5,
+        2.0,
+        0.0
+      ],
+      "rotation": null,
+      "old": {
+        "tag": "clamp_1",
+        "part": "lid",
+        "centroid": [
+          20.0,
+          105.0,
+          4.0969
+        ],
+        "size": [
+          2.7435,
+          2.7435,
+          4.65
+        ],
+        "volume": 25.1213,
+        "rotation": null
+      },
+      "new": {
+        "tag": "clamp_1",
+        "part": "lid",
+        "centroid": [
+          19.5,
+          107.0,
+          4.0969
+        ],
+        "size": [
+          2.7435,
+          2.7435,
+          4.65
+        ],
+        "volume": 25.1213,
+        "rotation": null
+      }
+    },
+    {
+      "tag": "support_1",
+      "part": "base",
+      "change": "moved",
+      "distance": 1.118,
+      "offset": [
+        -1.0,
+        -0.5,
+        0.0
+      ],
+      "rotation": null,
+      "old": {
+        "tag": "support_1",
+        "part": "base",
+        "centroid": [
+          18.5,
+          119.0,
+          -3.2989
+        ],
+        "size": [
+          2.8221,
+          2.8221,
+          6.15
+        ],
+        "volume": 34.2451,
+        "rotation": null
+      },
+      "new": {
+        "tag": "support_1",
+        "part": "base",
+        "centroid": [
+          17.5,
+          118.5,
+          -3.2989
+        ],
+        "size": [
+          2.8221,
+          2.8221,
+          6.15
+        ],
+        "volume": 34.2451,
+        "rotation": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "inputs": null,
+  "samples": [
+    "sample-b-parasite-case-on-v1-2",
+    "sample-b-parasite-v2-0-arrives",
+    "sample-b-parasite-case-updated-for-v2-0",
+    "sample-open-box",
+    "sample-l-bracket",
+    "sample-phone-stand"
+  ],
+  "recorded": {
+    "sample-b-parasite-case-on-v1-2": {
+      "models": [],
+      "efforts": [],
+      "modes": [],
+      "turns": 0,
+      "builds": 1,
+      "recorded_at": "2026-11-18T10:44:08.115435Z",
+      "files": "71e06580209cddd87f18812ea2c129b854c9e5eba1a76a7f2897961396be74b8"
+    },
+    "sample-b-parasite-v2-0-arrives": {
+      "models": [
+        "claude-opus-5-5"
+      ],
+      "efforts": [
+        "medium"
+      ],
+      "modes": [
+        "auto"
+      ],
+      "turns": 1,
+      "builds": 2,
+      "recorded_at": "2026-11-18T10:44:08.115435Z",
+      "files": "a3857ec8c9edcc3e028cf67bfc0b75353fa217de5abfe39746443a705310ad2a"
+    },
+    "sample-b-parasite-case-updated-for-v2-0": {
+      "models": [
+        "claude-opus-5-5"
+      ],
+      "efforts": [
+        "medium"
+      ],
+      "modes": [
+        "auto"
+      ],
+      "turns": 2,
+      "builds": 3,
+      "recorded_at": "2026-11-18T10:44:08.115435Z",
+      "files": "fa75d656fd35fc88a404e0f03c83286e3af0b05f95f5a4ae5bc32c11599288a8"
+    },
+    "sample-open-box": {
+      "models": [
+        "claude-opus-5-5"
+      ],
+      "efforts": [
+        "medium"
+      ],
+      "modes": [
+        "auto"
+      ],
+      "turns": 1,
+      "builds": 1,
+      "recorded_at": "2026-11-18T10:41:23.911518Z",
+      "files": "9953a1f88a996f513b6c1dc6b82fdb9ffb80169238bf5aa22037185ff2a37495"
+    },
+    "sample-l-bracket": {
+      "models": [
+        "claude-opus-5-5"
+      ],
+      "efforts": [
+        "medium"
+      ],
+      "modes": [
+        "auto"
+      ],
+      "turns": 1,
+      "builds": 1,
+      "recorded_at": "2026-11-18T10:42:23.509104Z",
+      "files": "d89c8bddcfcbef99ddc4e3e34e9ed7a3a4f9d00817bb40304d3d17aa410f99de"
+    },
+    "sample-phone-stand": {
+      "models": [
+        "claude-opus-5-5"
+      ],
+      "efforts": [
+        "medium"
+      ],
+      "modes": [
+        "auto"
+      ],
+      "turns": 1,
+      "builds": 2,
+      "recorded_at": "2026-11-18T10:42:23.713241Z",
+      "files": "e64e9722b4c704c31b7433d888927f697266f836fb7a844a5b4cc8a80340e392"
+    }
+  }
+}

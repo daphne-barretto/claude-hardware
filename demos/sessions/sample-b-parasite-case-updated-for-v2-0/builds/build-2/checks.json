@@ -1,0 +1,2661 @@
+{
+  "contract": "check-results/1",
+  "build_id": "build-2",
+  "board": {
+    "name": "b-parasite",
+    "revision": "2.0"
+  },
+  "results": [
+    {
+      "id": "fit_tolerance:lid",
+      "check": "fit_tolerance",
+      "title": "Fit tolerance",
+      "standard": "fit_tolerance",
+      "component": null,
+      "opening": null,
+      "parts": [
+        "base",
+        "lid"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "tolerance",
+        "value": 0.2,
+        "unit": "mm"
+      },
+      "summary": "Fit tolerance: Passes at lid between base and lid, measured 0 mm against ±0.2 mm (lid on base: outline deviation, interference 0 mm^3).",
+      "covers": "Lid to base at the parting plane (outline and interference), and the walls of every opening against the size the board requires.",
+      "location": {
+        "point": [
+          11.0,
+          105.014,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "fit_tolerance:Q4-sensor_window",
+      "check": "fit_tolerance",
+      "title": "Fit tolerance",
+      "standard": "fit_tolerance",
+      "component": "Q4",
+      "opening": "Q4-sensor_window",
+      "parts": null,
+      "status": "fail",
+      "measured": {
+        "value": 2.8164,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "tolerance",
+        "value": 0.2,
+        "unit": "mm"
+      },
+      "summary": "Fit tolerance: Fails at Q4, opening_Q4, lid, measured 2.8164 mm against ±0.2 mm (sensor_window walls against the required 2.8 x 1.3 mm).",
+      "covers": "Lid to base at the parting plane (outline and interference), and the walls of every opening against the size the board requires.",
+      "location": {
+        "point": [
+          3.3655,
+          124.4295,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.opening_Q4.1"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "fit_tolerance:RST1-button",
+      "check": "fit_tolerance",
+      "title": "Fit tolerance",
+      "standard": "fit_tolerance",
+      "component": "RST1",
+      "opening": "RST1-button",
+      "parts": null,
+      "status": "fail",
+      "measured": {
+        "value": "no opening"
+      },
+      "required": {
+        "kind": "tolerance",
+        "value": 0.2,
+        "unit": "mm"
+      },
+      "summary": "Fit tolerance: Fails at RST1, measured no opening against ±0.2 mm (no button cut for RST1).",
+      "covers": "Lid to base at the parting plane (outline and interference), and the walls of every opening against the size the board requires.",
+      "location": {
+        "point": [
+          15.302,
+          104.064,
+          7.6
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.14"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "fit_tolerance:SW1-button",
+      "check": "fit_tolerance",
+      "title": "Fit tolerance",
+      "standard": "fit_tolerance",
+      "component": "SW1",
+      "opening": "SW1-button",
+      "parts": null,
+      "status": "fail",
+      "measured": {
+        "value": "no opening"
+      },
+      "required": {
+        "kind": "tolerance",
+        "value": 0.2,
+        "unit": "mm"
+      },
+      "summary": "Fit tolerance: Fails at SW1, measured no opening against ±0.2 mm (no button cut for SW1).",
+      "covers": "Lid to base at the parting plane (outline and interference), and the walls of every opening against the size the board requires.",
+      "location": {
+        "point": [
+          6.92,
+          103.212,
+          7.6
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.14"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "fit_tolerance:U2-vent",
+      "check": "fit_tolerance",
+      "title": "Fit tolerance",
+      "standard": "fit_tolerance",
+      "component": "U2",
+      "opening": "U2-vent",
+      "parts": null,
+      "status": "fail",
+      "measured": {
+        "value": 5.6714,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "tolerance",
+        "value": 0.2,
+        "unit": "mm"
+      },
+      "summary": "Fit tolerance: Fails at U2, opening_U2, lid, measured 5.6714 mm against ±0.2 mm (vent walls against the required 2.9 x 2.5 mm).",
+      "covers": "Lid to base at the parting plane (outline and interference), and the walls of every opening against the size the board requires.",
+      "location": {
+        "point": [
+          14.2845,
+          104.1295,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.opening_U2.3"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "insert_pockets:insert_1",
+      "check": "insert_pockets",
+      "title": "M3 heat-set inserts",
+      "standard": "heat_set_inserts",
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "heat_set_insert_1"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 4.5,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "M3 heat-set insert"
+      },
+      "summary": "M3 heat-set inserts: Passes at insert_1, lid between lid and heat_set_insert_1, measured 4.5 mm against M3 heat-set insert (boss boss_1: obstruction 0 mm^3, material around the pocket 100%; heat_set_insert_1: interference 0 mm^3, gap to the pocket wall 0.100 mm).",
+      "covers": "Every boss has a pocket that takes the insert, clear and deep enough, with material all round it, and the insert part in it is seated: no interference with the boss, its sides within the fit tolerance of the pocket wall.",
+      "location": {
+        "point": [
+          -3.5014,
+          84.214,
+          0.6523
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.insert_1.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "insert_pockets:insert_2",
+      "check": "insert_pockets",
+      "title": "M3 heat-set inserts",
+      "standard": "heat_set_inserts",
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "heat_set_insert_2"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 4.5,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "M3 heat-set insert"
+      },
+      "summary": "M3 heat-set inserts: Passes at insert_2, lid between lid and heat_set_insert_2, measured 4.5 mm against M3 heat-set insert (boss boss_2: obstruction 0 mm^3, material around the pocket 100%; heat_set_insert_2: interference 0 mm^3, gap to the pocket wall 0.100 mm).",
+      "covers": "Every boss has a pocket that takes the insert, clear and deep enough, with material all round it, and the insert part in it is seated: no interference with the boss, its sides within the fit tolerance of the pocket wall.",
+      "location": {
+        "point": [
+          29.4986,
+          84.214,
+          0.6523
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.insert_2.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "insert_pockets:insert_3",
+      "check": "insert_pockets",
+      "title": "M3 heat-set inserts",
+      "standard": "heat_set_inserts",
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "heat_set_insert_3"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 4.5,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "M3 heat-set insert"
+      },
+      "summary": "M3 heat-set inserts: Passes at insert_3, lid between lid and heat_set_insert_3, measured 4.5 mm against M3 heat-set insert (boss boss_3: obstruction 0 mm^3, material around the pocket 100%; heat_set_insert_3: interference 0 mm^3, gap to the pocket wall 0.100 mm).",
+      "covers": "Every boss has a pocket that takes the insert, clear and deep enough, with material all round it, and the insert part in it is seated: no interference with the boss, its sides within the fit tolerance of the pocket wall.",
+      "location": {
+        "point": [
+          -3.5014,
+          125.814,
+          0.6523
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.insert_3.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "insert_pockets:insert_4",
+      "check": "insert_pockets",
+      "title": "M3 heat-set inserts",
+      "standard": "heat_set_inserts",
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "heat_set_insert_4"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 4.5,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "M3 heat-set insert"
+      },
+      "summary": "M3 heat-set inserts: Passes at insert_4, lid between lid and heat_set_insert_4, measured 4.5 mm against M3 heat-set insert (boss boss_4: obstruction 0 mm^3, material around the pocket 100%; heat_set_insert_4: interference 0 mm^3, gap to the pocket wall 0.100 mm).",
+      "covers": "Every boss has a pocket that takes the insert, clear and deep enough, with material all round it, and the insert part in it is seated: no interference with the boss, its sides within the fit tolerance of the pocket wall.",
+      "location": {
+        "point": [
+          29.4986,
+          125.814,
+          0.6523
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.insert_4.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "insert_pockets:heat_set_insert_1",
+      "check": "insert_pockets",
+      "title": "M3 heat-set inserts",
+      "standard": "heat_set_inserts",
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "heat_set_insert_1"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": "brass"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "M3 heat-set insert"
+      },
+      "summary": "M3 heat-set inserts: Passes at heat_set_insert_1 between lid and heat_set_insert_1, measured brass against M3 heat-set insert (insert part heat_set_insert_1: in a pocket of lid).",
+      "covers": "Every boss has a pocket that takes the insert, clear and deep enough, with material all round it, and the insert part in it is seated: no interference with the boss, its sides within the fit tolerance of the pocket wall.",
+      "location": {
+        "point": [
+          -3.6536,
+          84.214,
+          2.6483
+        ],
+        "part": "heat_set_insert_1",
+        "faces": [
+          "heat_set_insert_1.heat_set_insert_1.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "insert_pockets:heat_set_insert_2",
+      "check": "insert_pockets",
+      "title": "M3 heat-set inserts",
+      "standard": "heat_set_inserts",
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "heat_set_insert_2"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": "brass"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "M3 heat-set insert"
+      },
+      "summary": "M3 heat-set inserts: Passes at heat_set_insert_2 between lid and heat_set_insert_2, measured brass against M3 heat-set insert (insert part heat_set_insert_2: in a pocket of lid).",
+      "covers": "Every boss has a pocket that takes the insert, clear and deep enough, with material all round it, and the insert part in it is seated: no interference with the boss, its sides within the fit tolerance of the pocket wall.",
+      "location": {
+        "point": [
+          29.3464,
+          84.214,
+          2.6483
+        ],
+        "part": "heat_set_insert_2",
+        "faces": [
+          "heat_set_insert_2.heat_set_insert_2.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "insert_pockets:heat_set_insert_3",
+      "check": "insert_pockets",
+      "title": "M3 heat-set inserts",
+      "standard": "heat_set_inserts",
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "heat_set_insert_3"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": "brass"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "M3 heat-set insert"
+      },
+      "summary": "M3 heat-set inserts: Passes at heat_set_insert_3 between lid and heat_set_insert_3, measured brass against M3 heat-set insert (insert part heat_set_insert_3: in a pocket of lid).",
+      "covers": "Every boss has a pocket that takes the insert, clear and deep enough, with material all round it, and the insert part in it is seated: no interference with the boss, its sides within the fit tolerance of the pocket wall.",
+      "location": {
+        "point": [
+          -3.6536,
+          125.814,
+          2.6483
+        ],
+        "part": "heat_set_insert_3",
+        "faces": [
+          "heat_set_insert_3.heat_set_insert_3.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "insert_pockets:heat_set_insert_4",
+      "check": "insert_pockets",
+      "title": "M3 heat-set inserts",
+      "standard": "heat_set_inserts",
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "heat_set_insert_4"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": "brass"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "M3 heat-set insert"
+      },
+      "summary": "M3 heat-set inserts: Passes at heat_set_insert_4 between lid and heat_set_insert_4, measured brass against M3 heat-set insert (insert part heat_set_insert_4: in a pocket of lid).",
+      "covers": "Every boss has a pocket that takes the insert, clear and deep enough, with material all round it, and the insert part in it is seated: no interference with the boss, its sides within the fit tolerance of the pocket wall.",
+      "location": {
+        "point": [
+          29.3464,
+          125.814,
+          2.6483
+        ],
+        "part": "heat_set_insert_4",
+        "faces": [
+          "heat_set_insert_4.heat_set_insert_4.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "material:base",
+      "check": "material",
+      "title": "Molded ABS",
+      "standard": "material",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": "molded ABS"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "molded ABS"
+      },
+      "summary": "Molded ABS: Passes at base, measured molded ABS against molded ABS.",
+      "covers": "The material each part is set up for, which the molding rules assume.",
+      "location": {
+        "point": [
+          11.0,
+          105.014,
+          -5.0
+        ],
+        "part": "base",
+        "faces": [
+          "base.base.13"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "material:lid",
+      "check": "material",
+      "title": "Molded ABS",
+      "standard": "material",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": "molded ABS"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "molded ABS"
+      },
+      "summary": "Molded ABS: Passes at lid, measured molded ABS against molded ABS.",
+      "covers": "The material each part is set up for, which the molding rules assume.",
+      "location": {
+        "point": [
+          11.0,
+          105.014,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "wall_thickness:base",
+      "check": "wall_thickness",
+      "title": "Minimum wall thickness",
+      "standard": "min_wall",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 2.4991,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 2.0,
+        "unit": "mm"
+      },
+      "summary": "Minimum wall thickness: Passes at base, measured 2.4991 mm against min 2 mm.",
+      "covers": "Every face of every part, by rays cast into the material from sample points (the same samples as the wall-thickness map).",
+      "location": {
+        "point": [
+          -6.4515,
+          130.5975,
+          -4.6875
+        ],
+        "part": "base",
+        "faces": [
+          "base.base.2"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "wall_thickness:boss_4",
+      "check": "wall_thickness",
+      "title": "Minimum wall thickness",
+      "standard": "min_wall",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 2.4141,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 2.0,
+        "unit": "mm"
+      },
+      "summary": "Minimum wall thickness: Passes at boss_4, lid, measured 2.4141 mm against min 2 mm.",
+      "covers": "Every face of every part, by rays cast into the material from sample points (the same samples as the wall-thickness map).",
+      "location": {
+        "point": [
+          23.2461,
+          126.9261,
+          1.1625
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.boss_4.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "draft_angle:base",
+      "check": "draft_angle",
+      "title": "Minimum draft angle",
+      "standard": "min_draft",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 1.5,
+        "unit": "deg"
+      },
+      "required": {
+        "kind": "min",
+        "value": 1.0,
+        "unit": "deg"
+      },
+      "summary": "Minimum draft angle: Passes at base, measured 1.5 deg against min 1 deg.",
+      "covers": "Every face that is not horizontal, against the mold pull along Z.",
+      "location": {
+        "point": [
+          23.375,
+          128.1994,
+          -4.375
+        ],
+        "part": "base",
+        "faces": [
+          "base.base.11"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "draft_angle:peg_H1",
+      "check": "draft_angle",
+      "title": "Minimum draft angle",
+      "standard": "min_draft",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 1.5,
+        "unit": "deg"
+      },
+      "required": {
+        "kind": "min",
+        "value": 1.0,
+        "unit": "deg"
+      },
+      "summary": "Minimum draft angle: Passes at peg_H1, lid, measured 1.5 deg against min 1 deg.",
+      "covers": "Every face that is not horizontal, against the mold pull along Z.",
+      "location": {
+        "point": [
+          4.9234,
+          86.3374,
+          1.2875
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.peg_H1.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "object_fit",
+      "check": "object_fit",
+      "title": "Fit to the object",
+      "standard": "object_fit",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "not_applicable",
+      "measured": null,
+      "required": null,
+      "summary": "Fit to the object: not applicable. Fit to the object applies only to designs made to fit an object; this design has no object parameters.",
+      "reason": "Fit to the object applies only to designs made to fit an object; this design has no object parameters.",
+      "covers": "Every part against the object it fits (the design's object parameters, as a solid): no part takes up any of its volume, and the closest is within the gap.",
+      "location": null
+    },
+    {
+      "id": "component_clearance:BT1",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "BT1",
+      "opening": null,
+      "parts": [
+        "base",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 0.5848,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at BT1, base between base and board, measured 0.5848 mm against min 0.5 mm.",
+      "covers": "Exact distance from BT1's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          -0.448,
+          81.8244,
+          -4.2153
+        ],
+        "part": "base",
+        "faces": [
+          "base.base.15"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:C1",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "C1",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 3.0,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at C1, lid between lid and board, measured 3 mm against min 0.5 mm.",
+      "covers": "Exact distance from C1's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          12.292,
+          95.275,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:C2",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "C2",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 3.0,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at C2, lid between lid and board, measured 3 mm against min 0.5 mm.",
+      "covers": "Exact distance from C2's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          13.994,
+          97.052,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:C3",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "C3",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 3.0,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at C3, lid between lid and board, measured 3 mm against min 0.5 mm.",
+      "covers": "Exact distance from C3's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          10.576,
+          99.488,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:C4",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "C4",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 3.0,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at C4, lid between lid and board, measured 3 mm against min 0.5 mm.",
+      "covers": "Exact distance from C4's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          11.415,
+          101.325,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:D1",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "D1",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 1.9,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at D1, lid between lid and board, measured 1.9 mm against min 0.5 mm.",
+      "covers": "Exact distance from D1's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          12.392,
+          98.978,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:D2",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "D2",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 2.7,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at D2, lid between lid and board, measured 2.7 mm against min 0.5 mm.",
+      "covers": "Exact distance from D2's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          5.098,
+          101.275,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:Q1",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "Q1",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 2.38,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at Q1, lid between lid and board, measured 2.38 mm against min 0.5 mm.",
+      "covers": "Exact distance from Q1's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          9.636,
+          96.596,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:Q4",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "Q4",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 2.5503,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at Q4, lid between lid and board, measured 2.5503 mm against min 0.5 mm.",
+      "covers": "Exact distance from Q4's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          -1.7387,
+          123.4816,
+          2.2668
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.boss_3.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:R1",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "R1",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 3.15,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at R1, lid between lid and board, measured 3.15 mm against min 0.5 mm.",
+      "covers": "Exact distance from R1's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          3.6,
+          97.281,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:R2",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "R2",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 3.15,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at R2, lid between lid and board, measured 3.15 mm against min 0.5 mm.",
+      "covers": "Exact distance from R2's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          5.31,
+          103.682,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:R4",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "R4",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 3.15,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at R4, lid between lid and board, measured 3.15 mm against min 0.5 mm.",
+      "covers": "Exact distance from R4's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          5.46,
+          96.062,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:R6",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "R6",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 3.15,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at R6, lid between lid and board, measured 3.15 mm against min 0.5 mm.",
+      "covers": "Exact distance from R6's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          14.07,
+          95.275,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:R7",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "R7",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 2.899,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at R7, lid between lid and board, measured 2.899 mm against min 0.5 mm.",
+      "covers": "Exact distance from R7's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          19.412,
+          103.8873,
+          2.0259
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.clamp_1.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:R8",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "R8",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 2.4291,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at R8, lid between lid and board, measured 2.4291 mm against min 0.5 mm.",
+      "covers": "Exact distance from R8's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          19.9007,
+          103.7457,
+          2.0136
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.clamp_1.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:R10",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "R10",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 2.2429,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at R10, lid between lid and board, measured 2.2429 mm against min 0.5 mm.",
+      "covers": "Exact distance from R10's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          -1.2476,
+          124.6119,
+          2.0087
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.boss_3.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:RST1",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "RST1",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 1.9,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at RST1, lid between lid and board, measured 1.9 mm against min 0.5 mm.",
+      "covers": "Exact distance from RST1's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          14.2845,
+          101.4985,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:SW1",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "SW1",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 1.9,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at SW1, lid between lid and board, measured 1.9 mm against min 0.5 mm.",
+      "covers": "Exact distance from SW1's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          5.42,
+          105.562,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:TP1",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "TP1",
+      "opening": null,
+      "parts": [
+        "base",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 1.7,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at TP1, base between base and board, measured 1.7 mm against min 0.5 mm.",
+      "covers": "Exact distance from TP1's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          19.75,
+          119.0,
+          -0.1
+        ],
+        "part": "base",
+        "faces": [
+          "base.support_1.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:TP2",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "TP2",
+      "opening": null,
+      "parts": [
+        "base",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 1.8725,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at TP2, base between base and board, measured 1.8725 mm against min 0.5 mm.",
+      "covers": "Exact distance from TP2's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          19.0418,
+          117.8735,
+          -0.1
+        ],
+        "part": "base",
+        "faces": [
+          "base.support_1.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:TP3",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "TP3",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 3.499,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at TP3, lid between lid and board, measured 3.499 mm against min 0.5 mm.",
+      "covers": "Exact distance from TP3's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          19.362,
+          114.626,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:TP4",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "TP4",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 3.499,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at TP4, lid between lid and board, measured 3.499 mm against min 0.5 mm.",
+      "covers": "Exact distance from TP4's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          19.382,
+          112.086,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:TP5",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "TP5",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 3.499,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at TP5, lid between lid and board, measured 3.499 mm against min 0.5 mm.",
+      "covers": "Exact distance from TP5's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          11.984,
+          95.576,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:TP6",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "TP6",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 3.499,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at TP6, lid between lid and board, measured 3.499 mm against min 0.5 mm.",
+      "covers": "Exact distance from TP6's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          5.38,
+          94.941,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:TP7",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "TP7",
+      "opening": null,
+      "parts": [
+        "base",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 1.7224,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at TP7, base between base and board, measured 1.7224 mm against min 0.5 mm.",
+      "covers": "Exact distance from TP7's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          19.2222,
+          120.0203,
+          -0.1
+        ],
+        "part": "base",
+        "faces": [
+          "base.support_1.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:TP8",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "TP8",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 1.7948,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at TP8, lid between lid and board, measured 1.7948 mm against min 0.5 mm.",
+      "covers": "Exact distance from TP8's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          23.1514,
+          125.0833,
+          1.648
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.boss_4.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:U1",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "U1",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 1.5,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at U1, lid between lid and board, measured 1.5 mm against min 0.5 mm.",
+      "covers": "Exact distance from U1's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          3.468,
+          107.842,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:U2",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "U2",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 2.75,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at U2, lid between lid and board, measured 2.75 mm against min 0.5 mm.",
+      "covers": "Exact distance from U2's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          18.53,
+          98.62,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "component_clearance:Y1",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": "Y1",
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 2.6,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "Minimum clearance to components: Passes at Y1, lid between lid and board, measured 2.6 mm against min 0.5 mm.",
+      "covers": "Exact distance from Y1's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          8.888,
+          102.57,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "overall_height",
+      "check": "overall_height",
+      "title": "Overall height limit",
+      "standard": "max_height",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 15.1,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "max",
+        "value": 15.1,
+        "unit": "mm"
+      },
+      "summary": "Overall height limit: Passes at lid, measured 15.1 mm against max 15.1 mm (from z -7.500 to 7.600).",
+      "covers": "The Z extent of the closed enclosure, all parts together.",
+      "location": {
+        "point": [
+          11.0,
+          105.014,
+          7.6
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.14"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "openings:Q4-sensor_window",
+      "check": "openings",
+      "title": "Sensor window clear",
+      "standard": null,
+      "component": "Q4",
+      "opening": "Q4-sensor_window",
+      "parts": null,
+      "status": "fail",
+      "measured": {
+        "value": 9.1,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "Sensor window clear: Fails at Q4, lid, measured 9.1 mm3 against max 0 mm3 (sensor_window: material in the way).",
+      "covers": "The sensor window for Q4 is open from the component to the outside: an exact solid boolean of the enclosure with a column over the required opening, so a window that moved or turned away from its part, or a missing cut, fails.",
+      "location": {
+        "point": [
+          1.078,
+          120.738,
+          7.6
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.14"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "openings:RST1-button",
+      "check": "openings",
+      "title": "Button reachable",
+      "standard": null,
+      "component": "RST1",
+      "opening": "RST1-button",
+      "parts": null,
+      "status": "fail",
+      "measured": {
+        "value": 19.312,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "Button reachable: Fails at RST1, opening_U2, lid, measured 19.312 mm3 against max 0 mm3 (button: material in the way).",
+      "covers": "The button for RST1 is open from the component to the outside: an exact solid boolean of the enclosure with a column over the required opening, so a window that moved or turned away from its part, or a missing cut, fails.",
+      "location": {
+        "point": [
+          15.302,
+          104.064,
+          7.6
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.opening_U2.1"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "openings:SW1-button",
+      "check": "openings",
+      "title": "Button reachable",
+      "standard": null,
+      "component": "SW1",
+      "opening": "SW1-button",
+      "parts": null,
+      "status": "fail",
+      "measured": {
+        "value": 35.25,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "Button reachable: Fails at SW1, lid, measured 35.25 mm3 against max 0 mm3 (button: material in the way).",
+      "covers": "The button for SW1 is open from the component to the outside: an exact solid boolean of the enclosure with a column over the required opening, so a window that moved or turned away from its part, or a missing cut, fails.",
+      "location": {
+        "point": [
+          6.92,
+          103.212,
+          7.6
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.14"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "openings:U2-vent",
+      "check": "openings",
+      "title": "Vent clear",
+      "standard": null,
+      "component": "U2",
+      "opening": "U2-vent",
+      "parts": null,
+      "status": "fail",
+      "measured": {
+        "value": 18.125,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "Vent clear: Fails at U2, lid, measured 18.125 mm3 against max 0 mm3 (vent: material in the way).",
+      "covers": "The vent for U2 is open from the component to the outside: an exact solid boolean of the enclosure with a column over the required opening, so a window that moved or turned away from its part, or a missing cut, fails.",
+      "location": {
+        "point": [
+          17.08,
+          97.37,
+          7.6
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.14"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "antenna_keepout",
+      "check": "antenna_keepout",
+      "title": "Antenna keep-out",
+      "standard": null,
+      "component": "U1",
+      "opening": "U1-antenna_keepout",
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": "no features"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "no internal features"
+      },
+      "summary": "Antenna keep-out: Passes at U1, measured no features against no internal features (features over the antenna keep-out).",
+      "covers": "No boss, insert, screw, peg or other internal feature within the minimum component clearance of the antenna keep-out of U1. The shell walls are not counted.",
+      "location": {
+        "point": [
+          9.968,
+          124.592,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_fit:board",
+      "check": "board_fit",
+      "title": "Board fits",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": [
+        "base",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "Board fits: Passes at board, base between base and board, measured 0 mm3 against max 0 mm3 (enclosure material inside the board).",
+      "covers": "No material of base inside the board (outline, thickness and mounting holes).",
+      "location": {
+        "point": [
+          11.0,
+          79.214,
+          0.0
+        ],
+        "part": "base",
+        "faces": [
+          "base.base.10"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_fit:board.2",
+      "check": "board_fit",
+      "title": "Board fits",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "Board fits: Passes at board, lid between lid and board, measured 0 mm3 against max 0 mm3 (enclosure material inside the board).",
+      "covers": "No material of lid inside the board (outline, thickness and mounting holes).",
+      "location": {
+        "point": [
+          11.0,
+          79.2611,
+          1.8
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.10"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_retention:-x.pushed",
+      "check": "board_retention",
+      "title": "Board held",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 0.3051,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "a stop within 0.201 mm"
+      },
+      "summary": "Board held: Passes at board, peg_H1, measured 0.3051 mm3 against a stop within 0.201 mm (-x edge pushed out 0.201 mm: stopped by peg_H1, peg_H2).",
+      "covers": "The board cannot move once the enclosure is closed: an edge pushed out, lifted or pressed down just past the fit tolerance runs into enclosure material.",
+      "location": {
+        "point": [
+          3.5792,
+          87.2445,
+          1.7
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.peg_H1.1"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_retention:-x.lifted",
+      "check": "board_retention",
+      "title": "Board held",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 0.3109,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "a stop within 0.201 mm"
+      },
+      "summary": "Board held: Passes at board, opening_pcb, measured 0.3109 mm3 against a stop within 0.201 mm (-x edge lifted 0.201 mm about the opposite edge: stopped by opening_pcb, peg_H1).",
+      "covers": "The board cannot move once the enclosure is closed: an edge pushed out, lifted or pressed down just past the fit tolerance runs into enclosure material.",
+      "location": {
+        "point": [
+          -0.2116,
+          81.7495,
+          1.3571
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.opening_pcb.2"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_retention:-x.pressed",
+      "check": "board_retention",
+      "title": "Board held",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 4.143,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "a stop within 0.201 mm"
+      },
+      "summary": "Board held: Passes at board, base, measured 4.143 mm3 against a stop within 0.201 mm (-x edge pressed down 0.201 mm about the opposite edge: stopped by base).",
+      "covers": "The board cannot move once the enclosure is closed: an edge pushed out, lifted or pressed down just past the fit tolerance runs into enclosure material.",
+      "location": {
+        "point": [
+          -0.0,
+          102.814,
+          -5.0
+        ],
+        "part": "base",
+        "faces": [
+          "base.base.13"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_retention:_x.pushed",
+      "check": "board_retention",
+      "title": "Board held",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 0.3051,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "a stop within 0.201 mm"
+      },
+      "summary": "Board held: Passes at board, peg_H1, measured 0.3051 mm3 against a stop within 0.201 mm (+x edge pushed out 0.201 mm: stopped by peg_H1, peg_H2).",
+      "covers": "The board cannot move once the enclosure is closed: an edge pushed out, lifted or pressed down just past the fit tolerance runs into enclosure material.",
+      "location": {
+        "point": [
+          5.3504,
+          86.7194,
+          1.7
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.peg_H1.1"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_retention:_x.lifted",
+      "check": "board_retention",
+      "title": "Board held",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 0.7179,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "a stop within 0.201 mm"
+      },
+      "summary": "Board held: Passes at board, clamp_1, measured 0.7179 mm3 against a stop within 0.201 mm (+x edge lifted 0.201 mm about the opposite edge: stopped by clamp_1, opening_pcb, peg_H2).",
+      "covers": "The board cannot move once the enclosure is closed: an edge pushed out, lifted or pressed down just past the fit tolerance runs into enclosure material.",
+      "location": {
+        "point": [
+          20.8438,
+          104.0778,
+          1.7
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.clamp_1.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_retention:_x.pressed",
+      "check": "board_retention",
+      "title": "Board held",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 4.4826,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "a stop within 0.201 mm"
+      },
+      "summary": "Board held: Passes at board, support_1, measured 4.4826 mm3 against a stop within 0.201 mm (+x edge pressed down 0.201 mm about the opposite edge: stopped by support_1).",
+      "covers": "The board cannot move once the enclosure is closed: an edge pushed out, lifted or pressed down just past the fit tolerance runs into enclosure material.",
+      "location": {
+        "point": [
+          18.7642,
+          117.7782,
+          -0.1
+        ],
+        "part": "base",
+        "faces": [
+          "base.support_1.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_retention:-y.pushed",
+      "check": "board_retention",
+      "title": "Board held",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 0.3051,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "a stop within 0.201 mm"
+      },
+      "summary": "Board held: Passes at board, peg_H1, measured 0.3051 mm3 against a stop within 0.201 mm (-y edge pushed out 0.201 mm: stopped by peg_H1, peg_H2).",
+      "covers": "The board cannot move once the enclosure is closed: an edge pushed out, lifted or pressed down just past the fit tolerance runs into enclosure material.",
+      "location": {
+        "point": [
+          5.406,
+          84.1687,
+          1.7
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.peg_H1.1"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_retention:-y.lifted",
+      "check": "board_retention",
+      "title": "Board held",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 0.7201,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "a stop within 0.201 mm"
+      },
+      "summary": "Board held: Passes at board, opening_pcb, measured 0.7201 mm3 against a stop within 0.201 mm (-y edge lifted 0.201 mm about the opposite edge: stopped by opening_pcb, peg_H1, peg_H2).",
+      "covers": "The board cannot move once the enclosure is closed: an edge pushed out, lifted or pressed down just past the fit tolerance runs into enclosure material.",
+      "location": {
+        "point": [
+          11.0,
+          79.2611,
+          1.8
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.opening_pcb.1"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_retention:-y.pressed",
+      "check": "board_retention",
+      "title": "Board held",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 10.7615,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "a stop within 0.201 mm"
+      },
+      "summary": "Board held: Passes at board, base, measured 10.7615 mm3 against a stop within 0.201 mm (-y edge pressed down 0.201 mm about the opposite edge: stopped by base).",
+      "covers": "The board cannot move once the enclosure is closed: an edge pushed out, lifted or pressed down just past the fit tolerance runs into enclosure material.",
+      "location": {
+        "point": [
+          11.0,
+          79.214,
+          0.0
+        ],
+        "part": "base",
+        "faces": [
+          "base.base.10"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_retention:_y.pushed",
+      "check": "board_retention",
+      "title": "Board held",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 0.3051,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "a stop within 0.201 mm"
+      },
+      "summary": "Board held: Passes at board, peg_H1, measured 0.3051 mm3 against a stop within 0.201 mm (+y edge pushed out 0.201 mm: stopped by peg_H1, peg_H2).",
+      "covers": "The board cannot move once the enclosure is closed: an edge pushed out, lifted or pressed down just past the fit tolerance runs into enclosure material.",
+      "location": {
+        "point": [
+          4.3167,
+          87.2691,
+          1.8399
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.peg_H1.1"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_retention:_y.lifted",
+      "check": "board_retention",
+      "title": "Board held",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 0.0482,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "a stop within 0.201 mm"
+      },
+      "summary": "Board held: Passes at board, clamp_1, measured 0.0482 mm3 against a stop within 0.201 mm (+y edge lifted 0.201 mm about the opposite edge: stopped by clamp_1).",
+      "covers": "The board cannot move once the enclosure is closed: an edge pushed out, lifted or pressed down just past the fit tolerance runs into enclosure material.",
+      "location": {
+        "point": [
+          19.5157,
+          106.1524,
+          1.7
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.clamp_1.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "board_retention:_y.pressed",
+      "check": "board_retention",
+      "title": "Board held",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 0.3413,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "a stop within 0.201 mm"
+      },
+      "summary": "Board held: Passes at board, support_1, measured 0.3413 mm3 against a stop within 0.201 mm (+y edge pressed down 0.201 mm about the opposite edge: stopped by support_1).",
+      "covers": "The board cannot move once the enclosure is closed: an edge pushed out, lifted or pressed down just past the fit tolerance runs into enclosure material.",
+      "location": {
+        "point": [
+          17.611,
+          119.8788,
+          -0.1
+        ],
+        "part": "base",
+        "faces": [
+          "base.support_1.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "interference:base--lid",
+      "check": "interference",
+      "title": "No interference",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": [
+        "base",
+        "lid"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "No interference: Passes at base between base and lid, measured 0 mm3 against max 0 mm3 (material shared by base and lid).",
+      "covers": "No material shared by base and lid: an exact solid boolean of the two parts (the board with every component body). Every pair of parts whose bounding boxes meet is checked; parts whose boxes are apart cannot interfere.",
+      "location": {
+        "point": [
+          11.0,
+          105.014,
+          -5.0
+        ],
+        "part": "base",
+        "faces": [
+          "base.base.13"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "interference:base--board",
+      "check": "interference",
+      "title": "No interference",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": [
+        "base",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "No interference: Passes at base between base and board, measured 0 mm3 against max 0 mm3 (material shared by base and board).",
+      "covers": "No material shared by base and board: an exact solid boolean of the two parts (the board with every component body). Every pair of parts whose bounding boxes meet is checked; parts whose boxes are apart cannot interfere.",
+      "location": {
+        "point": [
+          11.0,
+          105.014,
+          -5.0
+        ],
+        "part": "base",
+        "faces": [
+          "base.base.13"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "interference:lid--heat_set_insert_1",
+      "check": "interference",
+      "title": "No interference",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "heat_set_insert_1"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "No interference: Passes at lid between lid and heat_set_insert_1, measured 0 mm3 against max 0 mm3 (material shared by lid and heat_set_insert_1).",
+      "covers": "No material shared by lid and heat_set_insert_1: an exact solid boolean of the two parts (the board with every component body). Every pair of parts whose bounding boxes meet is checked; parts whose boxes are apart cannot interfere.",
+      "location": {
+        "point": [
+          11.0,
+          105.014,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "interference:lid--heat_set_insert_2",
+      "check": "interference",
+      "title": "No interference",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "heat_set_insert_2"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "No interference: Passes at lid between lid and heat_set_insert_2, measured 0 mm3 against max 0 mm3 (material shared by lid and heat_set_insert_2).",
+      "covers": "No material shared by lid and heat_set_insert_2: an exact solid boolean of the two parts (the board with every component body). Every pair of parts whose bounding boxes meet is checked; parts whose boxes are apart cannot interfere.",
+      "location": {
+        "point": [
+          11.0,
+          105.014,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "interference:lid--heat_set_insert_3",
+      "check": "interference",
+      "title": "No interference",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "heat_set_insert_3"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "No interference: Passes at lid between lid and heat_set_insert_3, measured 0 mm3 against max 0 mm3 (material shared by lid and heat_set_insert_3).",
+      "covers": "No material shared by lid and heat_set_insert_3: an exact solid boolean of the two parts (the board with every component body). Every pair of parts whose bounding boxes meet is checked; parts whose boxes are apart cannot interfere.",
+      "location": {
+        "point": [
+          11.0,
+          105.014,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "interference:lid--heat_set_insert_4",
+      "check": "interference",
+      "title": "No interference",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "heat_set_insert_4"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "No interference: Passes at lid between lid and heat_set_insert_4, measured 0 mm3 against max 0 mm3 (material shared by lid and heat_set_insert_4).",
+      "covers": "No material shared by lid and heat_set_insert_4: an exact solid boolean of the two parts (the board with every component body). Every pair of parts whose bounding boxes meet is checked; parts whose boxes are apart cannot interfere.",
+      "location": {
+        "point": [
+          11.0,
+          105.014,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "interference:lid--board",
+      "check": "interference",
+      "title": "No interference",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": [
+        "lid",
+        "board"
+      ],
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "required": {
+        "kind": "max",
+        "value": 0.0,
+        "unit": "mm3"
+      },
+      "summary": "No interference: Passes at lid between lid and board, measured 0 mm3 against max 0 mm3 (material shared by lid and board).",
+      "covers": "No material shared by lid and board: an exact solid boolean of the two parts (the board with every component body). Every pair of parts whose bounding boxes meet is checked; parts whose boxes are apart cannot interfere.",
+      "location": {
+        "point": [
+          11.0,
+          105.014,
+          5.1
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.lid.12"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "strength",
+      "check": "strength",
+      "title": "Strength",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "untested",
+      "measured": null,
+      "required": null,
+      "summary": "Strength is not tested; review it by hand.",
+      "covers": "Loads on the parts, snap fits and screw bosses are not simulated.",
+      "location": null
+    },
+    {
+      "id": "drop",
+      "check": "drop",
+      "title": "Drop",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "untested",
+      "measured": null,
+      "required": null,
+      "summary": "Drop is not tested; review it by hand.",
+      "covers": "Impact from a drop is not simulated.",
+      "location": null
+    },
+    {
+      "id": "heat",
+      "check": "heat",
+      "title": "Heat",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "untested",
+      "measured": null,
+      "required": null,
+      "summary": "Heat is not tested; review it by hand.",
+      "covers": "Temperature rise and heat from the electronics are not simulated.",
+      "location": null
+    }
+  ],
+  "summary": {
+    "pass": 67,
+    "fail": 8,
+    "untested": 3,
+    "not_applicable": 1
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "contract": "risk-flags/1",
+  "build": "build-1",
+  "flags": [
+    {
+      "id": "near_limit:overall_height",
+      "kind": "near_limit",
+      "message": "Near a limit: overall height limit is 15.1 mm, right at the 15.1 mm maximum, the enclosure at (16.1, 110.6, 7.6).",
+      "standard": "max_height",
+      "value": 15.1,
+      "limit": 15.1,
+      "unit": "mm",
+      "location": {
+        "part": null,
+        "feature": null,
+        "component": null,
+        "faces": [
+          "lid.outer_cap",
+          "base.outer_cap"
+        ],
+        "point": [
+          16.081,
+          110.586,
+          7.6
+        ]
+      },
+      "status": "proposed",
+      "fix": {
+        "title": "Raise the bottom of the base 0.1 mm",
+        "edits": {
+          "z_bottom": -7.4
+        },
+        "changes": [
+          {
+            "kind": "modified",
+            "path": "z_bottom",
+            "feature": null,
+            "component": null,
+            "fields": [
+              {
+                "field": "value",
+                "before": -7.5,
+                "after": -7.4
+              }
+            ],
+            "move": null,
+            "rotate": null
+          }
+        ],
+        "resolves": false,
+        "checks": []
+      }
+    }
+  ]
+}

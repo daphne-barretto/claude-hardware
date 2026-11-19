@@ -1,0 +1,29 @@
+# Fixture inventory for e2e/ui-inventory-fixtures.spec.ts. The same entries are checked
+# against a page that matches them (good), one with an extra control and one missing a control.
+states:
+  - { id: good, url: /__ui-inventory-fixtures/controls.html }
+  - { id: extra, url: /__ui-inventory-fixtures/extra-control.html }
+  - { id: missing, url: /__ui-inventory-fixtures/missing-control.html }
+entries:
+  - id: details
+    screen: fixture
+    role: button
+    name: Details
+    states: ["*"]
+    expect:
+      - attribute: { name: aria-expanded, value: "true" }
+      - visible: text "More details"
+  - id: name
+    screen: fixture
+    role: textbox
+    name: Name
+    states: ["*"]
+    expect:
+      - value: { equals: Inventory check }
+  - id: done
+    screen: fixture
+    role: link
+    name: Done
+    states: ["*"]
+    expect:
+      - url: /__ui-inventory-fixtures/controls.html#done

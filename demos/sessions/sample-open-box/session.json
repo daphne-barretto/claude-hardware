@@ -1,0 +1,637 @@
+{
+  "session": {
+    "id": "sample-open-box",
+    "title": "Open box",
+    "created_at": "2026-11-18T10:41:23.911518Z",
+    "board": null,
+    "status": "idle",
+    "latest_build_id": "build-1",
+    "next_revision": null,
+    "standards": "hardware_team",
+    "sample": true
+  },
+  "messages": [
+    {
+      "id": "msg-1",
+      "role": "user",
+      "text": "Make an open box 60 x 40 x 30 mm with 2.5 mm walls.",
+      "created_at": "2026-11-18T10:41:30.434397Z",
+      "model": "claude-opus-5-5",
+      "effort": "medium",
+      "mode": "auto",
+      "selection": null,
+      "answer": null,
+      "attachments": [],
+      "standards": null,
+      "comments": []
+    },
+    {
+      "id": "msg-2",
+      "role": "assistant",
+      "text": "\n\nRisk: Near a limit: minimum wall thickness is 2.5 mm, right at the 2.5 mm minimum, pocket on the box at (-20.3, -17.0, 12.8). Fix ready to accept on its own: Wall and floor to 2.7 mm for margin.\n\n\n\nRisk: Thin wall: 2.5 mm, under the 2.5 mm minimum (Minimum wall thickness), box at (-29.5, 14.6, 11.2). Fix ready to accept on its own: Wall and floor to 2.7 mm for margin.\n\n\n\nRisk: Thin wall: 2.5 mm, under the 2.5 mm minimum (Minimum wall thickness), pocket on the box at (-20.3, -17.0, 12.8). Fix ready to accept on its own: Wall and floor to 2.7 mm for margin.\n\nI built the open box and it builds. The wall thickness, draft and material checks pass, and nothing fails.\n\n- **Size:** 60 × 40 mm at the rim and 30 mm tall.\n- **Walls and floor:** 2.5 mm.\n- **Draft:** every side face has 1.5° of draft, which molded ABS needs. Because of it, the walls lean in slightly, so the base is a little smaller than 60 × 40.\n- **Thickness note:** I measured the 2.5 mm straight through the leaning walls, not horizontally, so they don't come out thinner than you asked.\n\n**Thin-wall warning:** the analysis says the walls are exactly at the 2.5 mm minimum, with no margin. I've suggested making the walls and floor 2.7 mm. That's a separate proposal you can accept or ignore; I haven't applied it.\n\nStrength, drop and heat aren't tested, so they need checking by hand.",
+      "created_at": "2026-11-18T10:41:30.438961Z",
+      "model": null,
+      "effort": null,
+      "mode": null,
+      "selection": null,
+      "answer": null,
+      "attachments": [],
+      "standards": null,
+      "comments": []
+    }
+  ],
+  "events": [
+    {
+      "id": 1,
+      "event": {
+        "type": "user_message",
+        "message_id": "msg-1",
+        "message": {
+          "id": "msg-1",
+          "role": "user",
+          "text": "Make an open box 60 x 40 x 30 mm with 2.5 mm walls.",
+          "created_at": "2026-11-18T10:41:30.434397Z",
+          "model": "claude-opus-5-5",
+          "effort": "medium",
+          "mode": "auto",
+          "selection": null,
+          "answer": null,
+          "attachments": [],
+          "standards": null,
+          "comments": []
+        }
+      }
+    },
+    {
+      "id": 2,
+      "event": {
+        "type": "constraints",
+        "message_id": null,
+        "constraints": [
+          {
+            "id": "material",
+            "title": "Molded ABS",
+            "label": "Molded ABS",
+            "kind": "spec",
+            "value": "molded ABS",
+            "unit": null,
+            "check": "material",
+            "source": "standard",
+            "quote": null,
+            "message_id": null,
+            "standard_value": "molded ABS"
+          },
+          {
+            "id": "min_wall",
+            "title": "Minimum wall thickness",
+            "label": "Minimum wall thickness ≥ 2.5 mm",
+            "kind": "min",
+            "value": 2.5,
+            "unit": "mm",
+            "check": "wall_thickness",
+            "source": "user",
+            "quote": "Make an open box 60 x 40 x 30 mm with 2.5 mm walls",
+            "message_id": "msg-1",
+            "standard_value": 2.0
+          },
+          {
+            "id": "min_draft",
+            "title": "Minimum draft angle",
+            "label": "Minimum draft angle ≥ 1°",
+            "kind": "min",
+            "value": 1.0,
+            "unit": "deg",
+            "check": "draft_angle",
+            "source": "standard",
+            "quote": null,
+            "message_id": null,
+            "standard_value": 1.0
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "event": {
+        "type": "message_start",
+        "message_id": "msg-2",
+        "role": "assistant"
+      }
+    },
+    {
+      "id": 4,
+      "event": {
+        "type": "progress",
+        "message_id": "msg-2",
+        "text": "Reading the constraints and the design",
+        "round": null,
+        "rounds": null
+      }
+    },
+    {
+      "id": 5,
+      "event": {
+        "type": "progress",
+        "message_id": "msg-2",
+        "text": "Writing the design · round 1 of 4",
+        "round": 1,
+        "rounds": 4
+      }
+    },
+    {
+      "id": 6,
+      "event": {
+        "type": "progress",
+        "message_id": "msg-2",
+        "text": "Rerunning the checks · round 1 of 4",
+        "round": 1,
+        "rounds": 4
+      }
+    },
+    {
+      "id": 7,
+      "event": {
+        "type": "build_ready",
+        "message_id": "msg-2",
+        "build": {
+          "id": "build-1",
+          "created_at": "2026-11-18T10:41:54.228713Z",
+          "board": null,
+          "status": "ready",
+          "checks": {
+            "pass": 3,
+            "fail": 0,
+            "untested": 3,
+            "not_applicable": 5
+          },
+          "maps": [
+            "draft",
+            "wall_thickness"
+          ],
+          "mesh_url": "/api/sessions/sample-open-box/builds/build-1/mesh",
+          "checks_url": "/api/sessions/sample-open-box/builds/build-1/checks",
+          "source_url": "/api/sessions/sample-open-box/builds/build-1/source",
+          "board_url": "/api/sessions/sample-open-box/builds/build-1/board",
+          "step_url": null,
+          "restored_from": null,
+          "failure": null
+        }
+      }
+    },
+    {
+      "id": 8,
+      "event": {
+        "type": "progress",
+        "message_id": "msg-2",
+        "text": "Checking a fix for near_limit:wall_thickness · round 1 of 4",
+        "round": 1,
+        "rounds": 4
+      }
+    },
+    {
+      "id": 9,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "\n\nRisk: Near a limit: minimum wall thickness is 2.5 mm, right at the 2.5 mm minimum, pocket on the box at (-20.3, -17.0, 12.8). Fix ready to accept on its own: Wall and floor to 2.7 mm for margin.\n\n"
+      }
+    },
+    {
+      "id": 10,
+      "event": {
+        "type": "progress",
+        "message_id": "msg-2",
+        "text": "Finished · round 1 of 4",
+        "round": 1,
+        "rounds": 4
+      }
+    },
+    {
+      "id": 11,
+      "event": {
+        "type": "title",
+        "message_id": "msg-2",
+        "title": "Open box",
+        "title_locked": false
+      }
+    },
+    {
+      "id": 12,
+      "event": {
+        "type": "progress",
+        "message_id": "msg-2",
+        "text": "Checking a fix for thin:box · round 1 of 4",
+        "round": 1,
+        "rounds": 4
+      }
+    },
+    {
+      "id": 13,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "\n\nRisk: Thin wall: 2.5 mm, under the 2.5 mm minimum (Minimum wall thickness), box at (-29.5, 14.6, 11.2). Fix ready to accept on its own: Wall and floor to 2.7 mm for margin.\n\n"
+      }
+    },
+    {
+      "id": 14,
+      "event": {
+        "type": "progress",
+        "message_id": "msg-2",
+        "text": "Checking a fix for thin:pocket · round 1 of 4",
+        "round": 1,
+        "rounds": 4
+      }
+    },
+    {
+      "id": 15,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "\n\nRisk: Thin wall: 2.5 mm, under the 2.5 mm minimum (Minimum wall thickness), pocket on the box at (-20.3, -17.0, 12.8). Fix ready to accept on its own: Wall and floor to 2.7 mm for margin.\n\n"
+      }
+    },
+    {
+      "id": 16,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "I built the open box and it builds."
+      }
+    },
+    {
+      "id": 17,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": " The wall thickness, draft and material checks pass, and nothing fails.\n\n"
+      }
+    },
+    {
+      "id": 18,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "- **Size:** 60 × 40 mm at the rim and 30 mm tall."
+      }
+    },
+    {
+      "id": 19,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "\n"
+      }
+    },
+    {
+      "id": 20,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "- **Walls and floor:** 2.5 mm.\n"
+      }
+    },
+    {
+      "id": 21,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "- **Draft:** every side face has 1.5° of draft, which molded ABS needs."
+      }
+    },
+    {
+      "id": 22,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": " Because of it, the walls lean in slightly, so the base is a little smaller than 60 × 40.\n"
+      }
+    },
+    {
+      "id": 23,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "- **Thickness note:** I measured the 2.5 mm straight through the leaning walls, not horizontally, so they don't come out thinner than you asked."
+      }
+    },
+    {
+      "id": 24,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "\n\n"
+      }
+    },
+    {
+      "id": 25,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "**Thin-wall warning:** the analysis says the walls are exactly at the 2.5 mm minimum, with no margin."
+      }
+    },
+    {
+      "id": 26,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": " I've suggested making the walls and floor 2.7 mm."
+      }
+    },
+    {
+      "id": 27,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": " That's a separate proposal you can accept or ignore;"
+      }
+    },
+    {
+      "id": 28,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": " I haven't applied it.\n\n"
+      }
+    },
+    {
+      "id": 29,
+      "event": {
+        "type": "text",
+        "message_id": "msg-2",
+        "delta": "Strength, drop and heat aren't tested, so they need checking by hand."
+      }
+    },
+    {
+      "id": 30,
+      "event": {
+        "type": "risks_ready",
+        "message_id": "msg-2",
+        "risk_flags": {
+          "contract": "risk-flags/1",
+          "build": "build-1",
+          "flags": [
+            {
+              "id": "near_limit:wall_thickness",
+              "kind": "near_limit",
+              "message": "Near a limit: minimum wall thickness is 2.5 mm, right at the 2.5 mm minimum, pocket on the box at (-20.3, -17.0, 12.8).",
+              "standard": "min_wall",
+              "value": 2.5,
+              "limit": 2.5,
+              "unit": "mm",
+              "location": {
+                "part": "box",
+                "feature": "pocket",
+                "component": null,
+                "faces": [
+                  "box.pocket.2"
+                ],
+                "point": [
+                  -20.2868,
+                  -17.0491,
+                  12.8125
+                ]
+              },
+              "status": "proposed",
+              "fix": {
+                "title": "Wall and floor to 2.7 mm for margin",
+                "edits": {
+                  "wall": 2.7,
+                  "floor": 2.7
+                },
+                "changes": [
+                  {
+                    "kind": "modified",
+                    "path": "wall",
+                    "feature": null,
+                    "component": null,
+                    "fields": [
+                      {
+                        "field": "value",
+                        "before": 2.5,
+                        "after": 2.7
+                      }
+                    ],
+                    "move": null,
+                    "rotate": null
+                  },
+                  {
+                    "kind": "modified",
+                    "path": "floor",
+                    "feature": null,
+                    "component": null,
+                    "fields": [
+                      {
+                        "field": "value",
+                        "before": 2.5,
+                        "after": 2.7
+                      }
+                    ],
+                    "move": null,
+                    "rotate": null
+                  }
+                ],
+                "resolves": false,
+                "checks": []
+              }
+            },
+            {
+              "id": "thin:box",
+              "kind": "thin",
+              "message": "Thin wall: 2.5 mm, under the 2.5 mm minimum (Minimum wall thickness), box at (-29.5, 14.6, 11.2).",
+              "standard": "min_wall",
+              "value": 2.5,
+              "limit": 2.5,
+              "unit": "mm",
+              "location": {
+                "part": "box",
+                "feature": "box",
+                "component": null,
+                "faces": [],
+                "point": [
+                  -29.509,
+                  14.632,
+                  11.25
+                ]
+              },
+              "status": "proposed",
+              "fix": {
+                "title": "Wall and floor to 2.7 mm for margin",
+                "edits": {
+                  "wall": 2.7,
+                  "floor": 2.7
+                },
+                "changes": [
+                  {
+                    "kind": "modified",
+                    "path": "wall",
+                    "feature": null,
+                    "component": null,
+                    "fields": [
+                      {
+                        "field": "value",
+                        "before": 2.5,
+                        "after": 2.7
+                      }
+                    ],
+                    "move": null,
+                    "rotate": null
+                  },
+                  {
+                    "kind": "modified",
+                    "path": "floor",
+                    "feature": null,
+                    "component": null,
+                    "fields": [
+                      {
+                        "field": "value",
+                        "before": 2.5,
+                        "after": 2.7
+                      }
+                    ],
+                    "move": null,
+                    "rotate": null
+                  }
+                ],
+                "resolves": true,
+                "checks": []
+              }
+            },
+            {
+              "id": "thin:pocket",
+              "kind": "thin",
+              "message": "Thin wall: 2.5 mm, under the 2.5 mm minimum (Minimum wall thickness), pocket on the box at (-20.3, -17.0, 12.8).",
+              "standard": "min_wall",
+              "value": 2.5,
+              "limit": 2.5,
+              "unit": "mm",
+              "location": {
+                "part": "box",
+                "feature": "pocket",
+                "component": null,
+                "faces": [],
+                "point": [
+                  -20.287,
+                  -17.049,
+                  12.813
+                ]
+              },
+              "status": "proposed",
+              "fix": {
+                "title": "Wall and floor to 2.7 mm for margin",
+                "edits": {
+                  "wall": 2.7,
+                  "floor": 2.7
+                },
+                "changes": [
+                  {
+                    "kind": "modified",
+                    "path": "wall",
+                    "feature": null,
+                    "component": null,
+                    "fields": [
+                      {
+                        "field": "value",
+                        "before": 2.5,
+                        "after": 2.7
+                      }
+                    ],
+                    "move": null,
+                    "rotate": null
+                  },
+                  {
+                    "kind": "modified",
+                    "path": "floor",
+                    "feature": null,
+                    "component": null,
+                    "fields": [
+                      {
+                        "field": "value",
+                        "before": 2.5,
+                        "after": 2.7
+                      }
+                    ],
+                    "move": null,
+                    "rotate": null
+                  }
+                ],
+                "resolves": true,
+                "checks": []
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 31,
+      "event": {
+        "type": "message_end",
+        "message_id": "msg-2"
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "length",
+      "value": 60.0,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    },
+    {
+      "name": "width",
+      "value": 40.0,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    },
+    {
+      "name": "height",
+      "value": 30.0,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    },
+    {
+      "name": "wall",
+      "value": 2.5,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    },
+    {
+      "name": "floor",
+      "value": 2.5,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    },
+    {
+      "name": "draft_deg",
+      "value": 1.5,
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "",
+      "feature": null
+    }
+  ]
+}

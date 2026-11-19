@@ -1,0 +1,291 @@
+[
+  {
+    "name": "wall",
+    "value": 2.5,
+    "unit": "mm",
+    "locked": false,
+    "min": null,
+    "max": null,
+    "description": "Wall thickness, square to the face",
+    "feature": null,
+    "dimension": {
+      "kind": "distance",
+      "start": {
+        "point": [
+          15.269,
+          116.564,
+          7.6
+        ],
+        "part": "lid",
+        "face": "lid.outer_cap"
+      },
+      "end": {
+        "point": [
+          15.269,
+          116.564,
+          5.1
+        ],
+        "part": "lid",
+        "face": "lid.inner_cap"
+      }
+    },
+    "drag": null
+  },
+  {
+    "name": "draft",
+    "value": 1.5,
+    "unit": "deg",
+    "locked": false,
+    "min": null,
+    "max": null,
+    "description": "Draft on faces along the mold pull",
+    "feature": null,
+    "dimension": null,
+    "drag": null
+  },
+  {
+    "name": "clearance",
+    "value": 0.5,
+    "unit": "mm",
+    "locked": false,
+    "min": null,
+    "max": null,
+    "description": "Gap kept around every component",
+    "feature": null,
+    "dimension": null,
+    "drag": null
+  },
+  {
+    "name": "corner_radius",
+    "value": 5.0,
+    "unit": "mm",
+    "locked": false,
+    "min": null,
+    "max": null,
+    "description": "Outside corner radius",
+    "feature": null,
+    "dimension": {
+      "kind": "radius",
+      "start": {
+        "point": [
+          21.4,
+          84.214,
+          1.6
+        ],
+        "part": null,
+        "face": null
+      },
+      "end": {
+        "point": [
+          24.936,
+          80.678,
+          1.6
+        ],
+        "part": "lid",
+        "face": "lid.outer_wall_2"
+      }
+    },
+    "drag": null
+  },
+  {
+    "name": "length",
+    "value": 51.6,
+    "unit": "mm",
+    "locked": false,
+    "min": null,
+    "max": null,
+    "description": "Outside length along the board",
+    "feature": null,
+    "dimension": {
+      "kind": "distance",
+      "start": {
+        "point": [
+          11.0,
+          79.214,
+          1.6
+        ],
+        "part": "lid",
+        "face": "lid.outer_wall_1"
+      },
+      "end": {
+        "point": [
+          11.0,
+          130.814,
+          1.6
+        ],
+        "part": "lid",
+        "face": "lid.outer_wall_5"
+      }
+    },
+    "drag": {
+      "faces": [
+        "base.outer_wall_1",
+        "lid.outer_wall_1"
+      ],
+      "axis": [
+        0.0,
+        -1.0,
+        0.0
+      ]
+    }
+  },
+  {
+    "name": "width",
+    "value": 30.8,
+    "unit": "mm",
+    "locked": false,
+    "min": null,
+    "max": null,
+    "description": "Outside width",
+    "feature": null,
+    "dimension": {
+      "kind": "distance",
+      "start": {
+        "point": [
+          -4.4,
+          105.014,
+          1.6
+        ],
+        "part": "lid",
+        "face": "lid.outer_wall_7"
+      },
+      "end": {
+        "point": [
+          26.4,
+          105.014,
+          1.6
+        ],
+        "part": "lid",
+        "face": "lid.outer_wall_3"
+      }
+    },
+    "drag": {
+      "faces": [
+        "base.outer_wall_3",
+        "lid.outer_wall_3"
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  {
+    "name": "height",
+    "value": 15.1,
+    "unit": "mm",
+    "locked": false,
+    "min": null,
+    "max": null,
+    "description": "Overall height",
+    "feature": null,
+    "dimension": {
+      "kind": "distance",
+      "start": {
+        "point": [
+          16.081,
+          110.586,
+          -7.5
+        ],
+        "part": "base",
+        "face": "base.outer_cap"
+      },
+      "end": {
+        "point": [
+          16.081,
+          110.586,
+          7.6
+        ],
+        "part": "lid",
+        "face": "lid.outer_cap"
+      }
+    },
+    "drag": {
+      "faces": [
+        "lid.outer_cap"
+      ],
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  },
+  {
+    "name": "material",
+    "value": "molded ABS",
+    "unit": null,
+    "locked": false,
+    "min": null,
+    "max": null,
+    "description": "Material",
+    "feature": null,
+    "dimension": null,
+    "drag": null
+  },
+  {
+    "name": "boss_1_radius",
+    "value": 4.501,
+    "unit": "mm",
+    "locked": false,
+    "min": null,
+    "max": null,
+    "description": "Boss over H1",
+    "feature": "boss_1",
+    "dimension": {
+      "kind": "radius",
+      "start": {
+        "point": [
+          4.0,
+          85.414,
+          1.6
+        ],
+        "part": null,
+        "face": null
+      },
+      "end": {
+        "point": [
+          8.501,
+          85.414,
+          1.6
+        ],
+        "part": "lid",
+        "face": "boss_1.side"
+      }
+    },
+    "drag": null
+  },
+  {
+    "name": "boss_2_radius",
+    "value": 4.501,
+    "unit": "mm",
+    "locked": false,
+    "min": null,
+    "max": null,
+    "description": "Boss over H2",
+    "feature": "boss_2",
+    "dimension": {
+      "kind": "radius",
+      "start": {
+        "point": [
+          18.0,
+          85.414,
+          1.6
+        ],
+        "part": null,
+        "face": null
+      },
+      "end": {
+        "point": [
+          22.501,
+          85.414,
+          1.6
+        ],
+        "part": "lid",
+        "face": "boss_2.side"
+      }
+    },
+    "drag": null
+  }
+]

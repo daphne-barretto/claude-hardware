@@ -1,0 +1,141 @@
+[
+  {
+    "id": "hardware_team",
+    "name": "Default constraints",
+    "built_in": true,
+    "duplicated_from": null,
+    "standards": [
+      {
+        "id": "fit_tolerance",
+        "title": "Fit tolerance",
+        "description": "Mating features (lid to base, openings to components) are sized to ±0.2 mm.",
+        "check": "fit_tolerance",
+        "kind": "tolerance",
+        "value": 0.2,
+        "unit": "mm",
+        "applies_to": "board",
+        "enabled": true,
+        "aliases": [
+          "fit",
+          "tolerance"
+        ],
+        "dimensions": null,
+        "material": null,
+        "label": "Mating features fit to ±0.2 mm"
+      },
+      {
+        "id": "heat_set_inserts",
+        "title": "M3 heat-set inserts",
+        "description": "Fasteners go into M3 heat-set brass inserts pressed into bosses.",
+        "check": "insert_pockets",
+        "kind": "spec",
+        "value": "M3 heat-set insert",
+        "unit": null,
+        "applies_to": "board",
+        "enabled": true,
+        "aliases": [
+          "insert",
+          "heat-set",
+          "heat set"
+        ],
+        "dimensions": {
+          "hole_diameter": 4.0,
+          "insert_length": 4.0,
+          "screw_clearance": 3.4
+        },
+        "material": "brass",
+        "label": "Fasteners go into M3 heat-set insert"
+      },
+      {
+        "id": "material",
+        "title": "Molded ABS",
+        "description": "The enclosure is injection-molded ABS, so molding rules (wall, draft) apply.",
+        "check": "material",
+        "kind": "spec",
+        "value": "molded ABS",
+        "unit": null,
+        "applies_to": "any",
+        "enabled": true,
+        "aliases": [
+          "ABS",
+          "molded",
+          "moulded",
+          "injection",
+          "process"
+        ],
+        "dimensions": null,
+        "material": null,
+        "label": "Made of molded ABS"
+      },
+      {
+        "id": "min_wall",
+        "title": "Minimum wall thickness",
+        "description": "No wall of the enclosure is thinner than 2.0 mm.",
+        "check": "wall_thickness",
+        "kind": "min",
+        "value": 2.0,
+        "unit": "mm",
+        "applies_to": "any",
+        "enabled": true,
+        "aliases": [
+          "wall"
+        ],
+        "dimensions": null,
+        "material": null,
+        "label": "Walls at least 2.0 mm"
+      },
+      {
+        "id": "min_draft",
+        "title": "Minimum draft angle",
+        "description": "Faces parallel to the mold pull direction have at least 1° of draft.",
+        "check": "draft_angle",
+        "kind": "min",
+        "value": 1.0,
+        "unit": "deg",
+        "applies_to": "any",
+        "enabled": true,
+        "aliases": [
+          "draft"
+        ],
+        "dimensions": null,
+        "material": null,
+        "label": "Draft at least 1.0° along the mold pull"
+      },
+      {
+        "id": "object_fit",
+        "title": "Fit to the object",
+        "description": "A part made to fit an object (a stand, a cover, a mount) takes up none of the object's volume and comes within 1.0 mm of it, so the object sits in it without play.",
+        "check": "object_fit",
+        "kind": "max",
+        "value": 1.0,
+        "unit": "mm",
+        "applies_to": "object",
+        "enabled": true,
+        "aliases": [
+          "snug",
+          "cradle"
+        ],
+        "dimensions": null,
+        "material": null,
+        "label": "Takes up none of the object and comes within 1.0 mm of it"
+      },
+      {
+        "id": "min_component_clearance",
+        "title": "Minimum clearance to components",
+        "description": "The enclosure stays at least 0.5 mm away from every board component.",
+        "check": "component_clearance",
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm",
+        "applies_to": "board",
+        "enabled": true,
+        "aliases": [
+          "clearance"
+        ],
+        "dimensions": null,
+        "material": null,
+        "label": "At least 0.5 mm from every board component"
+      }
+    ]
+  }
+]

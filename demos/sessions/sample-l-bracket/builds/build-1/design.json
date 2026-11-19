@@ -1,0 +1,62 @@
+{
+  "params": {
+    "leg_a_length": 40,
+    "leg_b_length": 40,
+    "thickness": 4,
+    "width": 20,
+    "draft": 1.5,
+    "hole_diameter": 4.5,
+    "hole_a_offset": 24,
+    "hole_b_offset": 24
+  },
+  "features": [
+    {
+      "tag": "bracket",
+      "part": "bracket",
+      "centroid": [
+        11.4169,
+        11.4169,
+        9.4753
+      ],
+      "size": [
+        40.0,
+        40.0,
+        20.0
+      ],
+      "volume": 5249.7571,
+      "rotation": 135.0
+    },
+    {
+      "tag": "hole_leg_a",
+      "part": "bracket",
+      "centroid": [
+        24.0,
+        2.0,
+        10.0
+      ],
+      "size": [
+        4.5,
+        16.0,
+        4.5
+      ],
+      "volume": 254.469,
+      "rotation": 90.0
+    },
+    {
+      "tag": "hole_leg_b",
+      "part": "bracket",
+      "centroid": [
+        2.0,
+        24.0,
+        10.0
+      ],
+      "size": [
+        16.0,
+        4.5,
+        4.5
+      ],
+      "volume": 254.469,
+      "rotation": 0.0
+    }
+  ]
+}

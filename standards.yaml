@@ -1,0 +1,112 @@
+# Team standards for the enclosure. Single source of truth: code and tests read
+# this file and never repeat its values.
+#
+# Every standard names the check that enforces it (`check:`). The agent only
+# respects what is checked, so a standard without a check is a bug and fails
+# the loader. Schema: backend/app/standards.py (`StandardsFile`).
+#
+# The file is one set of standards, which the New screen offers in its "Choose team
+# standards" menu (GET /api/standards). The set's fields:
+#   id           stable identifier of the set, snake_case; the session API names the set by it
+#   name         the name the menu shows
+#
+# Fields of each standard:
+#   id           stable identifier, snake_case
+#   title        short human name
+#   description  what the standard means
+#   kind         min | max | tolerance (±value) | spec (a named requirement)
+#   value        number for min/max/tolerance, text for spec
+#   unit         mm | deg, or omitted for spec
+#   check        name of the check that enforces it (implemented by the check runner)
+#   applies_to   which designs the standard applies to: `any` (every design), `board`
+#                (only designs built around a board) or `object` (only designs made to fit
+#                an object, such as a photographed one: the design's `object` parameters).
+#                The check report marks a standard that does not apply to the design
+#                "not applicable", with the reason.
+#   derivation   optional; how the value was obtained, when it is not a team choice
+#   dimensions   optional; named sizes in mm that make a spec measurable
+#   material     optional; material of the bought-in part a spec names (the assembly part)
+#   aliases      optional; words that name the standard in a description ("walls",
+#                "taller"). A word matches at the start of a word, in any case. The chat
+#                turns a mention into a constraint chip traced to the standard, or to the
+#                user's words when they give a value (backend/app/spec.py).
+
+version: 1
+id: hardware_team
+name: Default constraints
+
+standards:
+  - id: fit_tolerance
+    title: Fit tolerance
+    description: Mating features (lid to base, openings to components) are sized to ±0.2 mm.
+    kind: tolerance
+    value: 0.2
+    unit: mm
+    check: fit_tolerance
+    aliases: [fit, tolerance]
+    applies_to: board
+
+  - id: heat_set_inserts
+    title: M3 heat-set inserts
+    description: Fasteners go into M3 heat-set brass inserts pressed into bosses.
+    kind: spec
+    value: M3 heat-set insert
+    check: insert_pockets
+    aliases: [insert, heat-set, heat set]
+    applies_to: board
+    dimensions:
+      hole_diameter: 4.0      # pocket diameter the insert is pressed into
+      insert_length: 4.0      # the pocket is at least this deep
+      screw_clearance: 3.4    # clearance hole for the M3 screw in the mating part
+    material: brass
+
+  - id: material
+    title: Molded ABS
+    description: The enclosure is injection-molded ABS, so molding rules (wall, draft) apply.
+    kind: spec
+    value: molded ABS
+    check: material
+    aliases: [ABS, molded, moulded, injection, process]
+    applies_to: any
+
+  - id: min_wall
+    title: Minimum wall thickness
+    description: No wall of the enclosure is thinner than 2.0 mm.
+    kind: min
+    value: 2.0
+    unit: mm
+    check: wall_thickness
+    aliases: [wall]
+    applies_to: any
+
+  - id: min_draft
+    title: Minimum draft angle
+    description: Faces parallel to the mold pull direction have at least 1° of draft.
+    kind: min
+    value: 1.0
+    unit: deg
+    check: draft_angle
+    aliases: [draft]
+    applies_to: any
+
+  - id: object_fit
+    title: Fit to the object
+    description: >-
+      A part made to fit an object (a stand, a cover, a mount) takes up none of the
+      object's volume and comes within 1.0 mm of it, so the object sits in it without play.
+    kind: max
+    value: 1.0
+    unit: mm
+    check: object_fit
+    aliases: [snug, cradle]
+    applies_to: object
+
+  - id: min_component_clearance
+    title: Minimum clearance to components
+    description: The enclosure stays at least 0.5 mm away from every board component.
+    kind: min
+    value: 0.5
+    unit: mm
+    check: component_clearance
+    aliases: [clearance]
+    applies_to: board

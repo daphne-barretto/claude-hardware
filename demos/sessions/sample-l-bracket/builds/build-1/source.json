@@ -1,0 +1,33 @@
+{
+  "build_id": "build-1",
+  "backend": "build123d",
+  "language": "python",
+  "filename": "design.py",
+  "code": "from build123d import *\n\ndef build(p):\n    La = p[\"leg_a_length\"]\n    Lb = p[\"leg_b_length\"]\n    t = p[\"thickness\"]\n    w = p[\"width\"]\n    d = p[\"hole_diameter\"]\n\n    pts = [(0, 0), (La, 0), (La, t), (t, t), (t, Lb), (0, Lb)]\n    prof = Polygon(*pts, align=None)\n    body = extrude(prof, amount=w, taper=p[\"draft\"])\n    feats = [{\"tag\": \"bracket\", \"part\": \"bracket\", \"tools\": [body]}]\n\n    hole_a = Pos(p[\"hole_a_offset\"], t / 2, w / 2) * Rot(90, 0, 0) * Cylinder(d / 2, t * 4)\n    body = body - hole_a\n    feats.append({\"tag\": \"hole_leg_a\", \"part\": \"bracket\", \"tools\": [hole_a]})\n\n    hole_b = Pos(t / 2, p[\"hole_b_offset\"], w / 2) * Rot(0, 90, 0) * Cylinder(d / 2, t * 4)\n    body = body - hole_b\n    feats.append({\"tag\": \"hole_leg_b\", \"part\": \"bracket\", \"tools\": [hole_b]})\n\n    return {\"parts\": {\"bracket\": body}, \"features\": feats,\n            \"materials\": {\"bracket\": \"molded ABS\"}}\n",
+  "features": [
+    {
+      "tag": "bracket",
+      "part": "bracket",
+      "lines": [
+        13,
+        13
+      ]
+    },
+    {
+      "tag": "hole_leg_a",
+      "part": "bracket",
+      "lines": [
+        17,
+        17
+      ]
+    },
+    {
+      "tag": "hole_leg_b",
+      "part": "bracket",
+      "lines": [
+        21,
+        21
+      ]
+    }
+  ]
+}

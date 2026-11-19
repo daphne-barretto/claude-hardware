@@ -1,0 +1,19 @@
+# Fixture inventory for e2e/ui-inventory-fixtures.spec.ts: controls that work but log a
+# console error or leave a promise rejection unhandled.
+states:
+  - { id: errors, url: /__ui-inventory-fixtures/errors.html }
+entries:
+  - id: save
+    screen: fixture
+    role: button
+    name: Save
+    states: [errors]
+    expect:
+      - visible: text "Saving"
+  - id: load
+    screen: fixture
+    role: button
+    name: Load
+    states: [errors]
+    expect:
+      - visible: text "Loading"

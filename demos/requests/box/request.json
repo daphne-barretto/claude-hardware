@@ -1,0 +1,7 @@
+{
+  "title": "Open box",
+  "prompt": "Make an open box 60 x 40 x 30 mm with 2.5 mm walls.",
+  "reply": "Here is an open box 60 x 40 x 30 mm with 2.5 mm walls and floor. The walls are drafted so it can be molded, and the corners are rounded.",
+  "params": {"length": 60, "width": 40, "height": 30, "wall": 2.5, "corner_radius": 4},
+  "standards": {"material": {"standard": "material"}, "draft": {"standard": "min_draft", "plus": 0.5}}
+}

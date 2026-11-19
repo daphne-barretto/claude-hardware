@@ -1,0 +1,235 @@
+{
+  "contract": "check-results/1",
+  "build_id": "build-1",
+  "board": null,
+  "results": [
+    {
+      "id": "fit_tolerance",
+      "check": "fit_tolerance",
+      "title": "Fit tolerance",
+      "standard": "fit_tolerance",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "not_applicable",
+      "measured": null,
+      "required": null,
+      "summary": "Fit tolerance: not applicable. Fit tolerance applies only to designs built around a board; this design has none.",
+      "reason": "Fit tolerance applies only to designs built around a board; this design has none.",
+      "covers": "Lid to base at the parting plane (outline and interference), and the walls of every opening against the size the board requires.",
+      "location": null
+    },
+    {
+      "id": "insert_pockets",
+      "check": "insert_pockets",
+      "title": "M3 heat-set inserts",
+      "standard": "heat_set_inserts",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "not_applicable",
+      "measured": null,
+      "required": null,
+      "summary": "M3 heat-set inserts: not applicable. M3 heat-set inserts applies only to designs built around a board; this design has none.",
+      "reason": "M3 heat-set inserts applies only to designs built around a board; this design has none.",
+      "covers": "Every boss has a pocket that takes the insert, clear and deep enough, with material all round it, and the insert part in it is seated: no interference with the boss, its sides within the fit tolerance of the pocket wall.",
+      "location": null
+    },
+    {
+      "id": "material",
+      "check": "material",
+      "title": "Molded ABS",
+      "standard": "material",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": "molded ABS"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "molded ABS"
+      },
+      "summary": "Molded ABS: Passes at bracket, measured molded ABS against molded ABS.",
+      "covers": "The material each part is set up for, which the molding rules assume.",
+      "location": {
+        "point": [
+          20.0,
+          3.7493,
+          9.5745
+        ],
+        "part": "bracket",
+        "faces": [
+          "bracket.bracket.6"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "wall_thickness",
+      "check": "wall_thickness",
+      "title": "Minimum wall thickness",
+      "standard": "min_wall",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 3.0867,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 2.0,
+        "unit": "mm"
+      },
+      "summary": "Minimum wall thickness: Passes at bracket, measured 3.0867 mm against min 2 mm.",
+      "covers": "Every face of every part, by rays cast into the material from sample points (the same samples as the wall-thickness map).",
+      "location": {
+        "point": [
+          35.5,
+          3.5417,
+          17.5
+        ],
+        "part": "bracket",
+        "faces": [
+          "bracket.bracket.6"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "draft_angle",
+      "check": "draft_angle",
+      "title": "Minimum draft angle",
+      "standard": "min_draft",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "pass",
+      "measured": {
+        "value": 1.5,
+        "unit": "deg"
+      },
+      "required": {
+        "kind": "min",
+        "value": 1.0,
+        "unit": "deg"
+      },
+      "summary": "Minimum draft angle: Passes at bracket, measured 1.5 deg against min 1 deg.",
+      "covers": "Every face that is not horizontal, against the mold pull along Z.",
+      "location": {
+        "point": [
+          3.9456,
+          3.9636,
+          2.5
+        ],
+        "part": "bracket",
+        "faces": [
+          "bracket.bracket.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "object_fit",
+      "check": "object_fit",
+      "title": "Fit to the object",
+      "standard": "object_fit",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "not_applicable",
+      "measured": null,
+      "required": null,
+      "summary": "Fit to the object: not applicable. Fit to the object applies only to designs made to fit an object; this design has no object parameters.",
+      "reason": "Fit to the object applies only to designs made to fit an object; this design has no object parameters.",
+      "covers": "Every part against the object it fits (the design's object parameters, as a solid): no part takes up any of its volume, and the closest is within the gap.",
+      "location": null
+    },
+    {
+      "id": "component_clearance",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "not_applicable",
+      "measured": null,
+      "required": null,
+      "summary": "Minimum clearance to components: not applicable. Minimum clearance to components applies only to designs built around a board; this design has none.",
+      "reason": "Minimum clearance to components applies only to designs built around a board; this design has none.",
+      "covers": "Exact distance from each component's body to every part of the enclosure.",
+      "location": null
+    },
+    {
+      "id": "overall_height",
+      "check": "overall_height",
+      "title": "Overall height limit",
+      "standard": "max_height",
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "not_applicable",
+      "measured": null,
+      "required": null,
+      "summary": "Overall height limit: not applicable. Overall height limit applies only to designs built around a board; this design has none.",
+      "reason": "Overall height limit applies only to designs built around a board; this design has none.",
+      "covers": "The Z extent of the closed enclosure, all parts together.",
+      "location": null
+    },
+    {
+      "id": "strength",
+      "check": "strength",
+      "title": "Strength",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "untested",
+      "measured": null,
+      "required": null,
+      "summary": "Strength is not tested; review it by hand.",
+      "covers": "Loads on the parts, snap fits and screw bosses are not simulated.",
+      "location": null
+    },
+    {
+      "id": "drop",
+      "check": "drop",
+      "title": "Drop",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "untested",
+      "measured": null,
+      "required": null,
+      "summary": "Drop is not tested; review it by hand.",
+      "covers": "Impact from a drop is not simulated.",
+      "location": null
+    },
+    {
+      "id": "heat",
+      "check": "heat",
+      "title": "Heat",
+      "standard": null,
+      "component": null,
+      "opening": null,
+      "parts": null,
+      "status": "untested",
+      "measured": null,
+      "required": null,
+      "summary": "Heat is not tested; review it by hand.",
+      "covers": "Temperature rise and heat from the electronics are not simulated.",
+      "location": null
+    }
+  ],
+  "summary": {
+    "pass": 3,
+    "fail": 0,
+    "untested": 3,
+    "not_applicable": 5
+  }
+}

@@ -1,0 +1,33 @@
+# Fixture inventory for e2e/ui-inventory-fixtures.spec.ts: buttons that do nothing, and
+# disabled buttons with and without a reason.
+states:
+  - { id: dead, url: /__ui-inventory-fixtures/dead-button.html }
+entries:
+  - id: more-models
+    screen: fixture
+    role: button
+    name: More models
+    states: [dead]
+    expect:
+      - visible: menu
+  - id: refresh
+    screen: fixture
+    role: button
+    name: Refresh
+    states: [dead]
+    expect:
+      - visible: button "Refresh"
+  - id: export
+    screen: fixture
+    role: button
+    name: Export
+    states: [dead]
+    expect:
+      - visible: button "Export"
+  - id: undo
+    screen: fixture
+    role: button
+    name: Undo
+    states: [dead]
+    expect:
+      - visible: button "Undo"

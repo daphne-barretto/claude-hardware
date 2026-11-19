@@ -1,0 +1,230 @@
+{
+  "contract": "analysis-map/1",
+  "build_id": "build-1",
+  "type": "wall_thickness",
+  "standard": "min_wall",
+  "standard_title": "Minimum wall thickness",
+  "unit": "mm",
+  "legend": {
+    "min": 0.0,
+    "max": 7.5,
+    "limit": 2.5,
+    "unit": "mm"
+  },
+  "parts": [
+    {
+      "part": "box",
+      "values": [
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5
+      ]
+    }
+  ],
+  "flagged": [
+    {
+      "id": "thin:box.box.0",
+      "kind": "thin",
+      "value": 2.5,
+      "message": "box is 2.5 mm thick, thinner than the 2.5 mm minimum (Minimum wall thickness)",
+      "location": {
+        "point": [
+          -29.509,
+          14.632,
+          11.25
+        ],
+        "part": "box",
+        "faces": [
+          "box.box.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "thin:box.box.1",
+      "kind": "thin",
+      "value": 2.5,
+      "message": "box is 2.5 mm thick, thinner than the 2.5 mm minimum (Minimum wall thickness)",
+      "location": {
+        "point": [
+          -21.984,
+          -19.313,
+          3.75
+        ],
+        "part": "box",
+        "faces": [
+          "box.box.1"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "thin:box.box.2",
+      "kind": "thin",
+      "value": 2.5,
+      "message": "box is 2.5 mm thick, thinner than the 2.5 mm minimum (Minimum wall thickness)",
+      "location": {
+        "point": [
+          21.984,
+          19.313,
+          3.75
+        ],
+        "part": "box",
+        "faces": [
+          "box.box.2"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "thin:box.box.3",
+      "kind": "thin",
+      "value": 2.5,
+      "message": "box is 2.5 mm thick, thinner than the 2.5 mm minimum (Minimum wall thickness)",
+      "location": {
+        "point": [
+          29.509,
+          -14.632,
+          11.25
+        ],
+        "part": "box",
+        "faces": [
+          "box.box.3"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "thin:box.pocket.2",
+      "kind": "thin",
+      "value": 2.5,
+      "message": "pocket is 2.5 mm thick, thinner than the 2.5 mm minimum (Minimum wall thickness)",
+      "location": {
+        "point": [
+          -20.287,
+          -17.049,
+          12.813
+        ],
+        "part": "box",
+        "faces": [
+          "box.pocket.2"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "thin:box.pocket.0",
+      "kind": "thin",
+      "value": 2.5,
+      "message": "pocket is 2.5 mm thick, thinner than the 2.5 mm minimum (Minimum wall thickness)",
+      "location": {
+        "point": [
+          26.869,
+          -12.652,
+          5.937
+        ],
+        "part": "box",
+        "faces": [
+          "box.pocket.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "thin:box.pocket.1",
+      "kind": "thin",
+      "value": 2.5,
+      "message": "pocket is 2.5 mm thick, thinner than the 2.5 mm minimum (Minimum wall thickness)",
+      "location": {
+        "point": [
+          20.287,
+          17.049,
+          12.813
+        ],
+        "part": "box",
+        "faces": [
+          "box.pocket.1"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "thin:box.pocket.3",
+      "kind": "thin",
+      "value": 2.5,
+      "message": "pocket is 2.5 mm thick, thinner than the 2.5 mm minimum (Minimum wall thickness)",
+      "location": {
+        "point": [
+          -26.869,
+          12.652,
+          5.937
+        ],
+        "part": "box",
+        "faces": [
+          "box.pocket.3"
+        ],
+        "edges": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+# Constraints the board revision example brings (examples.yaml, `standards`), in the format
+# of standards.yaml. They are added to whatever constraint set a session on this example uses,
+# never to the default set: they come from this example's existing design, not from a team
+# rule, so a session with any other board never gets them.
+
+standards:
+  - id: max_height
+    title: Overall height limit
+    description: The enclosure is no taller than the existing case.
+    kind: max
+    value: 15.1
+    unit: mm
+    check: overall_height
+    aliases: [height, tall, high]
+    applies_to: board
+    derivation:
+      source: demos/b-parasite/b-parasite-case.step
+      method: >-
+        Z extent of the bounding box of the existing case (imported from
+        b-parasite case/Case.step), rounded to 0.1 mm. The case is modelled
+        with the board lying flat and Z as the thickness axis, so this is the
+        overall height of the case today; the new design may not be taller.

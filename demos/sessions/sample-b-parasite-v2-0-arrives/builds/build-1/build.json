@@ -1,0 +1,30 @@
+{
+  "id": "build-1",
+  "created_at": "2026-11-18T10:44:17.657714Z",
+  "board": {
+    "name": "b-parasite",
+    "revision": "1.2"
+  },
+  "status": "ready",
+  "checks": {
+    "pass": 74,
+    "fail": 0,
+    "untested": 3,
+    "not_applicable": 1
+  },
+  "maps": [
+    "draft",
+    "wall_thickness"
+  ],
+  "mesh_url": "/api/sessions/sample-b-parasite-v2-0-arrives/builds/build-1/mesh",
+  "checks_url": "/api/sessions/sample-b-parasite-v2-0-arrives/builds/build-1/checks",
+  "source_url": "/api/sessions/sample-b-parasite-v2-0-arrives/builds/build-1/source",
+  "board_url": "/api/sessions/sample-b-parasite-v2-0-arrives/builds/build-1/board",
+  "step_url": null,
+  "restored_from": null,
+  "failure": null,
+  "origin": {
+    "kind": "existing",
+    "file_name": "b-parasite-case.step"
+  }
+}

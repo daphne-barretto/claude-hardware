@@ -1,0 +1,350 @@
+{
+  "contract": "check-results/1",
+  "build_id": "build-0",
+  "board": {
+    "name": "b-parasite",
+    "revision": "1.2"
+  },
+  "results": [
+    {
+      "id": "fit_tolerance",
+      "check": "fit_tolerance",
+      "title": "Fit tolerance",
+      "standard": "fit_tolerance",
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "tolerance",
+        "value": 0.2,
+        "unit": "mm"
+      },
+      "summary": "Lid and base rims match within ±0.2 mm.",
+      "covers": "Lid-to-base fit at the parting plane. Openings are covered by opening_alignment.",
+      "location": {
+        "point": [
+          -2.733,
+          111.947,
+          1.6
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.rim"
+        ]
+      }
+    },
+    {
+      "id": "insert_pockets",
+      "check": "insert_pockets",
+      "title": "M3 heat-set inserts",
+      "standard": "heat_set_inserts",
+      "status": "pass",
+      "measured": {
+        "value": 4.0,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "M3 heat-set insert"
+      },
+      "summary": "Every boss has a pocket for an M3 heat-set insert, 4 mm deep.",
+      "covers": "Every boss has a pocket that takes the insert: a 4 mm hole, its wall within ±0.2 mm, at least 4 mm deep.",
+      "location": {
+        "point": [
+          2.749,
+          86.909,
+          2.933
+        ],
+        "part": "lid",
+        "faces": [
+          "insert_1.wall"
+        ]
+      }
+    },
+    {
+      "id": "material",
+      "check": "material",
+      "title": "Molded ABS",
+      "standard": "material",
+      "status": "pass",
+      "measured": {
+        "value": "molded ABS"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "molded ABS"
+      },
+      "summary": "The design is set up for molded ABS.",
+      "covers": "The material the design and its molding rules assume.",
+      "location": {
+        "point": [
+          16.081,
+          110.586,
+          7.6
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.outer_cap"
+        ]
+      }
+    },
+    {
+      "id": "wall_thickness",
+      "check": "wall_thickness",
+      "title": "Minimum wall thickness",
+      "standard": "min_wall",
+      "status": "pass",
+      "measured": {
+        "value": 2.0,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 2.0,
+        "unit": "mm"
+      },
+      "summary": "The thinnest wall is 2 mm on insert_1.",
+      "covers": "Every face of every part, from the wall_thickness analysis map.",
+      "location": {
+        "point": [
+          4.479,
+          84.257,
+          5.6
+        ],
+        "part": "lid",
+        "faces": [
+          "insert_1.end"
+        ]
+      }
+    },
+    {
+      "id": "draft_angle",
+      "check": "draft_angle",
+      "title": "Minimum draft angle",
+      "standard": "min_draft",
+      "status": "pass",
+      "measured": {
+        "value": 1.501,
+        "unit": "deg"
+      },
+      "required": {
+        "kind": "min",
+        "value": 1.0,
+        "unit": "deg"
+      },
+      "summary": "The lowest draft is 1.501 deg on base.",
+      "covers": "Every face of every part, from the draft analysis map.",
+      "location": {
+        "point": [
+          14.467,
+          79.373,
+          -4.467
+        ],
+        "part": "base",
+        "faces": [
+          "base.outer_wall_1"
+        ]
+      }
+    },
+    {
+      "id": "component_clearance",
+      "check": "component_clearance",
+      "title": "Minimum clearance to components",
+      "standard": "min_component_clearance",
+      "status": "pass",
+      "measured": {
+        "value": 0.767,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "min",
+        "value": 0.5,
+        "unit": "mm"
+      },
+      "summary": "The closest part is BT1, 0.77 mm from the base.",
+      "covers": "Exact distance from every component's body to every part of the enclosure.",
+      "location": {
+        "point": [
+          0.134,
+          81.916,
+          -4.22
+        ],
+        "part": "base",
+        "faces": [
+          "base.inner_wall_8"
+        ]
+      }
+    },
+    {
+      "id": "overall_height",
+      "check": "overall_height",
+      "title": "Overall height limit",
+      "standard": "max_height",
+      "status": "pass",
+      "measured": {
+        "value": 15.1,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "max",
+        "value": 15.1,
+        "unit": "mm"
+      },
+      "summary": "The enclosure is 15.1 mm tall.",
+      "covers": "Overall Z extent of the closed enclosure.",
+      "location": {
+        "point": [
+          16.081,
+          110.586,
+          7.6
+        ],
+        "part": null,
+        "faces": [
+          "lid.outer_cap",
+          "base.outer_cap"
+        ]
+      }
+    },
+    {
+      "id": "opening_alignment:Q4-sensor_window",
+      "check": "opening_alignment",
+      "title": "Opening alignment",
+      "component": "Q4",
+      "opening": "Q4-sensor_window",
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "tolerance",
+        "value": 0.2,
+        "unit": "mm"
+      },
+      "summary": "The Q4 opening is 0 mm off.",
+      "covers": "The sensor window for Q4 is cut where the board needs it.",
+      "location": {
+        "point": [
+          1.9,
+          123.714,
+          7.6
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.outer_cap",
+          "opening_Q4.wall_1",
+          "opening_Q4.wall_2",
+          "opening_Q4.wall_3",
+          "opening_Q4.wall_4"
+        ]
+      }
+    },
+    {
+      "id": "antenna_keepout:U1-antenna_keepout",
+      "check": "antenna_keepout",
+      "title": "Antenna keep-out",
+      "component": "U1",
+      "opening": "U1-antenna_keepout",
+      "status": "pass",
+      "measured": {
+        "value": "no features"
+      },
+      "required": {
+        "kind": "spec",
+        "value": "no internal features"
+      },
+      "summary": "0 features over the U1 keep-out.",
+      "covers": "Bosses and other internal features over the antenna.",
+      "location": {
+        "point": [
+          10.0,
+          124.668,
+          7.6
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.outer_cap"
+        ]
+      }
+    },
+    {
+      "id": "opening_alignment:U2-vent",
+      "check": "opening_alignment",
+      "title": "Opening alignment",
+      "component": "U2",
+      "opening": "U2-vent",
+      "status": "pass",
+      "measured": {
+        "value": 0.0,
+        "unit": "mm"
+      },
+      "required": {
+        "kind": "tolerance",
+        "value": 0.2,
+        "unit": "mm"
+      },
+      "summary": "The U2 opening is 0 mm off.",
+      "covers": "The vent for U2 is cut where the board needs it.",
+      "location": {
+        "point": [
+          15.8,
+          102.814,
+          7.6
+        ],
+        "part": "lid",
+        "faces": [
+          "lid.outer_cap",
+          "opening_U2.wall_1",
+          "opening_U2.wall_2",
+          "opening_U2.wall_3",
+          "opening_U2.wall_4"
+        ]
+      }
+    },
+    {
+      "id": "object_fit",
+      "check": "object_fit",
+      "title": "Fit to the object",
+      "standard": "object_fit",
+      "status": "not_applicable",
+      "measured": null,
+      "required": null,
+      "summary": "Fit to the object: not applicable. Fit to the object applies only to designs made to fit an object; this design has no object parameters.",
+      "reason": "Fit to the object applies only to designs made to fit an object; this design has no object parameters.",
+      "covers": "A part made to fit an object (a stand, a cover, a mount) takes up none of the object's volume and comes within 1.0 mm of it, so the object sits in it without play.",
+      "location": null
+    },
+    {
+      "id": "strength",
+      "check": "strength",
+      "title": "Strength",
+      "status": "untested",
+      "summary": "Strength is not simulated.",
+      "covers": "Not covered by any check yet; review it by hand."
+    },
+    {
+      "id": "drop",
+      "check": "drop",
+      "title": "Drop",
+      "status": "untested",
+      "summary": "Drop is not simulated.",
+      "covers": "Not covered by any check yet; review it by hand."
+    },
+    {
+      "id": "heat",
+      "check": "heat",
+      "title": "Heat",
+      "status": "untested",
+      "summary": "Heat is not simulated.",
+      "covers": "Not covered by any check yet; review it by hand."
+    }
+  ],
+  "summary": {
+    "pass": 10,
+    "fail": 0,
+    "untested": 3,
+    "not_applicable": 1
+  }
+}

@@ -1,0 +1,209 @@
+{
+  "build_id": "build-1",
+  "backend": "build123d",
+  "language": "python",
+  "filename": "enclosure.py",
+  "code": "# Enclosure generator for build123d: base, lid, corner bosses with heat-set insert pockets and\n# the inserts in them (separate parts),\n# screw holes, the openings the board needs, the slot where the board leaves the case and\n# the pegs, clamp and support that hold the board.\n#\n# Every value comes from `params` (see geometry/params.py); nothing about a particular board is\n# written here. All side walls are drafted by params[\"draft\"] degrees: positive taper narrows\n# a prism as it rises, negative taper widens it.\nimport math\n\nfrom build123d import Circle, Face, Plane, RectangleRounded, Vector, Wire, extrude\n\n\ndef prism(points, z0, z1, taper=0.0):\n    \"\"\"Extrude a polygon at z0 up to z1, narrowing by `taper` degrees as it rises.\"\"\"\n    face = Face(Wire.make_polygon([Vector(x, y, z0) for x, y in points], close=True))\n    return extrude(face, amount=z1 - z0, taper=taper)\n\n\ndef rounded(x0, x1, y0, y1, r, z0, z1, taper=0.0):\n    \"\"\"Rounded rectangle from z0 up to z1.\"\"\"\n    sketch = Plane.XY.offset(z0) * RectangleRounded(x1 - x0, y1 - y0, r)\n    return extrude(sketch.translate(((x0 + x1) / 2, (y0 + y1) / 2, 0)), amount=z1 - z0, taper=taper)\n\n\ndef disc(x, y, radius, z0, z1, taper=0.0):\n    \"\"\"Circle of `radius` at z0 up to z1 (a cone when tapered).\"\"\"\n    face = (Plane.XY.offset(z0) * Circle(radius)).translate((x, y, 0))\n    return extrude(face, amount=z1 - z0, taper=taper)\n\n\ndef rect(o, grow_by):\n    w, length = o[\"size\"][0] + 2 * grow_by, o[\"size\"][1] + 2 * grow_by\n    r = math.radians(o[\"rotation\"])\n    c, s = math.cos(r), math.sin(r)\n    corners = [\n        (-w / 2, -length / 2),\n        (w / 2, -length / 2),\n        (w / 2, length / 2),\n        (-w / 2, length / 2),\n    ]\n    return [(o[\"x\"] + x * c - y * s, o[\"y\"] + x * s + y * c) for x, y in corners]\n\n\ndef build(params):\n    p = params\n    t = math.tan(math.radians(p[\"draft\"]))\n    wall, draft = p[\"wall\"], p[\"draft\"]\n    fx, fy, r = p[\"footprint\"][\"x\"], p[\"footprint\"][\"y\"], p[\"footprint\"][\"corner_radius\"]\n    zb, zt, zp = p[\"z_bottom\"], p[\"z_top\"], p[\"parting_z\"]\n    floor_top, ceiling = p[\"floor_top\"], p[\"ceiling\"]\n    features = []\n\n    def feature(tag, part, *tools):\n        features.append({\"tag\": tag, \"part\": part, \"tools\": list(tools)})\n\n    def footprint(inset, z_ref, z0, z1, taper):\n        \"\"\"The footprint offset inward by `inset`, sized exactly at z_ref, from z0 to z1.\"\"\"\n        d = inset - (z_ref - z0) * math.tan(math.radians(taper))\n        return rounded(fx[0] + d, fx[1] - d, fy[0] + d, fy[1] - d, r - d, z0, z1, taper)\n\n    # Base: below the parting plane, walls widening towards the parting plane.\n    base_outer = footprint(0, zp, zb, zp, -draft)\n    base_cavity = footprint(wall, zp, floor_top, zp + 1, -draft)\n    base = base_outer - base_cavity\n    feature(\"base\", \"base\", base_outer, base_cavity)\n\n    # Lid: above the parting plane, walls narrowing towards the top.\n    lid_outer = footprint(0, zp, zp, zt, draft)\n    lid_cavity = footprint(wall, zp, zp - 1, ceiling, draft)\n    lid = lid_outer - lid_cavity\n    feature(\"lid\", \"lid\", lid_outer, lid_cavity)\n\n    # Bosses hang from the lid's ceiling, narrowing towards their free end, each with a pocket\n    # for a heat-set insert. The base gets a clearance hole under each one for the screw.\n    b = p[\"boss\"]\n    inserts, placements = {}, {}\n    for boss in p[\"bosses\"]:\n        x, y = boss[\"x\"], boss[\"y\"]\n        top = ceiling + wall / 2  # overlap the lid's top so the boss fuses into it\n        bottom_r = b[\"radius\"] - (ceiling - b[\"bottom\"]) * t\n        tool = disc(x, y, bottom_r, b[\"bottom\"], top, -draft)\n        lid = lid + tool\n        feature(boss[\"tag\"], \"lid\", tool)\n    for boss in p[\"bosses\"]:\n        x, y, n = boss[\"x\"], boss[\"y\"], boss[\"id\"]\n        z0 = b[\"bottom\"] - 1\n        pocket = disc(x, y, b[\"insert_diameter\"] / 2 + t, z0, b[\"insert_top\"], draft)\n        lid = lid - pocket\n        feature(f\"insert_{n}\", \"lid\", pocket)\n        # The heat-set insert itself, a separate part: from the pocket's mouth up its length,\n        # with the pocket's draft, standing off the pocket wall by the insert gap.\n        insert = disc(\n            x,\n            y,\n            b[\"insert_diameter\"] / 2 - b[\"insert_gap\"],\n            b[\"bottom\"],\n            b[\"bottom\"] + b[\"insert_length\"],\n            draft,\n        )\n        inserts[f\"heat_set_insert_{n}\"] = insert\n        placements[f\"heat_set_insert_{n}\"] = [x, y, b[\"bottom\"]]\n        feature(f\"heat_set_insert_{n}\", f\"heat_set_insert_{n}\", insert)\n        z0 = zb - 1\n        hole = disc(x, y, b[\"screw_clearance\"] / 2 + t, z0, floor_top + 1, draft)\n        base = base - hole\n        feature(f\"screw_{n}\", \"base\", hole)\n\n    # Openings the board needs, cut through the lid's top (or the base's floor), exactly the\n    # required size at the outside face and widening inwards with the draft.\n    for o in p[\"openings\"]:\n        if not o[\"cut\"]:\n            continue\n        if o[\"side\"] == \"top\":\n            z0, z1 = ceiling - 1, zt + 1\n            cutter = prism(rect(o, (zt - z0) * t), z0, z1, draft)\n            lid = lid - cutter\n            feature(o[\"tag\"], \"lid\", cutter)\n        else:\n            z0, z1 = zb - 1, floor_top + 1\n            cutter = prism(rect(o, -(zb - z0) * t), z0, z1, -draft)\n            base = base - cutter\n            feature(o[\"tag\"], \"base\", cutter)\n\n    # Where the board leaves the enclosure: a slot through the lid's wall just above the\n    # parting plane, as thick as the board plus the fit tolerance.\n    for s in p[\"slots\"]:\n        z0, z1 = zp - 1, zp + p[\"pcb_thickness\"] + p[\"fit\"]\n        (x0, x1), (y0, y1) = s[\"x\"], s[\"y\"]\n        d = (z1 - z0) * t\n        cutter = prism([(x0 - d, y0), (x1 + d, y0), (x1 + d, y1), (x0 - d, y1)], z0, z1, draft)\n        lid = lid - cutter\n        feature(s[\"tag\"], \"lid\", cutter)\n\n    # Board retention: pegs from the lid through the board's mounting holes (a pin in the hole\n    # under a post that presses on the board's top face), a clamp from the lid onto the top face\n    # and a support from the base under the bottom face. Each stands off the board by the gap.\n    keep = p[\"retention\"]\n    gap, pcb = keep[\"gap\"], p[\"pcb_thickness\"]\n    lid_top = ceiling + wall / 2  # overlap the lid's top so the feature fuses into it\n    for peg in keep[\"pegs\"]:\n        x, y = peg[\"x\"], peg[\"y\"]\n        post_bottom = pcb + gap if peg[\"post_radius\"] else lid_top\n        pin_top = post_bottom + 0.5 if peg[\"post_radius\"] else lid_top\n        pin_r = peg[\"pin_radius\"] - (pcb - peg[\"tip\"]) * t  # pin_radius at the board's top face\n        tools = [disc(x, y, pin_r, peg[\"tip\"], pin_top, -draft)]\n        if peg[\"post_radius\"]:\n            tools.append(disc(x, y, peg[\"post_radius\"], post_bottom, lid_top, -draft))\n        for tool in tools:\n            lid = lid + tool\n        feature(peg[\"tag\"], \"lid\", *tools)\n    for pad in keep[\"clamps\"]:\n        tool = disc(pad[\"x\"], pad[\"y\"], pad[\"radius\"], pcb + gap, lid_top, -draft)\n        lid = lid + tool\n        feature(pad[\"tag\"], \"lid\", tool)\n    for pad in keep[\"supports\"]:\n        z0, z1 = floor_top - wall / 2, -gap\n        tool = disc(pad[\"x\"], pad[\"y\"], pad[\"radius\"] + (z1 - z0) * t, z0, z1, draft)\n        base = base + tool\n        feature(pad[\"tag\"], \"base\", tool)\n\n    return {\n        \"parts\": {\"base\": base, \"lid\": lid, **inserts},\n        \"features\": features,\n        \"materials\": {\n            \"base\": p[\"material\"],\n            \"lid\": p[\"material\"],\n            **{name: b[\"insert_material\"] for name in inserts},\n        },\n        \"kinds\": {name: \"insert\" for name in inserts},\n        \"placements\": placements,\n    }\n",
+  "features": [
+    {
+      "tag": "base",
+      "part": "base",
+      "lines": [
+        66,
+        66
+      ]
+    },
+    {
+      "tag": "lid",
+      "part": "lid",
+      "lines": [
+        72,
+        72
+      ]
+    },
+    {
+      "tag": "boss_1",
+      "part": "lid",
+      "lines": [
+        84,
+        84
+      ]
+    },
+    {
+      "tag": "boss_2",
+      "part": "lid",
+      "lines": [
+        84,
+        84
+      ]
+    },
+    {
+      "tag": "boss_3",
+      "part": "lid",
+      "lines": [
+        84,
+        84
+      ]
+    },
+    {
+      "tag": "boss_4",
+      "part": "lid",
+      "lines": [
+        84,
+        84
+      ]
+    },
+    {
+      "tag": "insert_1",
+      "part": "lid",
+      "lines": [
+        90,
+        90
+      ]
+    },
+    {
+      "tag": "heat_set_insert_1",
+      "part": "heat_set_insert_1",
+      "lines": [
+        103,
+        103
+      ]
+    },
+    {
+      "tag": "screw_1",
+      "part": "base",
+      "lines": [
+        107,
+        107
+      ]
+    },
+    {
+      "tag": "insert_2",
+      "part": "lid",
+      "lines": [
+        90,
+        90
+      ]
+    },
+    {
+      "tag": "heat_set_insert_2",
+      "part": "heat_set_insert_2",
+      "lines": [
+        103,
+        103
+      ]
+    },
+    {
+      "tag": "screw_2",
+      "part": "base",
+      "lines": [
+        107,
+        107
+      ]
+    },
+    {
+      "tag": "insert_3",
+      "part": "lid",
+      "lines": [
+        90,
+        90
+      ]
+    },
+    {
+      "tag": "heat_set_insert_3",
+      "part": "heat_set_insert_3",
+      "lines": [
+        103,
+        103
+      ]
+    },
+    {
+      "tag": "screw_3",
+      "part": "base",
+      "lines": [
+        107,
+        107
+      ]
+    },
+    {
+      "tag": "insert_4",
+      "part": "lid",
+      "lines": [
+        90,
+        90
+      ]
+    },
+    {
+      "tag": "heat_set_insert_4",
+      "part": "heat_set_insert_4",
+      "lines": [
+        103,
+        103
+      ]
+    },
+    {
+      "tag": "screw_4",
+      "part": "base",
+      "lines": [
+        107,
+        107
+      ]
+    },
+    {
+      "tag": "opening_Q4",
+      "part": "lid",
+      "lines": [
+        118,
+        118
+      ]
+    },
+    {
+      "tag": "opening_U2",
+      "part": "lid",
+      "lines": [
+        118,
+        118
+      ]
+    },
+    {
+      "tag": "opening_pcb",
+      "part": "lid",
+      "lines": [
+        133,
+        133
+      ]
+    },
+    {
+      "tag": "peg_H1",
+      "part": "lid",
+      "lines": [
+        151,
+        151
+      ]
+    },
+    {
+      "tag": "peg_H2",
+      "part": "lid",
+      "lines": [
+        151,
+        151
+      ]
+    },
+    {
+      "tag": "clamp_1",
+      "part": "lid",
+      "lines": [
+        155,
+        155
+      ]
+    },
+    {
+      "tag": "support_1",
+      "part": "base",
+      "lines": [
+        160,
+        160
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "id": "build-0",
+  "created_at": "2026-01-01T00:00:00Z",
+  "board": {
+    "name": "b-parasite",
+    "revision": "1.2"
+  },
+  "status": "ready",
+  "checks": {
+    "pass": 10,
+    "fail": 0,
+    "untested": 3,
+    "not_applicable": 1
+  },
+  "maps": [
+    "draft",
+    "wall_thickness"
+  ],
+  "mesh_url": "builds/build-0/mesh",
+  "checks_url": "builds/build-0/checks",
+  "source_url": "builds/build-0/source",
+  "board_url": "builds/build-0/board",
+  "step_url": null,
+  "restored_from": null,
+  "failure": null
+}

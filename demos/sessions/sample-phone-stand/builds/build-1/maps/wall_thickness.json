@@ -1,0 +1,137 @@
+{
+  "contract": "analysis-map/1",
+  "build_id": "build-1",
+  "type": "wall_thickness",
+  "standard": "min_wall",
+  "standard_title": "Minimum wall thickness",
+  "unit": "mm",
+  "legend": {
+    "min": 0.0,
+    "max": 6.0,
+    "limit": 2.0,
+    "unit": "mm"
+  },
+  "parts": [
+    {
+      "part": "stand",
+      "values": [
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        4.914,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        4.0,
+        4.0,
+        4.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        4.0,
+        4.0,
+        4.0
+      ]
+    }
+  ],
+  "flagged": [
+    {
+      "id": "thick:stand.back_rest.1",
+      "kind": "thick",
+      "value": 4.914,
+      "message": "back_rest is 4.914 mm thick, more than 2 times the 2 mm minimum (Minimum wall thickness); thick sections sink when molded",
+      "location": {
+        "point": [
+          35.625,
+          -40.0,
+          44.903
+        ],
+        "part": "stand",
+        "faces": [
+          "stand.back_rest.1"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "thick:stand.back_rest.2",
+      "kind": "thick",
+      "value": 4.914,
+      "message": "back_rest is 4.914 mm thick, more than 2 times the 2 mm minimum (Minimum wall thickness); thick sections sink when molded",
+      "location": {
+        "point": [
+          35.625,
+          40.0,
+          44.903
+        ],
+        "part": "stand",
+        "faces": [
+          "stand.back_rest.2"
+        ],
+        "edges": []
+      }
+    }
+  ]
+}

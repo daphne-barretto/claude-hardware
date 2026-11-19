@@ -1,0 +1,2854 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Answer": {
+      "additionalProperties": false,
+      "description": "An answer to a question event: one of its options.",
+      "properties": {
+        "question_id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Question Id",
+          "type": "string"
+        },
+        "option_id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Option Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "question_id",
+        "option_id"
+      ],
+      "title": "Answer",
+      "type": "object"
+    },
+    "Attachment": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "media_type": {
+          "title": "Media Type",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "media_type",
+        "url"
+      ],
+      "title": "Attachment",
+      "type": "object"
+    },
+    "BoardRef": {
+      "additionalProperties": false,
+      "description": "A board revision, as named in its `demos/<board>/*.json` file.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "revision": {
+          "minLength": 1,
+          "title": "Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "revision"
+      ],
+      "title": "BoardRef",
+      "type": "object"
+    },
+    "Build": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "board": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoardRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The board revision the build was checked against; null for a design without a board"
+        },
+        "status": {
+          "enum": [
+            "ready",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "checks": {
+          "$ref": "#/$defs/CheckSummary"
+        },
+        "maps": {
+          "description": "Analysis maps available for the build",
+          "items": {
+            "enum": [
+              "wall_thickness",
+              "draft"
+            ],
+            "type": "string"
+          },
+          "title": "Maps",
+          "type": "array"
+        },
+        "mesh_url": {
+          "description": "glTF following the mesh contract",
+          "title": "Mesh Url",
+          "type": "string"
+        },
+        "checks_url": {
+          "description": "JSON following the check-result contract",
+          "title": "Checks Url",
+          "type": "string"
+        },
+        "source_url": {
+          "description": "The CAD code that produced the build (`BuildSource`)",
+          "title": "Source Url",
+          "type": "string"
+        },
+        "board_url": {
+          "description": "The board revision named by `board`, in the board JSON format (`backend/app/boards/SCHEMA.md`); 404 when `board` is null",
+          "title": "Board Url",
+          "type": "string"
+        },
+        "step_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "STEP of the build, null until exported",
+          "title": "Step Url"
+        },
+        "restored_from": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The earlier build whose design this build restores (undo in the history)",
+          "title": "Restored From"
+        },
+        "failure": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Why a failed build couldn't be built, in plain words for the user (never internal error text); null for a ready build",
+          "title": "Failure"
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BuildOrigin"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The file the build came from, for a build no message made (an import, or the existing design an example opens on); null otherwise"
+        }
+      },
+      "required": [
+        "id",
+        "created_at",
+        "board",
+        "status",
+        "checks",
+        "maps",
+        "mesh_url",
+        "checks_url",
+        "source_url",
+        "board_url",
+        "step_url"
+      ],
+      "title": "Build",
+      "type": "object"
+    },
+    "BuildOrigin": {
+      "additionalProperties": false,
+      "description": "Where a build that no message made came from, so the chat can say so where it happened.",
+      "properties": {
+        "kind": {
+          "description": "`import`: a file the user imported; `existing`: the existing design an example opens on, read from its file",
+          "enum": [
+            "import",
+            "existing"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "file_name": {
+          "description": "The file's name",
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "File Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "file_name"
+      ],
+      "title": "BuildOrigin",
+      "type": "object"
+    },
+    "BuildReadyEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "build_ready",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message Id"
+        },
+        "build": {
+          "$ref": "#/$defs/Build"
+        }
+      },
+      "required": [
+        "type",
+        "build"
+      ],
+      "title": "BuildReadyEvent",
+      "type": "object"
+    },
+    "ChangeSet": {
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "change-set/1",
+          "default": "change-set/1",
+          "title": "Contract",
+          "type": "string"
+        },
+        "mode": {
+          "description": "manual: only accepted changes are applied; auto: all start accepted",
+          "enum": [
+            "manual",
+            "auto"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "base_build": {
+          "description": "Build of the design the run started from",
+          "title": "Base Build",
+          "type": "string"
+        },
+        "build": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Build of the accepted changes, once checked",
+          "title": "Build"
+        },
+        "checks": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CheckSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Summary of `build`"
+        },
+        "changes": {
+          "items": {
+            "$ref": "#/$defs/ProposedChange"
+          },
+          "title": "Changes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "mode",
+        "base_build",
+        "build",
+        "changes"
+      ],
+      "title": "ChangeSet",
+      "type": "object"
+    },
+    "ChangesReadyEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "changes_ready",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The run's message; null for a review outside a run",
+          "title": "Message Id"
+        },
+        "change_set": {
+          "$ref": "#/$defs/ChangeSet",
+          "description": "Same shape as `GET .../changes`"
+        }
+      },
+      "required": [
+        "type",
+        "change_set"
+      ],
+      "title": "ChangesReadyEvent",
+      "type": "object"
+    },
+    "CheckLink": {
+      "additionalProperties": false,
+      "description": "A check that proves (or argues against) a change.\n\n`before` is the check on the design the run started from, `alone` on that design plus this\nchange only, and `after` on the current build (the accepted changes); null when that build\nhas no such check or doesn't exist yet.",
+      "properties": {
+        "id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "check": {
+          "title": "Check",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The result's title on the checks strip, as people read it",
+          "title": "Title"
+        },
+        "standard": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Standard"
+        },
+        "effect": {
+          "description": "`fixes`: fails before, passes with the change alone; `breaks`: the reverse; `related`: about the same component or feature",
+          "enum": [
+            "fixes",
+            "breaks",
+            "related"
+          ],
+          "title": "Effect",
+          "type": "string"
+        },
+        "before": {
+          "anyOf": [
+            {
+              "enum": [
+                "pass",
+                "fail",
+                "untested",
+                "not_applicable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Before"
+        },
+        "alone": {
+          "anyOf": [
+            {
+              "enum": [
+                "pass",
+                "fail",
+                "untested",
+                "not_applicable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Alone"
+        },
+        "after": {
+          "anyOf": [
+            {
+              "enum": [
+                "pass",
+                "fail",
+                "untested",
+                "not_applicable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After"
+        }
+      },
+      "required": [
+        "id",
+        "check",
+        "effect"
+      ],
+      "title": "CheckLink",
+      "type": "object"
+    },
+    "CheckSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "pass": {
+          "minimum": 0,
+          "title": "Pass",
+          "type": "integer"
+        },
+        "fail": {
+          "minimum": 0,
+          "title": "Fail",
+          "type": "integer"
+        },
+        "untested": {
+          "minimum": 0,
+          "title": "Untested",
+          "type": "integer"
+        },
+        "not_applicable": {
+          "default": 0,
+          "description": "Standards that do not apply to this design",
+          "minimum": 0,
+          "title": "Not Applicable",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "pass",
+        "fail",
+        "untested"
+      ],
+      "title": "CheckSummary",
+      "type": "object"
+    },
+    "Comment": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "build_id": {
+          "description": "The build it was pinned on",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Build Id",
+          "type": "string"
+        },
+        "face_id": {
+          "description": "Stable face ID: the comment survives rebuilds",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Face Id",
+          "type": "string"
+        },
+        "point": {
+          "description": "Where it was pinned, on the build it was pinned on",
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Point",
+          "type": "array"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "author": {
+          "title": "Author",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "part": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The part of the face",
+          "title": "Part"
+        },
+        "feature": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The feature that made the face: if a rebuild drops the face ID, the pin moves to the nearest face of the same feature",
+          "title": "Feature"
+        },
+        "anchor": {
+          "anyOf": [
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Centre of the face on the build it was pinned on. On a later build the pin keeps its offset from the face's centre, so it follows the face when it moves",
+          "title": "Anchor"
+        },
+        "location": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Location"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Where the pin is on the build the list was asked for (the latest by default); null when the build no longer has the face or its feature"
+        },
+        "replies": {
+          "items": {
+            "$ref": "#/$defs/CommentReply"
+          },
+          "title": "Replies",
+          "type": "array"
+        },
+        "request": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CommentRequest"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Set once the comment is sent to Claude; null for a note"
+        },
+        "resolved": {
+          "default": false,
+          "title": "Resolved",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "build_id",
+        "face_id",
+        "point",
+        "text",
+        "author",
+        "created_at"
+      ],
+      "title": "Comment",
+      "type": "object"
+    },
+    "CommentEvent": {
+      "additionalProperties": false,
+      "description": "A comment was pinned, replied to, sent, answered or resolved: the whole comment as it\nis now, located on the latest build.",
+      "properties": {
+        "type": {
+          "const": "comment",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The run, for Claude's replies while it runs",
+          "title": "Message Id"
+        },
+        "comment": {
+          "$ref": "#/$defs/Comment"
+        }
+      },
+      "required": [
+        "type",
+        "comment"
+      ],
+      "title": "CommentEvent",
+      "type": "object"
+    },
+    "CommentReply": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "author": {
+          "title": "Author",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The run that wrote it, for Claude's replies",
+          "title": "Message Id"
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "author",
+        "text",
+        "created_at"
+      ],
+      "title": "CommentReply",
+      "type": "object"
+    },
+    "CommentRequest": {
+      "additionalProperties": false,
+      "description": "The comment was sent to Claude: the run that handles it.",
+      "properties": {
+        "message_id": {
+          "description": "The run's assistant message",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "running",
+            "answered",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message_id",
+        "status"
+      ],
+      "title": "CommentRequest",
+      "type": "object"
+    },
+    "ConflictConstraint": {
+      "additionalProperties": false,
+      "description": "One side of a conflict: a locked parameter, a team standard or a board part.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "locked",
+            "standard",
+            "board"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "description": "Parameter path, standard ID or component reference",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "description": "What to call it, e.g. the standard's title",
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "relation": {
+          "description": "How `value` binds: a lock or a part's height is `=`, a `min` standard `>=`, a `max` standard `<=`",
+          "enum": [
+            "=",
+            ">=",
+            "<="
+          ],
+          "title": "Relation",
+          "type": "string"
+        },
+        "value": {
+          "description": "The locked value, the standard's value, or the height",
+          "title": "Value",
+          "type": "number"
+        },
+        "unit": {
+          "default": "mm",
+          "enum": [
+            "mm",
+            "deg"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "best": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Best achievable value when only this constraint gives way; null when no value of it resolves the conflict (a board part can't change)",
+          "title": "Best"
+        },
+        "locations": {
+          "description": "Where on the model it acts",
+          "items": {
+            "$ref": "#/$defs/Location"
+          },
+          "minItems": 1,
+          "title": "Locations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "label",
+        "relation",
+        "value",
+        "best",
+        "locations"
+      ],
+      "title": "ConflictConstraint",
+      "type": "object"
+    },
+    "Constraint": {
+      "additionalProperties": false,
+      "description": "One constraint of the design's spec, shown as a chip above the chat input.\n\nEvery constraint is a team standard (`standards.yaml`) with the value the design must\nmeet, so its check enforces it. The value is the standard's own (`source: standard`), one\nthe user gave in a message (`user`, with their words in `quote`) or a chip edit (`edit`).",
+      "properties": {
+        "id": {
+          "description": "The standard's ID",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "description": "The standard's title",
+          "title": "Title",
+          "type": "string"
+        },
+        "label": {
+          "description": "The chip text, e.g. \"Minimum wall thickness ≥ 2.5 mm\"",
+          "title": "Label",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "min",
+            "max",
+            "tolerance",
+            "spec"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "enum": [
+                "mm",
+                "deg"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Null for a spec",
+          "title": "Unit"
+        },
+        "check": {
+          "description": "The check that enforces it",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Check",
+          "type": "string"
+        },
+        "source": {
+          "description": "`standard`: from standards.yaml; `user`: from the user's words; `edit`: the chip was edited",
+          "enum": [
+            "standard",
+            "user",
+            "edit"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "quote": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The user's words it came from",
+          "title": "Quote"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The message the user's words are in",
+          "title": "Message Id"
+        },
+        "standard_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "The value in standards.yaml",
+          "title": "Standard Value"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "label",
+        "kind",
+        "value",
+        "unit",
+        "check",
+        "source",
+        "quote",
+        "message_id",
+        "standard_value"
+      ],
+      "title": "Constraint",
+      "type": "object"
+    },
+    "ConstraintConflict": {
+      "additionalProperties": false,
+      "description": "Locked values, standards and the board that can't all be met (conflict detection).",
+      "properties": {
+        "id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "over_by": {
+          "description": "How far apart the constraints are, in mm",
+          "minimum": 0,
+          "title": "Over By",
+          "type": "number"
+        },
+        "constraints": {
+          "items": {
+            "$ref": "#/$defs/ConflictConstraint"
+          },
+          "minItems": 2,
+          "title": "Constraints",
+          "type": "array"
+        },
+        "location": {
+          "$ref": "#/$defs/Location",
+          "description": "Where the conflict is worst"
+        }
+      },
+      "required": [
+        "id",
+        "message",
+        "over_by",
+        "constraints",
+        "location"
+      ],
+      "title": "ConstraintConflict",
+      "type": "object"
+    },
+    "ConstraintsEvent": {
+      "additionalProperties": false,
+      "description": "The design's spec changed: every constraint, as the chips show them.",
+      "properties": {
+        "type": {
+          "const": "constraints",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message Id"
+        },
+        "constraints": {
+          "items": {
+            "$ref": "#/$defs/Constraint"
+          },
+          "title": "Constraints",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "constraints"
+      ],
+      "title": "ConstraintsEvent",
+      "type": "object"
+    },
+    "ErrorEvent": {
+      "additionalProperties": false,
+      "description": "The run stopped. `message` says plainly what happened, whether anything was lost and\nwhat to do; `retryable` offers Retry (`POST .../retry`), which picks up from the design\nand builds so far.",
+      "properties": {
+        "type": {
+          "const": "error",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message Id"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "rate_limited",
+                "overloaded",
+                "network",
+                "billing",
+                "not_configured",
+                "too_large",
+                "model_unavailable",
+                "run_queue",
+                "build_queue",
+                "build_memory",
+                "build_time",
+                "build_crash",
+                "preempted",
+                "stopped",
+                "interrupted",
+                "save_failed",
+                "unknown"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why, as a code; null: unknown",
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "type",
+        "message"
+      ],
+      "title": "ErrorEvent",
+      "type": "object"
+    },
+    "FieldDelta": {
+      "additionalProperties": false,
+      "description": "One value that differs: its dot path inside the changed element, before and after\n(null when absent).",
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "before": {
+          "default": null,
+          "title": "Before"
+        },
+        "after": {
+          "default": null,
+          "title": "After"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "title": "FieldDelta",
+      "type": "object"
+    },
+    "FindMatch": {
+      "additionalProperties": false,
+      "properties": {
+        "face": {
+          "description": "A face ID of the build's mesh",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Face",
+          "type": "string"
+        },
+        "part": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Part",
+          "type": "string"
+        },
+        "feature": {
+          "description": "The feature that created the face",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Feature",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The measured value the query compared, if it compared one",
+          "title": "Value"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "enum": [
+                "mm",
+                "deg"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "face",
+        "part",
+        "feature"
+      ],
+      "title": "FindMatch",
+      "type": "object"
+    },
+    "FindResult": {
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "title": "Query",
+          "type": "string"
+        },
+        "status": {
+          "description": "`found` with matches, `none` when the query was understood and nothing matches, `unclear` when part of it wasn't understood (see `question`)",
+          "enum": [
+            "found",
+            "none",
+            "unclear"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "understood": {
+          "description": "What the query was read as, in words",
+          "title": "Understood",
+          "type": "string"
+        },
+        "question": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Set when `unclear`: what to ask the user, with suggestions",
+          "title": "Question"
+        },
+        "matches": {
+          "items": {
+            "$ref": "#/$defs/FindMatch"
+          },
+          "title": "Matches",
+          "type": "array"
+        }
+      },
+      "required": [
+        "query",
+        "status",
+        "understood"
+      ],
+      "title": "FindResult",
+      "type": "object"
+    },
+    "FoundEvent": {
+      "additionalProperties": false,
+      "description": "Claude looked for parts of the model from chat (`find_in_model`): the canvas\nhighlights the matched faces, and the chat lists them, ready to send back as the\nselection. An unclear query has no matches: the chat shows what was understood and the\nquestion.",
+      "properties": {
+        "type": {
+          "const": "found",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "build_id": {
+          "description": "The build whose mesh faces the matches name",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Build Id",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/$defs/FindResult",
+          "description": "Same shape as `POST .../builds/{id}/find`"
+        }
+      },
+      "required": [
+        "type",
+        "message_id",
+        "build_id",
+        "result"
+      ],
+      "title": "FoundEvent",
+      "type": "object"
+    },
+    "GeometryDelta": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "added",
+            "removed",
+            "modified"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "path": {
+          "description": "Parameter path of the changed element (`openings.<id>`)",
+          "title": "Path",
+          "type": "string"
+        },
+        "feature": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Feature tag on the mesh, e.g. `opening_Q4`, if it has one",
+          "title": "Feature"
+        },
+        "component": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Board component it serves",
+          "title": "Component"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FieldDelta"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "move": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How far it moved in x and y, mm (modified elements only)",
+          "title": "Move"
+        },
+        "rotate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How far it turned, degrees",
+          "title": "Rotate"
+        }
+      },
+      "required": [
+        "kind",
+        "path"
+      ],
+      "title": "GeometryDelta",
+      "type": "object"
+    },
+    "Location": {
+      "additionalProperties": false,
+      "description": "Where on the model something is: a point (mm, board coordinates) and the faces and edges\nit concerns, by their stable mesh IDs.",
+      "properties": {
+        "point": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Point",
+          "type": "array"
+        },
+        "part": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Part node name, e.g. `lid`",
+          "title": "Part"
+        },
+        "faces": {
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Faces",
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Edges",
+          "type": "array"
+        }
+      },
+      "required": [
+        "point"
+      ],
+      "title": "Location",
+      "type": "object"
+    },
+    "Message": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+                "max"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Effort"
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "manual",
+                "auto"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mode"
+        },
+        "selection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Selection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "answer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Answer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "attachments": {
+          "items": {
+            "$ref": "#/$defs/Attachment"
+          },
+          "title": "Attachments",
+          "type": "array"
+        },
+        "standards": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Standards"
+        },
+        "comments": {
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Comments",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "text",
+        "created_at"
+      ],
+      "title": "Message",
+      "type": "object"
+    },
+    "MessageCreate": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "default": "",
+          "description": "May be empty when `answer` is given",
+          "title": "Text",
+          "type": "string"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Model ID from `contracts/models.json`; the server picks if null",
+          "title": "Model"
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+                "max"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Effort"
+        },
+        "mode": {
+          "default": "auto",
+          "description": "Auto applies changes; Manual proposes them",
+          "enum": [
+            "manual",
+            "auto"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "selection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Selection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "answer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Answer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "attachments": {
+          "items": {
+            "$ref": "#/$defs/Attachment"
+          },
+          "title": "Attachments",
+          "type": "array"
+        },
+        "standards": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A standards set ID (`GET /api/standards`) for the agent and checks to use. Given with the session's first message; a later message may repeat it but not change it",
+          "title": "Standards"
+        },
+        "comments": {
+          "description": "Comments sent to Claude (\"Send to Claude\"): one run handles them all and answers each in its own thread. `text` may be empty",
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Comments",
+          "type": "array"
+        }
+      },
+      "title": "MessageCreate",
+      "type": "object"
+    },
+    "MessageEndEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "message_end",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Message Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "message_id"
+      ],
+      "title": "MessageEndEvent",
+      "type": "object"
+    },
+    "MessageQueue": {
+      "additionalProperties": false,
+      "description": "The messages waiting for the current run to end, in the order they will be sent.",
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/QueuedMessage"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "paused": {
+          "description": "Claude's question is open: the next message waits until it is answered (it is never taken as the answer), or until it is sent anyway (`POST .../queue/{item}/send`)",
+          "title": "Paused",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "items",
+        "paused"
+      ],
+      "title": "MessageQueue",
+      "type": "object"
+    },
+    "MessageStartEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "message_start",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "role": {
+          "const": "assistant",
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "message_id",
+        "role"
+      ],
+      "title": "MessageStartEvent",
+      "type": "object"
+    },
+    "NoticeEvent": {
+      "additionalProperties": false,
+      "description": "A notice the chat shows apart from Claude's text (`text` is plain and complete). One\nevent for every kind:\n\n- `retrying`: a temporary API error, retried automatically in `retry_in_s` seconds\n  (`attempt` of `attempts`);\n- `waiting`: in line behind other runs (`place`, 1: next) or another build;\n- `warning`: something failed but nothing stopped (a build hit a limit, the session\n  couldn't be saved);\n- `refused`: Claude won't design this (a weapon, a harmful part, or a part made to\n  defeat a safety protection or evade a legal requirement), and `text` says why;\n- `safety`: Claude helps with a regulated or safety-critical product, and `text` says\n  requirements vary by region and none were checked; `regulations` are the kinds of rules\n  that may apply, never a claim that the design meets them.\n\nA later event of the same message replaces a `retrying` or `waiting` notice.",
+      "properties": {
+        "type": {
+          "const": "notice",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message Id"
+        },
+        "kind": {
+          "enum": [
+            "retrying",
+            "waiting",
+            "warning",
+            "refused",
+            "safety"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "rate_limited",
+                "overloaded",
+                "network",
+                "billing",
+                "not_configured",
+                "too_large",
+                "model_unavailable",
+                "run_queue",
+                "build_queue",
+                "build_memory",
+                "build_time",
+                "build_crash",
+                "preempted",
+                "stopped",
+                "interrupted",
+                "save_failed",
+                "unknown"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "retry_in_s": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "retrying: seconds to wait",
+          "title": "Retry In S"
+        },
+        "attempt": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "retrying: this retry's number",
+          "title": "Attempt"
+        },
+        "attempts": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "retrying: retries allowed",
+          "title": "Attempts"
+        },
+        "place": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "waiting: place in line, 1: next",
+          "title": "Place"
+        },
+        "categories": {
+          "description": "safety: what kind of product it is, e.g. \"a product for children\"",
+          "items": {
+            "type": "string"
+          },
+          "title": "Categories",
+          "type": "array"
+        },
+        "regulations": {
+          "description": "safety: kinds of regulations that may apply; none were checked",
+          "items": {
+            "type": "string"
+          },
+          "title": "Regulations",
+          "type": "array"
+        },
+        "region": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "safety: the region the user named; null when unknown",
+          "title": "Region"
+        }
+      },
+      "required": [
+        "type",
+        "kind",
+        "text"
+      ],
+      "title": "NoticeEvent",
+      "type": "object"
+    },
+    "PlanEvent": {
+      "additionalProperties": false,
+      "description": "Claude's build plan for a new design, shown before any edit.",
+      "properties": {
+        "type": {
+          "const": "plan",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Steps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "message_id",
+        "steps"
+      ],
+      "title": "PlanEvent",
+      "type": "object"
+    },
+    "ProgressEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "progress",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "text": {
+          "description": "A progress line, e.g. \"Fixing the cutout · round 1 of 4\"",
+          "title": "Text",
+          "type": "string"
+        },
+        "round": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Round"
+        },
+        "rounds": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rounds"
+        }
+      },
+      "required": [
+        "type",
+        "message_id",
+        "text"
+      ],
+      "title": "ProgressEvent",
+      "type": "object"
+    },
+    "ProposedChange": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Stable within the set: the parameter path",
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "proposed",
+            "accepted",
+            "rejected"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "rounds": {
+          "description": "Fix rounds whose edits touched it",
+          "items": {
+            "type": "integer"
+          },
+          "title": "Rounds",
+          "type": "array"
+        },
+        "delta": {
+          "$ref": "#/$defs/GeometryDelta"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/CheckLink"
+          },
+          "title": "Checks",
+          "type": "array"
+        },
+        "comment": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The comment this change answers (a comment sent to Claude): its thread shows the change with accept, reject and Undo",
+          "title": "Comment"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "reason",
+        "status",
+        "delta"
+      ],
+      "title": "ProposedChange",
+      "type": "object"
+    },
+    "QuestionEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "question",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "question_id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Question Id",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/QuestionOption"
+          },
+          "minItems": 2,
+          "title": "Options",
+          "type": "array"
+        },
+        "location": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Location"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The spot on the model the question is about, to pin it at"
+        },
+        "conflict": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConstraintConflict"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Set when Claude asks because the constraints can't all be met"
+        }
+      },
+      "required": [
+        "type",
+        "message_id",
+        "question_id",
+        "text",
+        "options"
+      ],
+      "title": "QuestionEvent",
+      "type": "object"
+    },
+    "QuestionOption": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        }
+      },
+      "required": [
+        "id",
+        "label"
+      ],
+      "title": "QuestionOption",
+      "type": "object"
+    },
+    "QueueEvent": {
+      "additionalProperties": false,
+      "description": "The session's message queue changed (a message queued, edited, moved, removed or sent,\nor a question pausing it): the whole queue as it is now, so every tab shows the same.",
+      "properties": {
+        "type": {
+          "const": "queue",
+          "title": "Type",
+          "type": "string"
+        },
+        "queue": {
+          "$ref": "#/$defs/MessageQueue"
+        },
+        "sent": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The queued message this change sent, if it sent one",
+          "title": "Sent"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The stored user message `sent` became (`GET .../messages`)",
+          "title": "Message Id"
+        }
+      },
+      "required": [
+        "type",
+        "queue"
+      ],
+      "title": "QueueEvent",
+      "type": "object"
+    },
+    "QueuedMessage": {
+      "additionalProperties": false,
+      "description": "A message sent while Claude was working: it waits in the session's queue and is sent,\nas a normal message, once the runs before it have ended (`GET .../queue`).",
+      "properties": {
+        "id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "message": {
+          "$ref": "#/$defs/MessageCreate",
+          "description": "What is sent when its turn comes (text, attachments, selection, standards, model, effort and mode); never an answer"
+        }
+      },
+      "required": [
+        "id",
+        "created_at",
+        "message"
+      ],
+      "title": "QueuedMessage",
+      "type": "object"
+    },
+    "RiskFix": {
+      "additionalProperties": false,
+      "description": "The proposed change that answers a risk: what it sets, and the checks of the design with\nit alone. A fix can't break a check that passes without it.",
+      "properties": {
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "edits": {
+          "additionalProperties": true,
+          "description": "Parameter path to new value; `code` for new code",
+          "title": "Edits",
+          "type": "object"
+        },
+        "changes": {
+          "items": {
+            "$ref": "#/$defs/GeometryDelta"
+          },
+          "minItems": 1,
+          "title": "Changes",
+          "type": "array"
+        },
+        "resolves": {
+          "description": "The risk is gone on the build with the fix alone",
+          "title": "Resolves",
+          "type": "boolean"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/CheckLink"
+          },
+          "title": "Checks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title",
+        "edits",
+        "changes",
+        "resolves"
+      ],
+      "title": "RiskFix",
+      "type": "object"
+    },
+    "RiskFlag": {
+      "additionalProperties": false,
+      "description": "A risk the checks don't block, named in one line in chat, with a fix.",
+      "properties": {
+        "id": {
+          "description": "`<kind>:<feature or check>`, unique in the set",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "description": "`thick`: a section that sinks when molded; `thin`, `low_draft`: an analysis spot no failing check covers; `near_limit`: a passing check close to its limit",
+          "enum": [
+            "thick",
+            "thin",
+            "low_draft",
+            "near_limit"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "message": {
+          "description": "The one line said in chat",
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "standard": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Standard"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Limit"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "location": {
+          "$ref": "#/$defs/RiskLocation"
+        },
+        "status": {
+          "description": "The fix's review status; starts `proposed`",
+          "enum": [
+            "proposed",
+            "accepted",
+            "rejected"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "fix": {
+          "$ref": "#/$defs/RiskFix"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "message",
+        "location",
+        "status",
+        "fix"
+      ],
+      "title": "RiskFlag",
+      "type": "object"
+    },
+    "RiskFlags": {
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "risk-flags/1",
+          "default": "risk-flags/1",
+          "title": "Contract",
+          "type": "string"
+        },
+        "build": {
+          "description": "The build the risks were found on",
+          "title": "Build",
+          "type": "string"
+        },
+        "flags": {
+          "items": {
+            "$ref": "#/$defs/RiskFlag"
+          },
+          "title": "Flags",
+          "type": "array"
+        }
+      },
+      "required": [
+        "build",
+        "flags"
+      ],
+      "title": "RiskFlags",
+      "type": "object"
+    },
+    "RiskLocation": {
+      "additionalProperties": false,
+      "description": "Where a risk is: the part, the feature or component, the faces when the analysis names\nthem, and a point (mm, board coordinates) when known.",
+      "properties": {
+        "part": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Part"
+        },
+        "feature": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feature"
+        },
+        "component": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Component"
+        },
+        "faces": {
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Faces",
+          "type": "array"
+        },
+        "point": {
+          "anyOf": [
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Point"
+        }
+      },
+      "title": "RiskLocation",
+      "type": "object"
+    },
+    "RisksReadyEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "risks_ready",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The run's message; null for a review outside a run",
+          "title": "Message Id"
+        },
+        "risk_flags": {
+          "$ref": "#/$defs/RiskFlags",
+          "description": "Same shape as `GET .../risks`"
+        }
+      },
+      "required": [
+        "type",
+        "risk_flags"
+      ],
+      "title": "RisksReadyEvent",
+      "type": "object"
+    },
+    "Selection": {
+      "additionalProperties": false,
+      "description": "What the user selected on the model when they sent the message.",
+      "properties": {
+        "part": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The part everything selected is on; null across parts",
+          "title": "Part"
+        },
+        "parts": {
+          "description": "Whole parts selected",
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Parts",
+          "type": "array"
+        },
+        "faces": {
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Faces",
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Edges",
+          "type": "array"
+        },
+        "components": {
+          "description": "Board components selected (reference designators). Their opening faces are not added to `faces`",
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Components",
+          "type": "array"
+        },
+        "point": {
+          "anyOf": [
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Point"
+        }
+      },
+      "title": "Selection",
+      "type": "object"
+    },
+    "TextEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "text",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "delta": {
+          "description": "Text tokens to append to the message",
+          "title": "Delta",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "message_id",
+        "delta"
+      ],
+      "title": "TextEvent",
+      "type": "object"
+    },
+    "TitleEvent": {
+      "additionalProperties": false,
+      "description": "The session was renamed: by Claude, naming the part it designs (`message_id` of its run),\nor by the user (`message_id` null). The header and Recents show the new name.",
+      "properties": {
+        "type": {
+          "const": "title",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message Id"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "title_locked": {
+          "default": false,
+          "title": "Title Locked",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "title"
+      ],
+      "title": "TitleEvent",
+      "type": "object"
+    },
+    "UserMessageEvent": {
+      "additionalProperties": false,
+      "description": "The user sent a message (typed, an answer, a queued message sent, a revision load, a\nRetry): the message as stored, so every tab shows it, not only the one that sent it.",
+      "properties": {
+        "type": {
+          "const": "user_message",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "description": "The stored message's ID (`GET .../messages`)",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "message": {
+          "$ref": "#/$defs/Message"
+        }
+      },
+      "required": [
+        "type",
+        "message_id",
+        "message"
+      ],
+      "title": "UserMessageEvent",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "build_ready": "#/$defs/BuildReadyEvent",
+      "changes_ready": "#/$defs/ChangesReadyEvent",
+      "comment": "#/$defs/CommentEvent",
+      "constraints": "#/$defs/ConstraintsEvent",
+      "error": "#/$defs/ErrorEvent",
+      "found": "#/$defs/FoundEvent",
+      "message_end": "#/$defs/MessageEndEvent",
+      "message_start": "#/$defs/MessageStartEvent",
+      "notice": "#/$defs/NoticeEvent",
+      "plan": "#/$defs/PlanEvent",
+      "progress": "#/$defs/ProgressEvent",
+      "question": "#/$defs/QuestionEvent",
+      "queue": "#/$defs/QueueEvent",
+      "risks_ready": "#/$defs/RisksReadyEvent",
+      "text": "#/$defs/TextEvent",
+      "title": "#/$defs/TitleEvent",
+      "user_message": "#/$defs/UserMessageEvent"
+    },
+    "propertyName": "type"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/MessageStartEvent"
+    },
+    {
+      "$ref": "#/$defs/TextEvent"
+    },
+    {
+      "$ref": "#/$defs/ProgressEvent"
+    },
+    {
+      "$ref": "#/$defs/QuestionEvent"
+    },
+    {
+      "$ref": "#/$defs/BuildReadyEvent"
+    },
+    {
+      "$ref": "#/$defs/ChangesReadyEvent"
+    },
+    {
+      "$ref": "#/$defs/ConstraintsEvent"
+    },
+    {
+      "$ref": "#/$defs/PlanEvent"
+    },
+    {
+      "$ref": "#/$defs/RisksReadyEvent"
+    },
+    {
+      "$ref": "#/$defs/FoundEvent"
+    },
+    {
+      "$ref": "#/$defs/MessageEndEvent"
+    },
+    {
+      "$ref": "#/$defs/ErrorEvent"
+    },
+    {
+      "$ref": "#/$defs/CommentEvent"
+    },
+    {
+      "$ref": "#/$defs/QueueEvent"
+    },
+    {
+      "$ref": "#/$defs/NoticeEvent"
+    },
+    {
+      "$ref": "#/$defs/TitleEvent"
+    },
+    {
+      "$ref": "#/$defs/UserMessageEvent"
+    }
+  ],
+  "title": "Session server-sent event (the JSON in each event's data line)"
+}

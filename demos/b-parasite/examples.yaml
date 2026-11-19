@@ -1,0 +1,21 @@
+# Examples a new session can open (New > "Open example", GET /api/examples, then
+# POST /api/sessions with {"example": id}). A session starts empty otherwise: an example is one
+# design the general tool handles, not the app.
+#
+# Fields of each example:
+#   id           stable identifier, kebab-case; the session API names the example by it
+#   description  one line the New screen shows under the title
+#   changes      a board revision example: the changes file in demos/b-parasite/ (CHANGES.md format)
+#                that names the previous and the new revision. The session opens on the
+#                existing design for the previous revision, with the new one ready to load.
+#                The title is "<board> <previous> to <new>", from the board files.
+#   standards    optional: a file here of constraints the example brings (standards.yaml
+#                format), added to the session's constraint set, never to the default set.
+
+examples:
+  - id: board-revision
+    description: >-
+      A new board revision arrives: update the existing enclosure for it, with every change
+      proved by the checks.
+    changes: CHANGES.md
+    standards: constraints.yaml

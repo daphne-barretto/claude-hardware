@@ -1,0 +1,421 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "BoardRef": {
+      "additionalProperties": false,
+      "description": "A board revision, as named in its `demos/<board>/*.json` file.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "revision": {
+          "minLength": 1,
+          "title": "Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "revision"
+      ],
+      "title": "BoardRef",
+      "type": "object"
+    },
+    "CheckResult": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Unique in the report. The check name, or `<check>:<subject>` when a check runs once per subject (e.g. `opening_alignment:Q4-sensor_window`).",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "check": {
+          "description": "Name of the check that produced the result",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Check",
+          "type": "string"
+        },
+        "title": {
+          "description": "Short label for the checks strip",
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "standard": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ID of the standard in `standards.yaml`, null for board checks",
+          "title": "Standard"
+        },
+        "component": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Board reference designator",
+          "title": "Component"
+        },
+        "opening": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Board opening ID",
+          "title": "Opening"
+        },
+        "parts": {
+          "anyOf": [
+            {
+              "items": {
+                "maxLength": 200,
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+                "type": "string"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The two assembly parts the result is between (e.g. `[\"base\", \"lid\"]`, `[\"lid\", \"heat_set_insert_1\"]`, `[\"lid\", \"board\"]`), null for a result about one part or none. `board` is the board, drawn from the board data rather than the mesh.",
+          "title": "Parts"
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "fail",
+            "untested",
+            "not_applicable"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "measured": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Measured"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "required": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Required"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "summary": {
+          "description": "One sentence: what was found",
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        },
+        "covers": {
+          "description": "What the check covers (and what it doesn't)",
+          "minLength": 1,
+          "title": "Covers",
+          "type": "string"
+        },
+        "location": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Location"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why the standard was not checked: it does not apply to this design (`applies_to`; required when the status is `not_applicable`), or it is turned off in its set (an `untested` result naming a standard). Never set on a pass or fail",
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "id",
+        "check",
+        "title",
+        "status",
+        "summary",
+        "covers"
+      ],
+      "title": "CheckResult",
+      "type": "object"
+    },
+    "CheckSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "pass": {
+          "minimum": 0,
+          "title": "Pass",
+          "type": "integer"
+        },
+        "fail": {
+          "minimum": 0,
+          "title": "Fail",
+          "type": "integer"
+        },
+        "untested": {
+          "minimum": 0,
+          "title": "Untested",
+          "type": "integer"
+        },
+        "not_applicable": {
+          "default": 0,
+          "description": "Standards that do not apply to this design",
+          "minimum": 0,
+          "title": "Not Applicable",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "pass",
+        "fail",
+        "untested"
+      ],
+      "title": "CheckSummary",
+      "type": "object"
+    },
+    "Location": {
+      "additionalProperties": false,
+      "description": "Where on the model something is: a point (mm, board coordinates) and the faces and edges\nit concerns, by their stable mesh IDs.",
+      "properties": {
+        "point": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Point",
+          "type": "array"
+        },
+        "part": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Part node name, e.g. `lid`",
+          "title": "Part"
+        },
+        "faces": {
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Faces",
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Edges",
+          "type": "array"
+        }
+      },
+      "required": [
+        "point"
+      ],
+      "title": "Location",
+      "type": "object"
+    },
+    "Measured": {
+      "additionalProperties": false,
+      "description": "A measured value. Text for spec checks (e.g. the material found).",
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "enum": [
+                "mm",
+                "deg",
+                "mm2",
+                "mm3"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "Measured",
+      "type": "object"
+    },
+    "Required": {
+      "additionalProperties": false,
+      "description": "The limit a result is judged against, in the same shape as a standard.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "min",
+            "max",
+            "tolerance",
+            "spec"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "enum": [
+                "mm",
+                "deg",
+                "mm2",
+                "mm3"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "kind",
+        "value"
+      ],
+      "title": "Required",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "check-results/1",
+      "title": "Contract",
+      "type": "string"
+    },
+    "build_id": {
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+      "title": "Build Id",
+      "type": "string"
+    },
+    "board": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BoardRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The board revision the design was checked against; null for a design without a board"
+    },
+    "results": {
+      "items": {
+        "$ref": "#/$defs/CheckResult"
+      },
+      "minItems": 1,
+      "title": "Results",
+      "type": "array"
+    },
+    "summary": {
+      "$ref": "#/$defs/CheckSummary"
+    }
+  },
+  "required": [
+    "contract",
+    "build_id",
+    "board",
+    "results",
+    "summary"
+  ],
+  "title": "Check results",
+  "type": "object"
+}

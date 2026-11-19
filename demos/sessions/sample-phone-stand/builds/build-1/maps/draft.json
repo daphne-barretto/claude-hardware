@@ -1,0 +1,227 @@
+{
+  "contract": "analysis-map/1",
+  "build_id": "build-1",
+  "type": "draft",
+  "standard": "min_draft",
+  "standard_title": "Minimum draft angle",
+  "unit": "deg",
+  "legend": {
+    "min": 0.0,
+    "max": 3.0,
+    "limit": 1.0,
+    "unit": "deg"
+  },
+  "parts": [
+    {
+      "part": "stand",
+      "values": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        null,
+        null,
+        null,
+        null,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        null,
+        null,
+        null,
+        null,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        null,
+        null,
+        null,
+        null,
+        20.0,
+        20.0,
+        20.0,
+        20.0,
+        70.0,
+        70.0,
+        70.0,
+        70.0,
+        20.0,
+        20.0,
+        20.0,
+        20.0,
+        20.0,
+        20.0,
+        20.0,
+        20.0,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        34.151,
+        34.151,
+        34.151,
+        34.151,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "flagged": [
+    {
+      "id": "low_draft:stand.front_lip.0",
+      "kind": "low_draft",
+      "value": 0.0,
+      "message": "front_lip has 0 deg of draft, less than the 1 deg minimum (Minimum draft angle)",
+      "location": {
+        "point": [
+          0.0,
+          30.0,
+          2.0
+        ],
+        "part": "stand",
+        "faces": [
+          "stand.front_lip.0"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "low_draft:stand.back_rest.1",
+      "kind": "low_draft",
+      "value": 0.0,
+      "message": "back_rest has 0 deg of draft, less than the 1 deg minimum (Minimum draft angle)",
+      "location": {
+        "point": [
+          3.958,
+          -40.0,
+          4.082
+        ],
+        "part": "stand",
+        "faces": [
+          "stand.back_rest.1"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "low_draft:stand.back_rest.2",
+      "kind": "low_draft",
+      "value": 0.0,
+      "message": "back_rest has 0 deg of draft, less than the 1 deg minimum (Minimum draft angle)",
+      "location": {
+        "point": [
+          3.958,
+          40.0,
+          4.082
+        ],
+        "part": "stand",
+        "faces": [
+          "stand.back_rest.2"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "low_draft:stand.front_lip.2",
+      "kind": "low_draft",
+      "value": 0.0,
+      "message": "front_lip has 0 deg of draft, less than the 1 deg minimum (Minimum draft angle)",
+      "location": {
+        "point": [
+          4.0,
+          30.0,
+          5.5
+        ],
+        "part": "stand",
+        "faces": [
+          "stand.front_lip.2"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "low_draft:stand.stand.3",
+      "kind": "low_draft",
+      "value": 0.0,
+      "message": "stand has 0 deg of draft, less than the 1 deg minimum (Minimum draft angle)",
+      "location": {
+        "point": [
+          95.0,
+          30.0,
+          0.5
+        ],
+        "part": "stand",
+        "faces": [
+          "stand.stand.3"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "low_draft:stand.support_rib.1",
+      "kind": "low_draft",
+      "value": 0.0,
+      "message": "support_rib has 0 deg of draft, less than the 1 deg minimum (Minimum draft angle)",
+      "location": {
+        "point": [
+          30.64,
+          2.0,
+          12.043
+        ],
+        "part": "stand",
+        "faces": [
+          "stand.support_rib.1"
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "low_draft:stand.support_rib.0",
+      "kind": "low_draft",
+      "value": 0.0,
+      "message": "support_rib has 0 deg of draft, less than the 1 deg minimum (Minimum draft angle)",
+      "location": {
+        "point": [
+          30.64,
+          -2.0,
+          12.043
+        ],
+        "part": "stand",
+        "faces": [
+          "stand.support_rib.0"
+        ],
+        "edges": []
+      }
+    }
+  ]
+}

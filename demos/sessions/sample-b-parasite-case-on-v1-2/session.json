@@ -1,0 +1,141 @@
+{
+  "session": {
+    "id": "sample-b-parasite-case-on-v1-2",
+    "title": "b-parasite case on v1.2",
+    "created_at": "2026-11-18T10:44:08.115435Z",
+    "board": {
+      "name": "b-parasite",
+      "revision": "1.2"
+    },
+    "status": "idle",
+    "latest_build_id": "build-1",
+    "next_revision": {
+      "name": "b-parasite",
+      "revision": "2.0"
+    },
+    "standards": "hardware_team",
+    "sample": true
+  },
+  "messages": [],
+  "events": [
+    {
+      "id": 1,
+      "event": {
+        "type": "build_ready",
+        "message_id": null,
+        "build": {
+          "id": "build-1",
+          "created_at": "2026-11-18T10:44:17.657714Z",
+          "board": {
+            "name": "b-parasite",
+            "revision": "1.2"
+          },
+          "status": "ready",
+          "checks": {
+            "pass": 74,
+            "fail": 0,
+            "untested": 3,
+            "not_applicable": 1
+          },
+          "maps": [
+            "draft",
+            "wall_thickness"
+          ],
+          "mesh_url": "/api/sessions/sample-b-parasite-case-on-v1-2/builds/build-1/mesh",
+          "checks_url": "/api/sessions/sample-b-parasite-case-on-v1-2/builds/build-1/checks",
+          "source_url": "/api/sessions/sample-b-parasite-case-on-v1-2/builds/build-1/source",
+          "board_url": "/api/sessions/sample-b-parasite-case-on-v1-2/builds/build-1/board",
+          "step_url": null,
+          "restored_from": null,
+          "failure": null,
+          "origin": {
+            "kind": "existing",
+            "file_name": "b-parasite-case.step"
+          }
+        }
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "wall",
+      "value": 2.5,
+      "unit": "mm",
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "Wall thickness, square to the face",
+      "feature": null
+    },
+    {
+      "name": "draft",
+      "value": 1.5,
+      "unit": "deg",
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "Draft on faces along the mold pull",
+      "feature": null
+    },
+    {
+      "name": "clearance",
+      "value": 0.5,
+      "unit": "mm",
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "Gap kept around every component",
+      "feature": null
+    },
+    {
+      "name": "material",
+      "value": "molded ABS",
+      "unit": null,
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "Material",
+      "feature": null
+    },
+    {
+      "name": "z_top",
+      "value": 7.6,
+      "unit": "mm",
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "Top of the lid",
+      "feature": null
+    },
+    {
+      "name": "ceiling",
+      "value": 5.1,
+      "unit": "mm",
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "Underside of the lid's roof",
+      "feature": null
+    },
+    {
+      "name": "floor_top",
+      "value": -5.0,
+      "unit": "mm",
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "Top of the base's floor",
+      "feature": null
+    },
+    {
+      "name": "z_bottom",
+      "value": -7.5,
+      "unit": "mm",
+      "locked": false,
+      "min": null,
+      "max": null,
+      "description": "Bottom of the base",
+      "feature": null
+    }
+  ]
+}

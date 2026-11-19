@@ -1,0 +1,44 @@
+{
+  "params": {
+    "length": 60,
+    "width": 40,
+    "height": 30,
+    "wall": 2.5,
+    "floor": 2.5,
+    "draft_deg": 1.5
+  },
+  "features": [
+    {
+      "tag": "box",
+      "part": "box",
+      "centroid": [
+        0.0,
+        0.0,
+        15.1665
+      ],
+      "size": [
+        60.0,
+        40.0,
+        30.0
+      ],
+      "volume": 69667.9523,
+      "rotation": 0.0
+    },
+    {
+      "tag": "pocket",
+      "part": "box",
+      "centroid": [
+        0.0,
+        0.0,
+        16.9186
+      ],
+      "size": [
+        55.0507,
+        35.0507,
+        28.5
+      ],
+      "volume": 53097.2639,
+      "rotation": 0.0
+    }
+  ]
+}

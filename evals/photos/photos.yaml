@@ -1,0 +1,28 @@
+# The photo-to-part evaluation set: synthetic rendered photos (render.py), each with the
+# object's true dimensions in mm and what the person asks for. `measurement` is the one real
+# dimension the person gives with the photo; without it, Claude has to assume the scale and
+# say so. The agent-eval workflow scores each photo on whether the part builds and the checks
+# run (backend/tests/test_photo_live.py).
+photos:
+  - id: mug-stand
+    file: mug.jpg
+    request: Make a stand this mug sits in, so it doesn't slide around on my desk.
+    size: {shape: cylinder, width: 82, depth: 82, height: 95}
+    measurement: null
+    px_per_mm: 2.6
+    color: [236, 232, 222]
+    handle: true
+  - id: phone-stand
+    file: phone.jpg
+    request: Design a desk stand that holds this phone upright. It is 150 mm tall.
+    size: {shape: box, width: 72, depth: 9, height: 150}
+    measurement: {dimension: height, value: 150}
+    px_per_mm: 1.6
+    color: [40, 42, 48]
+  - id: tin-cover
+    file: tin.jpg
+    request: I need a cover that fits over the top of this tin.
+    size: {shape: box, width: 75, depth: 75, height: 120}
+    measurement: null
+    px_per_mm: 1.9
+    color: [168, 54, 48]

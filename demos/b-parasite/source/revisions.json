@@ -1,0 +1,27 @@
+{
+  "_comment": "Board revisions converted by `python -m app.boards.kicad`. Each kicad_file is an unmodified copy of `path` at `commit` in `repo`. pcb_material is the board substrate: the 2.0 stackup names FR4; 1.2 has no stackup, so it is KiCad's default substrate, FR4.",
+  "revisions": [
+    {
+      "name": "b-parasite",
+      "revision": "1.2",
+      "repo": "https://github.com/rbaron/b-parasite",
+      "commit": "6528565fade5c9c85ce7d33ee7d15f84c3debdb7",
+      "path": "kicad/parasite.kicad_pcb",
+      "license": "CC BY-SA 4.0",
+      "kicad_file": "b-parasite-1.2.kicad_pcb",
+      "output": "b-parasite-1.2.json",
+      "pcb_material": "FR4"
+    },
+    {
+      "name": "b-parasite",
+      "revision": "2.0",
+      "repo": "https://github.com/rbaron/b-parasite",
+      "commit": "15920b1ae4519c1a84581e1fa85689614ec402b3",
+      "path": "kicad/parasite.kicad_pcb",
+      "license": "CC BY-SA 4.0",
+      "kicad_file": "b-parasite-2.0.kicad_pcb",
+      "output": "b-parasite-2.0.json",
+      "pcb_material": "FR4"
+    }
+  ]
+}

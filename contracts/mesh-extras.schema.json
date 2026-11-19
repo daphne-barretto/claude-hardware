@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mesh contract extras (glTF asset.extras and part node.extras)",
+  "type": "object",
+  "properties": {
+    "asset": {
+      "additionalProperties": false,
+      "description": "`asset.extras`: identifies the contract and the units.",
+      "properties": {
+        "contract": {
+          "const": "mesh/1",
+          "title": "Contract",
+          "type": "string"
+        },
+        "units": {
+          "const": "mm",
+          "title": "Units",
+          "type": "string"
+        },
+        "up_axis": {
+          "const": "Z",
+          "description": "Part nodes are in board coordinates, Z up",
+          "title": "Up Axis",
+          "type": "string"
+        },
+        "source": {
+          "additionalProperties": true,
+          "description": "Free-form provenance: board, build ID, generator",
+          "title": "Source",
+          "type": "object"
+        }
+      },
+      "required": [
+        "contract",
+        "units",
+        "up_axis"
+      ],
+      "title": "AssetExtras",
+      "type": "object"
+    },
+    "part": {
+      "$defs": {
+        "MeshEdge": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "description": "Stable edge ID, unique in the whole mesh",
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "title": "Id",
+              "type": "string"
+            },
+            "feature": {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "title": "Feature",
+              "type": "string"
+            },
+            "faces": {
+              "description": "The faces the edge bounds (two, or one on a seam)",
+              "items": {
+                "maxLength": 200,
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+                "type": "string"
+              },
+              "maxItems": 2,
+              "title": "Faces",
+              "type": "array"
+            }
+          },
+          "required": [
+            "id",
+            "feature",
+            "faces"
+          ],
+          "title": "MeshEdge",
+          "type": "object"
+        },
+        "MeshFace": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "description": "Stable face ID, unique in the whole mesh",
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "title": "Id",
+              "type": "string"
+            },
+            "feature": {
+              "description": "Feature that created the face, e.g. `opening_Q4`",
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "title": "Feature",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "feature"
+          ],
+          "title": "MeshFace",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "`node.extras` of a part node.",
+      "properties": {
+        "part": {
+          "description": "Part name, e.g. `base` or `lid`; same as `node.name`",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Part",
+          "type": "string"
+        },
+        "kind": {
+          "default": "enclosure",
+          "description": "`enclosure` for a molded part (base, lid), `insert` for bought-in hardware pressed into it (a heat-set insert)",
+          "enum": [
+            "enclosure",
+            "insert"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "material": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. `molded ABS`, `brass`",
+          "title": "Material"
+        },
+        "placement": {
+          "default": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "description": "Where the part's own origin sits in the assembly (mm, board coordinates). Informational: vertex positions are already in board coordinates",
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Placement",
+          "type": "array"
+        },
+        "faces": {
+          "description": "Indexed by `_FACE_ID`",
+          "items": {
+            "$ref": "#/$defs/MeshFace"
+          },
+          "minItems": 1,
+          "title": "Faces",
+          "type": "array"
+        },
+        "edges": {
+          "description": "Indexed by `_EDGE_ID`",
+          "items": {
+            "$ref": "#/$defs/MeshEdge"
+          },
+          "title": "Edges",
+          "type": "array"
+        }
+      },
+      "required": [
+        "part",
+        "faces"
+      ],
+      "title": "PartExtras",
+      "type": "object"
+    }
+  }
+}

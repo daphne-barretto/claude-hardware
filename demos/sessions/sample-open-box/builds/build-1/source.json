@@ -1,0 +1,25 @@
+{
+  "build_id": "build-1",
+  "backend": "build123d",
+  "language": "python",
+  "filename": "design.py",
+  "code": "from build123d import *\nimport math\n\ndef build(params):\n    L = params[\"length\"]; W = params[\"width\"]; H = params[\"height\"]\n    t = params[\"wall\"]; fl = params[\"floor\"]; d = math.radians(params[\"draft_deg\"])\n    tn = math.tan(d)\n    # wall measured normal to the drafted face\n    tw = t / math.cos(d)\n    s = H * tn  # outer inset at bottom per side\n    outer = loft([\n        Pos(0, 0, 0) * Rectangle(L - 2 * s, W - 2 * s),\n        Pos(0, 0, H) * Rectangle(L, W),\n    ])\n    over = 1.0\n    zb = fl\n    zt = H + over\n    il_top = L - 2 * tw + 2 * over * tn\n    iw_top = W - 2 * tw + 2 * over * tn\n    drop = (zt - zb) * tn\n    pocket = loft([\n        Pos(0, 0, zb) * Rectangle(il_top - 2 * drop, iw_top - 2 * drop),\n        Pos(0, 0, zt) * Rectangle(il_top, iw_top),\n    ])\n    box = outer - pocket\n    return {\n        \"parts\": {\"box\": box},\n        \"features\": [\n            {\"tag\": \"box\", \"part\": \"box\", \"tools\": [outer]},\n            {\"tag\": \"pocket\", \"part\": \"box\", \"tools\": [pocket]},\n        ],\n        \"materials\": {\"box\": \"molded ABS\"},\n    }\n",
+  "features": [
+    {
+      "tag": "box",
+      "part": "box",
+      "lines": [
+        26,
+        33
+      ]
+    },
+    {
+      "tag": "pocket",
+      "part": "box",
+      "lines": [
+        26,
+        33
+      ]
+    }
+  ]
+}

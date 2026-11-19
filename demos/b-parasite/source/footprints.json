@@ -1,0 +1,85 @@
+{
+  "_comment": "Per-footprint data KiCad does not carry: body height above the board, the part's role, the openings the enclosure must provide, and a rotation offset that makes rotation 0 mean the same physical orientation across footprint libraries. See backend/app/boards/SCHEMA.md.",
+  "footprints": {
+    "Capacitor_SMD:C_0402_1005Metric": {
+      "height": 0.5,
+      "height_source": "EIA 0402 (1005 metric) nominal thickness"
+    },
+    "Capacitor_SMD:C_0805_2012Metric": {
+      "height": 1.25,
+      "height_source": "EIA 0805 (2012 metric) maximum thickness"
+    },
+    "Resistor_SMD:R_0402_1005Metric": {
+      "height": 0.35,
+      "height_source": "EIA 0402 (1005 metric) nominal thickness"
+    },
+    "Crystal:Crystal_SMD_3215-2Pin_3.2x1.5mm": {
+      "height": 0.9,
+      "height_source": "3215 crystal package maximum height"
+    },
+    "Diode_SMD:D_MiniMELF": {
+      "height": 1.6,
+      "height_source": "MiniMELF (SOD-80) body diameter"
+    },
+    "LED_SMD:LED_0603_1608Metric": {
+      "role": "status LED",
+      "height": 0.8,
+      "height_source": "0603 LED typical height"
+    },
+    "Package_TO_SOT_SMD:SOT-23": {
+      "height": 1.12,
+      "height_source": "SOT-23 (TO-236) maximum height"
+    },
+    "TestPoint:TestPoint_Pad_D1.0mm": {
+      "role": "test pad",
+      "height": 0.0,
+      "height_source": "bare copper pad"
+    },
+    "kicad:BatteryHolder_Keystone_3002_1x2032": {
+      "role": "battery holder",
+      "height": 4.2,
+      "height_source": "estimate: CR2032 cell (3.2 mm) plus retainer; confirm against the Keystone 3002 drawing"
+    },
+    "kicad:Sensirion_DFN-4-1EP_2x2mm_P1mm_EP0.7x1.6mm": {
+      "role": "humidity sensor",
+      "height": 0.75,
+      "height_source": "Sensirion SHTC3 datasheet, 2 x 2 x 0.75 mm DFN",
+      "openings": [{ "kind": "vent" }]
+    },
+    "snapeda:TR8": {
+      "role": "light sensor",
+      "height": 0.6,
+      "height_source": "Everlight ALS-PT19-315C/L177/TR8 datasheet, 0.6 mm",
+      "openings": [{ "kind": "sensor_window" }]
+    },
+    "snapeda:SW_B3U-1000P": {
+      "role": "push button",
+      "height": 1.6,
+      "height_source": "Omron B3U-1000P datasheet, 1.6 mm including actuator",
+      "openings": [{ "kind": "button" }]
+    },
+    "nrfmicro:E73-2G4M08S1C-52840": {
+      "role": "radio module",
+      "height": 2.0,
+      "height_source": "estimate for the Ebyte E73-2G4M08S1C module with shield; confirm against the Ebyte datasheet",
+      "rotation_offset": -90,
+      "_rotation_comment": "This footprint draws the antenna end along +x; the offset makes rotation 0 mean antenna towards +y, as in the snapeda footprint.",
+      "openings": [{ "kind": "antenna_keepout", "offset": [0, 7.5], "size": [13, 3.5] }]
+    },
+    "snapeda:E73-2G4M08S1C": {
+      "role": "radio module",
+      "height": 2.0,
+      "height_source": "estimate for the Ebyte E73-2G4M08S1C module with shield; confirm against the Ebyte datasheet",
+      "_openings_comment": "The antenna keep-out is the footprint's Dwgs.User keep-out band (3.5 mm at the antenna end), clipped to the module width.",
+      "openings": [{ "kind": "antenna_keepout", "offset": [0, 7.5], "size": [13, 3.5] }]
+    },
+    "Symbol:OSHW-Symbol_6.7x6mm_SilkScreen": {
+      "ignore": true,
+      "_comment": "Silkscreen logo, not a part."
+    },
+    "b-parasite:circuit_drawing": {
+      "ignore": true,
+      "_comment": "Silkscreen drawing, not a part."
+    }
+  }
+}

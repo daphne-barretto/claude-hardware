@@ -1,0 +1,35 @@
+# Render Blueprint. Both services run the single image built from the repo-root Dockerfile
+# (no rootDir, so a change anywhere in the repo redeploys).
+# See README.md ("Deploy") and docs/architecture.md ("Hosting") for the env vars and storage.
+services:
+  # Staging: deploys every commit on main.
+  - type: web
+    name: claude-hardware-staging
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    autoDeployTrigger: commit
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: claude-hardware
+      - key: DATA_DIR
+        value: /app/data
+
+  # Demo: never auto-deploys. A tested commit is promoted through its deploy hook (&ref=<sha>).
+  - type: web
+    name: claude-hardware-demo
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    autoDeployTrigger: "off"
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: claude-hardware
+      - key: DATA_DIR
+        value: /app/data

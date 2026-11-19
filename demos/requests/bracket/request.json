@@ -1,0 +1,7 @@
+{
+  "title": "L bracket",
+  "prompt": "An L bracket with two M4 holes, one in each leg.",
+  "reply": "Here is an L bracket: a 50 x 30 mm base and a 40 mm upright, with a 4.5 mm clearance hole for an M4 screw in each leg. Both legs are drafted for molding.",
+  "params": {"length": 50, "width": 30, "height": 40, "thickness": 5, "hole_diameter": 4.5},
+  "standards": {"material": {"standard": "material"}, "draft": {"standard": "min_draft", "plus": 0.5}}
+}

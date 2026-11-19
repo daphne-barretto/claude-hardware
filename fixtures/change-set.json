@@ -1,0 +1,163 @@
+{
+  "contract": "change-set/1",
+  "mode": "manual",
+  "base_build": "build-1",
+  "build": "build-1",
+  "checks": {
+    "pass": 7,
+    "fail": 5,
+    "untested": 3,
+    "not_applicable": 1
+  },
+  "changes": [
+    {
+      "id": "openings.Q4-sensor_window",
+      "title": "Move opening_Q4 (sensor_window for Q4) by (-0.822, -2.976) mm and turn it 90°",
+      "reason": "Board change: Q4 moved and rotated. The case's light-sensor cutout spans y 121.9 to 127.0. The sensor now lies along y (119.3 to 122.1) and sits mostly under the solid top, so it no longer sees light. The window must move down and turn 90°. Fixes Opening alignment (Q4 sensor window).",
+      "status": "proposed",
+      "rounds": [],
+      "delta": {
+        "kind": "modified",
+        "path": "openings.Q4-sensor_window",
+        "feature": "opening_Q4",
+        "component": "Q4",
+        "fields": [
+          {
+            "field": "x",
+            "before": 1.9,
+            "after": 1.078
+          },
+          {
+            "field": "y",
+            "before": 123.714,
+            "after": 120.738
+          },
+          {
+            "field": "rotation",
+            "before": 0.0,
+            "after": 90.0
+          }
+        ],
+        "move": [
+          -0.822,
+          -2.976
+        ],
+        "rotate": 90.0
+      },
+      "checks": [
+        {
+          "id": "opening_alignment:Q4-sensor_window",
+          "check": "opening_alignment",
+          "title": "Opening alignment",
+          "standard": null,
+          "effect": "fixes",
+          "before": "fail",
+          "alone": "pass",
+          "after": "fail"
+        }
+      ],
+      "comment": null
+    },
+    {
+      "id": "openings.RST1-button",
+      "title": "Add opening_RST1 (button for RST1)",
+      "reason": "Board change: RST1 added. The case has no button openings, so the reset button cannot be pressed with the case closed. It also sits directly under the 1 mm vent holes that were placed over the old humidity sensor position. Fixes Opening alignment (RST1 button).",
+      "status": "proposed",
+      "rounds": [],
+      "delta": {
+        "kind": "added",
+        "path": "openings.RST1-button",
+        "feature": "opening_RST1",
+        "component": "RST1",
+        "fields": [],
+        "move": null,
+        "rotate": null
+      },
+      "checks": [
+        {
+          "id": "opening_alignment:RST1-button",
+          "check": "opening_alignment",
+          "title": "Opening alignment",
+          "standard": null,
+          "effect": "fixes",
+          "before": "fail",
+          "alone": "pass",
+          "after": "fail"
+        }
+      ],
+      "comment": null
+    },
+    {
+      "id": "openings.SW1-button",
+      "title": "Add opening_SW1 (button for SW1)",
+      "reason": "Board change: SW1 added. The case has no button openings, so the user button cannot be pressed with the case closed. Fixes Opening alignment (SW1 button).",
+      "status": "proposed",
+      "rounds": [],
+      "delta": {
+        "kind": "added",
+        "path": "openings.SW1-button",
+        "feature": "opening_SW1",
+        "component": "SW1",
+        "fields": [],
+        "move": null,
+        "rotate": null
+      },
+      "checks": [
+        {
+          "id": "opening_alignment:SW1-button",
+          "check": "opening_alignment",
+          "title": "Opening alignment",
+          "standard": null,
+          "effect": "fixes",
+          "before": "fail",
+          "alone": "pass",
+          "after": "fail"
+        }
+      ],
+      "comment": null
+    },
+    {
+      "id": "openings.U2-vent",
+      "title": "Move opening_U2 (vent for U2) by (1.28, -5.444) mm",
+      "reason": "Board change: U2 moved. The case's five vent holes are centred on the old position (x 13.9 to 17.8, y 101.1 to 104.6). The sensor is now about 5.6 mm away under solid wall, so it reads the air sealed inside the case. The vents must follow the sensor. Fixes Opening alignment (U2 vent).",
+      "status": "proposed",
+      "rounds": [],
+      "delta": {
+        "kind": "modified",
+        "path": "openings.U2-vent",
+        "feature": "opening_U2",
+        "component": "U2",
+        "fields": [
+          {
+            "field": "x",
+            "before": 15.8,
+            "after": 17.08
+          },
+          {
+            "field": "y",
+            "before": 102.814,
+            "after": 97.37
+          }
+        ],
+        "move": [
+          1.28,
+          -5.444
+        ],
+        "rotate": null
+      },
+      "checks": [
+        {
+          "id": "opening_alignment:U2-vent",
+          "check": "opening_alignment",
+          "title": "Opening alignment",
+          "standard": null,
+          "effect": "fixes",
+          "before": "fail",
+          "alone": "pass",
+          "after": "fail"
+        }
+      ],
+      "comment": null
+    }
+  ]
+}

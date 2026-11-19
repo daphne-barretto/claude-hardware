@@ -1,0 +1,37 @@
+# Fixture inventory for e2e/ui-inventory-fixtures.spec.ts: nth among controls with the same
+# name, a control the pointer can't reach (pressed from the keyboard), and downloads.
+states:
+  - { id: page, url: /__ui-inventory-fixtures/keyboard-download.html }
+entries:
+  - id: remove
+    screen: fixture
+    role: button
+    name: Remove
+    nth: 1
+    states: [page]
+    expect:
+      - hidden: text "Second item"
+      - visible: text "First item"
+  - id: covered
+    screen: fixture
+    role: button
+    name: Covered
+    states: [page]
+    action: [{ focus: self }, { press: Enter }]
+    expect:
+      - visible: text "Pressed"
+  - id: report
+    screen: fixture
+    role: link
+    name: report.txt
+    states: [page]
+    expect:
+      - download: true
+  # Downloads a file named other than the link says.
+  - id: notes
+    screen: fixture
+    role: link
+    name: notes.txt
+    states: [page]
+    expect:
+      - download: true

@@ -1,0 +1,490 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "CheckLink": {
+      "additionalProperties": false,
+      "description": "A check that proves (or argues against) a change.\n\n`before` is the check on the design the run started from, `alone` on that design plus this\nchange only, and `after` on the current build (the accepted changes); null when that build\nhas no such check or doesn't exist yet.",
+      "properties": {
+        "id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "check": {
+          "title": "Check",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The result's title on the checks strip, as people read it",
+          "title": "Title"
+        },
+        "standard": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Standard"
+        },
+        "effect": {
+          "description": "`fixes`: fails before, passes with the change alone; `breaks`: the reverse; `related`: about the same component or feature",
+          "enum": [
+            "fixes",
+            "breaks",
+            "related"
+          ],
+          "title": "Effect",
+          "type": "string"
+        },
+        "before": {
+          "anyOf": [
+            {
+              "enum": [
+                "pass",
+                "fail",
+                "untested",
+                "not_applicable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Before"
+        },
+        "alone": {
+          "anyOf": [
+            {
+              "enum": [
+                "pass",
+                "fail",
+                "untested",
+                "not_applicable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Alone"
+        },
+        "after": {
+          "anyOf": [
+            {
+              "enum": [
+                "pass",
+                "fail",
+                "untested",
+                "not_applicable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After"
+        }
+      },
+      "required": [
+        "id",
+        "check",
+        "effect"
+      ],
+      "title": "CheckLink",
+      "type": "object"
+    },
+    "FieldDelta": {
+      "additionalProperties": false,
+      "description": "One value that differs: its dot path inside the changed element, before and after\n(null when absent).",
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "before": {
+          "default": null,
+          "title": "Before"
+        },
+        "after": {
+          "default": null,
+          "title": "After"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "title": "FieldDelta",
+      "type": "object"
+    },
+    "GeometryDelta": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "added",
+            "removed",
+            "modified"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "path": {
+          "description": "Parameter path of the changed element (`openings.<id>`)",
+          "title": "Path",
+          "type": "string"
+        },
+        "feature": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Feature tag on the mesh, e.g. `opening_Q4`, if it has one",
+          "title": "Feature"
+        },
+        "component": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Board component it serves",
+          "title": "Component"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FieldDelta"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "move": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How far it moved in x and y, mm (modified elements only)",
+          "title": "Move"
+        },
+        "rotate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How far it turned, degrees",
+          "title": "Rotate"
+        }
+      },
+      "required": [
+        "kind",
+        "path"
+      ],
+      "title": "GeometryDelta",
+      "type": "object"
+    },
+    "RiskFix": {
+      "additionalProperties": false,
+      "description": "The proposed change that answers a risk: what it sets, and the checks of the design with\nit alone. A fix can't break a check that passes without it.",
+      "properties": {
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "edits": {
+          "additionalProperties": true,
+          "description": "Parameter path to new value; `code` for new code",
+          "title": "Edits",
+          "type": "object"
+        },
+        "changes": {
+          "items": {
+            "$ref": "#/$defs/GeometryDelta"
+          },
+          "minItems": 1,
+          "title": "Changes",
+          "type": "array"
+        },
+        "resolves": {
+          "description": "The risk is gone on the build with the fix alone",
+          "title": "Resolves",
+          "type": "boolean"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/CheckLink"
+          },
+          "title": "Checks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title",
+        "edits",
+        "changes",
+        "resolves"
+      ],
+      "title": "RiskFix",
+      "type": "object"
+    },
+    "RiskFlag": {
+      "additionalProperties": false,
+      "description": "A risk the checks don't block, named in one line in chat, with a fix.",
+      "properties": {
+        "id": {
+          "description": "`<kind>:<feature or check>`, unique in the set",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "description": "`thick`: a section that sinks when molded; `thin`, `low_draft`: an analysis spot no failing check covers; `near_limit`: a passing check close to its limit",
+          "enum": [
+            "thick",
+            "thin",
+            "low_draft",
+            "near_limit"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "message": {
+          "description": "The one line said in chat",
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "standard": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Standard"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Limit"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "location": {
+          "$ref": "#/$defs/RiskLocation"
+        },
+        "status": {
+          "description": "The fix's review status; starts `proposed`",
+          "enum": [
+            "proposed",
+            "accepted",
+            "rejected"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "fix": {
+          "$ref": "#/$defs/RiskFix"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "message",
+        "location",
+        "status",
+        "fix"
+      ],
+      "title": "RiskFlag",
+      "type": "object"
+    },
+    "RiskLocation": {
+      "additionalProperties": false,
+      "description": "Where a risk is: the part, the feature or component, the faces when the analysis names\nthem, and a point (mm, board coordinates) when known.",
+      "properties": {
+        "part": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Part"
+        },
+        "feature": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feature"
+        },
+        "component": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Component"
+        },
+        "faces": {
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Faces",
+          "type": "array"
+        },
+        "point": {
+          "anyOf": [
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Point"
+        }
+      },
+      "title": "RiskLocation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "risk-flags/1",
+      "default": "risk-flags/1",
+      "title": "Contract",
+      "type": "string"
+    },
+    "build": {
+      "description": "The build the risks were found on",
+      "title": "Build",
+      "type": "string"
+    },
+    "flags": {
+      "items": {
+        "$ref": "#/$defs/RiskFlag"
+      },
+      "title": "Flags",
+      "type": "array"
+    }
+  },
+  "required": [
+    "build",
+    "flags"
+  ],
+  "title": "Risk flags",
+  "type": "object"
+}

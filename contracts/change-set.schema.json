@@ -1,0 +1,404 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "CheckLink": {
+      "additionalProperties": false,
+      "description": "A check that proves (or argues against) a change.\n\n`before` is the check on the design the run started from, `alone` on that design plus this\nchange only, and `after` on the current build (the accepted changes); null when that build\nhas no such check or doesn't exist yet.",
+      "properties": {
+        "id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "check": {
+          "title": "Check",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The result's title on the checks strip, as people read it",
+          "title": "Title"
+        },
+        "standard": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Standard"
+        },
+        "effect": {
+          "description": "`fixes`: fails before, passes with the change alone; `breaks`: the reverse; `related`: about the same component or feature",
+          "enum": [
+            "fixes",
+            "breaks",
+            "related"
+          ],
+          "title": "Effect",
+          "type": "string"
+        },
+        "before": {
+          "anyOf": [
+            {
+              "enum": [
+                "pass",
+                "fail",
+                "untested",
+                "not_applicable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Before"
+        },
+        "alone": {
+          "anyOf": [
+            {
+              "enum": [
+                "pass",
+                "fail",
+                "untested",
+                "not_applicable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Alone"
+        },
+        "after": {
+          "anyOf": [
+            {
+              "enum": [
+                "pass",
+                "fail",
+                "untested",
+                "not_applicable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After"
+        }
+      },
+      "required": [
+        "id",
+        "check",
+        "effect"
+      ],
+      "title": "CheckLink",
+      "type": "object"
+    },
+    "CheckSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "pass": {
+          "minimum": 0,
+          "title": "Pass",
+          "type": "integer"
+        },
+        "fail": {
+          "minimum": 0,
+          "title": "Fail",
+          "type": "integer"
+        },
+        "untested": {
+          "minimum": 0,
+          "title": "Untested",
+          "type": "integer"
+        },
+        "not_applicable": {
+          "default": 0,
+          "description": "Standards that do not apply to this design",
+          "minimum": 0,
+          "title": "Not Applicable",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "pass",
+        "fail",
+        "untested"
+      ],
+      "title": "CheckSummary",
+      "type": "object"
+    },
+    "FieldDelta": {
+      "additionalProperties": false,
+      "description": "One value that differs: its dot path inside the changed element, before and after\n(null when absent).",
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "before": {
+          "default": null,
+          "title": "Before"
+        },
+        "after": {
+          "default": null,
+          "title": "After"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "title": "FieldDelta",
+      "type": "object"
+    },
+    "GeometryDelta": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "added",
+            "removed",
+            "modified"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "path": {
+          "description": "Parameter path of the changed element (`openings.<id>`)",
+          "title": "Path",
+          "type": "string"
+        },
+        "feature": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Feature tag on the mesh, e.g. `opening_Q4`, if it has one",
+          "title": "Feature"
+        },
+        "component": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Board component it serves",
+          "title": "Component"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FieldDelta"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "move": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How far it moved in x and y, mm (modified elements only)",
+          "title": "Move"
+        },
+        "rotate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How far it turned, degrees",
+          "title": "Rotate"
+        }
+      },
+      "required": [
+        "kind",
+        "path"
+      ],
+      "title": "GeometryDelta",
+      "type": "object"
+    },
+    "ProposedChange": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Stable within the set: the parameter path",
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "proposed",
+            "accepted",
+            "rejected"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "rounds": {
+          "description": "Fix rounds whose edits touched it",
+          "items": {
+            "type": "integer"
+          },
+          "title": "Rounds",
+          "type": "array"
+        },
+        "delta": {
+          "$ref": "#/$defs/GeometryDelta"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/CheckLink"
+          },
+          "title": "Checks",
+          "type": "array"
+        },
+        "comment": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The comment this change answers (a comment sent to Claude): its thread shows the change with accept, reject and Undo",
+          "title": "Comment"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "reason",
+        "status",
+        "delta"
+      ],
+      "title": "ProposedChange",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "change-set/1",
+      "default": "change-set/1",
+      "title": "Contract",
+      "type": "string"
+    },
+    "mode": {
+      "description": "manual: only accepted changes are applied; auto: all start accepted",
+      "enum": [
+        "manual",
+        "auto"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "base_build": {
+      "description": "Build of the design the run started from",
+      "title": "Base Build",
+      "type": "string"
+    },
+    "build": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Build of the accepted changes, once checked",
+      "title": "Build"
+    },
+    "checks": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CheckSummary"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Summary of `build`"
+    },
+    "changes": {
+      "items": {
+        "$ref": "#/$defs/ProposedChange"
+      },
+      "title": "Changes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "mode",
+    "base_build",
+    "build",
+    "changes"
+  ],
+  "title": "Change set",
+  "type": "object"
+}

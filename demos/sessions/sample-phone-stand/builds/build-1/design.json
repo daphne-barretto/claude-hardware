@@ -1,0 +1,82 @@
+{
+  "params": {
+    "width": 80,
+    "base_depth": 95,
+    "base_thickness": 4,
+    "angle": 70,
+    "rest_length": 100,
+    "rest_thickness": 4,
+    "lip_height": 12,
+    "lip_thickness": 4,
+    "seat_depth": 14,
+    "rib_thickness": 4,
+    "rib_height_ratio": 0.7,
+    "rib_inset": 5
+  },
+  "features": [
+    {
+      "tag": "stand",
+      "part": "stand",
+      "centroid": [
+        47.5,
+        0.0,
+        2.0
+      ],
+      "size": [
+        95.0,
+        80.0,
+        4.0
+      ],
+      "volume": 30400.0,
+      "rotation": 0.0
+    },
+    {
+      "tag": "front_lip",
+      "part": "stand",
+      "centroid": [
+        2.0,
+        0.0,
+        8.0
+      ],
+      "size": [
+        4.0,
+        80.0,
+        16.0
+      ],
+      "volume": 5120.0,
+      "rotation": 90.0
+    },
+    {
+      "tag": "back_rest",
+      "part": "stand",
+      "centroid": [
+        36.9804,
+        0.0,
+        50.3006
+      ],
+      "size": [
+        37.9608,
+        80.0,
+        95.3373
+      ],
+      "volume": 32000.0,
+      "rotation": 90.0
+    },
+    {
+      "tag": "support_rib",
+      "part": "stand",
+      "centroid": [
+        51.9856,
+        0.0,
+        25.2595
+      ],
+      "size": [
+        68.7433,
+        4.0,
+        66.7785
+      ],
+      "volume": 9181.1452,
+      "rotation": 0.0
+    }
+  ]
+}

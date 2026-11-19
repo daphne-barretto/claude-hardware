@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Inventory fixture: a control added without an inventory entry</title></head>
+<body>
+  <main>
+    <button type="button" aria-expanded="false" onclick="this.setAttribute('aria-expanded', 'true'); document.getElementById('panel').hidden = false">Details</button>
+    <div id="panel" hidden><p>More details</p></div>
+    <label>Name <input></label>
+    <a href="#done">Done</a>
+    <button type="button" onclick="this.textContent = 'Archived'">Archive</button>
+  </main>
+</body>
+</html>

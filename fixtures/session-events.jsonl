@@ -1,0 +1,97 @@
+{"id": 1, "delay_ms": 0, "event": {"type": "message_start", "message_id": "msg-2", "role": "assistant"}}
+{"id": 2, "delay_ms": 400, "event": {"type": "plan", "message_id": "msg-2", "steps": ["Compare revision 1.2 with 2.0", "Rework the enclosure for Q4 (light sensor)", "Rework the enclosure for RST1 (push button)", "Rework the enclosure for SW1 (push button)", "Rework the enclosure for U2 (humidity sensor)", "Recheck every constraint on 2.0"]}}
+{"id": 3, "delay_ms": 400, "event": {"type": "progress", "message_id": "msg-2", "round": 1, "rounds": 2, "text": "Comparing revision 1.2 with 2.0 · round 1 of 2"}}
+{"id": 4, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "Revision "}}
+{"id": 5, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "2.0 "}}
+{"id": 6, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "changes "}}
+{"id": 7, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "4 "}}
+{"id": 8, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "things "}}
+{"id": 9, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "that "}}
+{"id": 10, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "affect "}}
+{"id": 11, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "the "}}
+{"id": 12, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "enclosure:\n- "}}
+{"id": 13, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "Q4 "}}
+{"id": 14, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "(light "}}
+{"id": 15, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "sensor): "}}
+{"id": 16, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "moved "}}
+{"id": 17, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "and "}}
+{"id": 18, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "rotated\n- "}}
+{"id": 19, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "RST1 "}}
+{"id": 20, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "(push "}}
+{"id": 21, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "button): "}}
+{"id": 22, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "added\n- "}}
+{"id": 23, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "SW1 "}}
+{"id": 24, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "(push "}}
+{"id": 25, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "button): "}}
+{"id": 26, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "added\n- "}}
+{"id": 27, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "U2 "}}
+{"id": 28, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "(humidity "}}
+{"id": 29, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "sensor): "}}
+{"id": 30, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "moved\n\n"}}
+{"id": 31, "delay_ms": 400, "event": {"type": "progress", "message_id": "msg-2", "round": 2, "rounds": 2, "text": "Checking the current enclosure on 2.0 · round 2 of 2"}}
+{"id": 32, "delay_ms": 400, "event": {"type": "build_ready", "message_id": null, "build": {"id": "build-0", "created_at": "2026-01-01T00:00:00Z", "board": {"name": "b-parasite", "revision": "1.2"}, "status": "ready", "checks": {"pass": 10, "fail": 0, "untested": 3, "not_applicable": 1}, "maps": ["draft", "wall_thickness"], "mesh_url": "builds/build-0/mesh", "checks_url": "builds/build-0/checks", "source_url": "builds/build-0/source", "board_url": "builds/build-0/board", "step_url": null, "restored_from": null, "failure": null}}}
+{"id": 33, "delay_ms": 0, "event": {"type": "build_ready", "message_id": "msg-2", "build": {"id": "build-1", "created_at": "2026-01-01T00:00:00Z", "board": {"name": "b-parasite", "revision": "2.0"}, "status": "ready", "checks": {"pass": 7, "fail": 5, "untested": 3, "not_applicable": 1}, "maps": ["draft", "wall_thickness"], "mesh_url": "builds/build-1/mesh", "checks_url": "builds/build-1/checks", "source_url": "builds/build-1/source", "board_url": "builds/build-1/board", "step_url": null, "restored_from": null, "failure": null}}}
+{"id": 34, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "7 "}}
+{"id": 35, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "checks "}}
+{"id": 36, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "pass, "}}
+{"id": 37, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "5 "}}
+{"id": 38, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "fail "}}
+{"id": 39, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "and "}}
+{"id": 40, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "3 "}}
+{"id": 41, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "are "}}
+{"id": 42, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "untested:\n- "}}
+{"id": 43, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "Minimum "}}
+{"id": 44, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "clearance "}}
+{"id": 45, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "to "}}
+{"id": 46, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "components: "}}
+{"id": 47, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "The "}}
+{"id": 48, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "closest "}}
+{"id": 49, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "part "}}
+{"id": 50, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "is "}}
+{"id": 51, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "BT1, "}}
+{"id": 52, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "0.26 "}}
+{"id": 53, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "mm "}}
+{"id": 54, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "from "}}
+{"id": 55, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "the "}}
+{"id": 56, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "base.\n- "}}
+{"id": 57, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "Opening "}}
+{"id": 58, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "alignment: "}}
+{"id": 59, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "The "}}
+{"id": 60, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "Q4 "}}
+{"id": 61, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "opening "}}
+{"id": 62, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "is "}}
+{"id": 63, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "3.087 "}}
+{"id": 64, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "mm "}}
+{"id": 65, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "off "}}
+{"id": 66, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "and "}}
+{"id": 67, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "turned "}}
+{"id": 68, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "90°.\n- "}}
+{"id": 69, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "Opening "}}
+{"id": 70, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "alignment: "}}
+{"id": 71, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "There "}}
+{"id": 72, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "is "}}
+{"id": 73, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "no "}}
+{"id": 74, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "opening "}}
+{"id": 75, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "for "}}
+{"id": 76, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "RST1 "}}
+{"id": 77, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "(button).\n- "}}
+{"id": 78, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "Opening "}}
+{"id": 79, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "alignment: "}}
+{"id": 80, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "There "}}
+{"id": 81, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "is "}}
+{"id": 82, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "no "}}
+{"id": 83, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "opening "}}
+{"id": 84, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "for "}}
+{"id": 85, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "SW1 "}}
+{"id": 86, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "(button).\n- "}}
+{"id": 87, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "Opening "}}
+{"id": 88, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "alignment: "}}
+{"id": 89, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "The "}}
+{"id": 90, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "U2 "}}
+{"id": 91, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "opening "}}
+{"id": 92, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "is "}}
+{"id": 93, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "5.592 "}}
+{"id": 94, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "mm "}}
+{"id": 95, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "off."}}
+{"id": 96, "delay_ms": 400, "event": {"type": "question", "message_id": "msg-2", "question_id": "q-1", "text": "How should I fix the 5 failing checks?", "options": [{"id": "fix-all", "label": "Fix them all", "description": "Propose every change at once as tracked changes."}, {"id": "one-by-one", "label": "One at a time", "description": "Propose one change, wait for review, then the next."}, {"id": "explain", "label": "Explain first", "description": "Walk through each failure before changing anything."}]}}
+{"id": 97, "delay_ms": 0, "event": {"type": "message_end", "message_id": "msg-2"}}

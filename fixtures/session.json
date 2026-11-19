@@ -1,0 +1,9 @@
+{
+  "title": "Sample session",
+  "board": {
+    "name": "b-parasite",
+    "revision": "2.0"
+  },
+  "prompt": "Here is revision 2.0. Check the current enclosure against it.",
+  "conflict_prompt": "Lock floor_top at -7.3 mm."
+}

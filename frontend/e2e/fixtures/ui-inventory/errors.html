@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Inventory fixture: controls that log errors</title></head>
+<body>
+  <main>
+    <p id="status">Idle</p>
+    <button type="button" onclick="document.getElementById('status').textContent = 'Saving'; console.error('save failed')">Save</button>
+    <button type="button" onclick="document.getElementById('status').textContent = 'Loading'; Promise.reject(new Error('load failed'))">Load</button>
+  </main>
+</body>
+</html>

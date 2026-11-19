@@ -1,0 +1,7 @@
+{
+  "title": "Phone stand",
+  "prompt": "Design a desk phone stand that holds a phone at about 70 degrees.",
+  "reply": "Here is a phone stand: a 80 x 70 mm base, a back rest leaning 20 degrees from vertical so the phone sits at 70 degrees, and a front lip that stops it sliding. Every plate is 3.5 mm thick and drafted for molding.",
+  "params": {"width": 80, "depth": 70, "thickness": 3.5, "back_height": 90, "lean": 20, "lip_height": 12, "lip_offset": 18},
+  "standards": {"material": {"standard": "material"}, "draft": {"standard": "min_draft", "plus": 0.5}}
+}

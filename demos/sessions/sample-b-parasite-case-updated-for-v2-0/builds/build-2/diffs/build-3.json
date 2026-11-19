@@ -1,0 +1,326 @@
+{
+  "old": "build-3",
+  "new": "build-2",
+  "parameters": [
+    {
+      "name": "openings[Q4-sensor_window].rotation",
+      "change": "changed",
+      "old": 90,
+      "new": 0.0
+    },
+    {
+      "name": "openings[Q4-sensor_window].x",
+      "change": "changed",
+      "old": 1.078,
+      "new": 1.9
+    },
+    {
+      "name": "openings[Q4-sensor_window].y",
+      "change": "changed",
+      "old": 120.738,
+      "new": 123.714
+    },
+    {
+      "name": "openings[RST1-button].component",
+      "change": "removed",
+      "old": "RST1",
+      "new": null
+    },
+    {
+      "name": "openings[RST1-button].cut",
+      "change": "removed",
+      "old": true,
+      "new": null
+    },
+    {
+      "name": "openings[RST1-button].id",
+      "change": "removed",
+      "old": "RST1-button",
+      "new": null
+    },
+    {
+      "name": "openings[RST1-button].kind",
+      "change": "removed",
+      "old": "button",
+      "new": null
+    },
+    {
+      "name": "openings[RST1-button].rotation",
+      "change": "removed",
+      "old": 270,
+      "new": null
+    },
+    {
+      "name": "openings[RST1-button].side",
+      "change": "removed",
+      "old": "top",
+      "new": null
+    },
+    {
+      "name": "openings[RST1-button].size[0]",
+      "change": "removed",
+      "old": 4.7,
+      "new": null
+    },
+    {
+      "name": "openings[RST1-button].size[1]",
+      "change": "removed",
+      "old": 3,
+      "new": null
+    },
+    {
+      "name": "openings[RST1-button].tag",
+      "change": "removed",
+      "old": "opening_RST1",
+      "new": null
+    },
+    {
+      "name": "openings[RST1-button].x",
+      "change": "removed",
+      "old": 15.302,
+      "new": null
+    },
+    {
+      "name": "openings[RST1-button].y",
+      "change": "removed",
+      "old": 103.212,
+      "new": null
+    },
+    {
+      "name": "openings[SW1-button].component",
+      "change": "removed",
+      "old": "SW1",
+      "new": null
+    },
+    {
+      "name": "openings[SW1-button].cut",
+      "change": "removed",
+      "old": true,
+      "new": null
+    },
+    {
+      "name": "openings[SW1-button].id",
+      "change": "removed",
+      "old": "SW1-button",
+      "new": null
+    },
+    {
+      "name": "openings[SW1-button].kind",
+      "change": "removed",
+      "old": "button",
+      "new": null
+    },
+    {
+      "name": "openings[SW1-button].rotation",
+      "change": "removed",
+      "old": 270,
+      "new": null
+    },
+    {
+      "name": "openings[SW1-button].side",
+      "change": "removed",
+      "old": "top",
+      "new": null
+    },
+    {
+      "name": "openings[SW1-button].size[0]",
+      "change": "removed",
+      "old": 4.7,
+      "new": null
+    },
+    {
+      "name": "openings[SW1-button].size[1]",
+      "change": "removed",
+      "old": 3,
+      "new": null
+    },
+    {
+      "name": "openings[SW1-button].tag",
+      "change": "removed",
+      "old": "opening_SW1",
+      "new": null
+    },
+    {
+      "name": "openings[SW1-button].x",
+      "change": "removed",
+      "old": 6.92,
+      "new": null
+    },
+    {
+      "name": "openings[SW1-button].y",
+      "change": "removed",
+      "old": 103.212,
+      "new": null
+    },
+    {
+      "name": "openings[U1-antenna_keepout].x",
+      "change": "changed",
+      "old": 9.968,
+      "new": 10.0
+    },
+    {
+      "name": "openings[U1-antenna_keepout].y",
+      "change": "changed",
+      "old": 124.592,
+      "new": 124.668
+    },
+    {
+      "name": "openings[U2-vent].x",
+      "change": "changed",
+      "old": 17.08,
+      "new": 15.8
+    },
+    {
+      "name": "openings[U2-vent].y",
+      "change": "changed",
+      "old": 97.37,
+      "new": 102.814
+    },
+    {
+      "name": "source.revision",
+      "change": "changed",
+      "old": "2.0",
+      "new": "1.2"
+    }
+  ],
+  "features": [
+    {
+      "tag": "opening_RST1",
+      "part": "lid",
+      "change": "removed",
+      "distance": null,
+      "offset": null,
+      "rotation": null,
+      "old": {
+        "tag": "opening_RST1",
+        "part": "lid",
+        "centroid": [
+          15.302,
+          103.212,
+          6.3026
+        ],
+        "size": [
+          3.1833,
+          4.8833,
+          4.5
+        ],
+        "volume": 65.7585,
+        "rotation": 90.0
+      },
+      "new": null
+    },
+    {
+      "tag": "opening_SW1",
+      "part": "lid",
+      "change": "removed",
+      "distance": null,
+      "offset": null,
+      "rotation": null,
+      "old": {
+        "tag": "opening_SW1",
+        "part": "lid",
+        "centroid": [
+          6.92,
+          103.212,
+          6.3026
+        ],
+        "size": [
+          3.1833,
+          4.8833,
+          4.5
+        ],
+        "volume": 65.7585,
+        "rotation": 90.0
+      },
+      "new": null
+    },
+    {
+      "tag": "opening_Q4",
+      "part": "lid",
+      "change": "moved and rotated",
+      "distance": 3.0874,
+      "offset": [
+        0.822,
+        2.976,
+        0.0
+      ],
+      "rotation": 90.0,
+      "old": {
+        "tag": "opening_Q4",
+        "part": "lid",
+        "centroid": [
+          1.078,
+          120.738,
+          6.2545
+        ],
+        "size": [
+          1.4833,
+          2.9833,
+          4.5
+        ],
+        "volume": 17.6279,
+        "rotation": 90.0
+      },
+      "new": {
+        "tag": "opening_Q4",
+        "part": "lid",
+        "centroid": [
+          1.9,
+          123.714,
+          6.2545
+        ],
+        "size": [
+          2.9833,
+          1.4833,
+          4.5
+        ],
+        "volume": 17.6279,
+        "rotation": 0.0
+      }
+    },
+    {
+      "tag": "opening_U2",
+      "part": "lid",
+      "change": "moved",
+      "distance": 5.5925,
+      "offset": [
+        -1.28,
+        5.444,
+        0.0
+      ],
+      "rotation": 0.0,
+      "old": {
+        "tag": "opening_U2",
+        "part": "lid",
+        "centroid": [
+          17.08,
+          97.37,
+          6.2858
+        ],
+        "size": [
+          3.0833,
+          2.6833,
+          4.5
+        ],
+        "volume": 34.2559,
+        "rotation": 0.0
+      },
+      "new": {
+        "tag": "opening_U2",
+        "part": "lid",
+        "centroid": [
+          15.8,
+          102.814,
+          6.2858
+        ],
+        "size": [
+          3.0833,
+          2.6833,
+          4.5
+        ],
+        "volume": 34.2559,
+        "rotation": 0.0
+      }
+    }
+  ]
+}

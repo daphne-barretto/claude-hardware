@@ -1,0 +1,40 @@
+name: visual baselines
+# Regenerates the Linux screenshot baselines (frontend/e2e/*-snapshots/*-linux.png) on ubuntu,
+# the platform CI compares them on, and uploads them as the `visual-baselines` artifact.
+# Run it from the Actions tab after a UI change, download the artifact, unzip it into
+# frontend/e2e/, review the images and commit them. Once the committed baselines are current,
+# set the repository variable E2E_VISUAL to 1 so the `e2e` job in ci.yml checks them.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  baselines:
+    name: baselines
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install (cached)
+        uses: ./.github/actions/deps
+      - name: Update the screenshot baselines
+        working-directory: frontend
+        env:
+          E2E_VISUAL: "1"
+        # Every spec with a toHaveScreenshot comparison; specs of flagged features are skipped
+        # by playwright.config.ts. --update-snapshots=all rewrites every baseline it reaches.
+        run: |
+          specs=$(grep -l "toHaveScreenshot" e2e/*.spec.ts)
+          echo "$specs"
+          npx playwright test $specs --update-snapshots=all
+      - uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines
+          path: frontend/e2e/*-snapshots/*-linux.png
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          if-no-files-found: ignore

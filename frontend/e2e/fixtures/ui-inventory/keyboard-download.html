@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Inventory fixture: repeated names, keyboard-only and download controls</title></head>
+<body>
+  <main>
+    <ul>
+      <li>First item <button type="button" onclick="this.parentElement.remove()">Remove</button></li>
+      <li>Second item <button type="button" onclick="this.parentElement.remove()">Remove</button></li>
+    </ul>
+    <div style="position: relative">
+      <button type="button" onclick="document.getElementById('status').textContent = 'Pressed'">Covered</button>
+      <div style="position: absolute; inset: 0; background: white"></div>
+    </div>
+    <p id="status"></p>
+    <a href="data:text/plain,report" download="report.txt">report.txt</a>
+    <a href="data:text/plain,notes" download="other.txt">notes.txt</a>
+  </main>
+</body>
+</html>

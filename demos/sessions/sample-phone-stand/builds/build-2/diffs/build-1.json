@@ -1,0 +1,275 @@
+{
+  "old": "build-1",
+  "new": "build-2",
+  "parameters": [
+    {
+      "name": "base_thickness",
+      "change": "changed",
+      "old": 4,
+      "new": 3
+    },
+    {
+      "name": "draft",
+      "change": "added",
+      "old": null,
+      "new": 1.5
+    },
+    {
+      "name": "lip_thickness",
+      "change": "changed",
+      "old": 4,
+      "new": 3.5
+    },
+    {
+      "name": "rest_thickness",
+      "change": "changed",
+      "old": 4,
+      "new": 3
+    },
+    {
+      "name": "rib_height_ratio",
+      "change": "removed",
+      "old": 0.7,
+      "new": null
+    },
+    {
+      "name": "rib_inset",
+      "change": "removed",
+      "old": 5,
+      "new": null
+    },
+    {
+      "name": "rib_thickness",
+      "change": "removed",
+      "old": 4,
+      "new": null
+    },
+    {
+      "name": "strut_height_ratio",
+      "change": "added",
+      "old": null,
+      "new": 0.7
+    },
+    {
+      "name": "strut_inset",
+      "change": "added",
+      "old": null,
+      "new": 3
+    },
+    {
+      "name": "strut_thickness",
+      "change": "added",
+      "old": null,
+      "new": 3
+    }
+  ],
+  "features": [
+    {
+      "tag": "support_rib",
+      "part": "stand",
+      "change": "removed",
+      "distance": null,
+      "offset": null,
+      "rotation": null,
+      "old": {
+        "tag": "support_rib",
+        "part": "stand",
+        "centroid": [
+          51.9856,
+          0.0,
+          25.2595
+        ],
+        "size": [
+          68.7433,
+          4.0,
+          66.7785
+        ],
+        "volume": 9181.1452,
+        "rotation": 0.0
+      },
+      "new": null
+    },
+    {
+      "tag": "stand",
+      "part": "stand",
+      "change": "moved and resized",
+      "distance": 0.5,
+      "offset": [
+        0.0,
+        0.0,
+        -0.5
+      ],
+      "rotation": 0.0,
+      "old": {
+        "tag": "stand",
+        "part": "stand",
+        "centroid": [
+          47.5,
+          0.0,
+          2.0
+        ],
+        "size": [
+          95.0,
+          80.0,
+          4.0
+        ],
+        "volume": 30400.0,
+        "rotation": 0.0
+      },
+      "new": {
+        "tag": "stand",
+        "part": "stand",
+        "centroid": [
+          47.5,
+          0.0,
+          1.5
+        ],
+        "size": [
+          95.0,
+          80.0,
+          3.0
+        ],
+        "volume": 22800.0,
+        "rotation": 0.0
+      }
+    },
+    {
+      "tag": "front_lip",
+      "part": "stand",
+      "change": "moved and resized",
+      "distance": 0.7353,
+      "offset": [
+        -0.3463,
+        0.0,
+        -0.6486
+      ],
+      "rotation": 0.0,
+      "old": {
+        "tag": "front_lip",
+        "part": "stand",
+        "centroid": [
+          2.0,
+          0.0,
+          8.0
+        ],
+        "size": [
+          4.0,
+          80.0,
+          16.0
+        ],
+        "volume": 5120.0,
+        "rotation": 90.0
+      },
+      "new": {
+        "tag": "front_lip",
+        "part": "stand",
+        "centroid": [
+          1.6537,
+          0.0,
+          7.3514
+        ],
+        "size": [
+          3.5,
+          82.0,
+          15.0
+        ],
+        "volume": 4063.4349,
+        "rotation": 90.0
+      }
+    },
+    {
+      "tag": "back_rest",
+      "part": "stand",
+      "change": "moved and resized",
+      "distance": 1.2759,
+      "offset": [
+        -0.9699,
+        0.0,
+        -0.829
+      ],
+      "rotation": 0.0,
+      "old": {
+        "tag": "back_rest",
+        "part": "stand",
+        "centroid": [
+          36.9804,
+          0.0,
+          50.3006
+        ],
+        "size": [
+          37.9608,
+          80.0,
+          95.3373
+        ],
+        "volume": 32000.0,
+        "rotation": 90.0
+      },
+      "new": {
+        "tag": "back_rest",
+        "part": "stand",
+        "centroid": [
+          36.0105,
+          0.0,
+          49.4716
+        ],
+        "size": [
+          37.0211,
+          82.0,
+          94.9953
+        ],
+        "volume": 24600.0,
+        "rotation": 90.0
+      }
+    },
+    {
+      "tag": "rear_strut",
+      "part": "stand",
+      "change": "added",
+      "distance": null,
+      "offset": null,
+      "rotation": null,
+      "old": null,
+      "new": {
+        "tag": "rear_strut",
+        "part": "stand",
+        "centroid": [
+          67.1394,
+          0.0,
+          35.6392
+        ],
+        "size": [
+          49.7212,
+          82.0,
+          66.2785
+        ],
+        "volume": 20164.4394,
+        "rotation": 90.0
+      }
+    },
+    {
+      "tag": "drafted_outline",
+      "part": "stand",
+      "change": "added",
+      "distance": null,
+      "offset": null,
+      "rotation": null,
+      "old": null,
+      "new": {
+        "tag": "drafted_outline",
+        "part": "stand",
+        "centroid": [
+          47.5,
+          0.0,
+          55.1717
+        ],
+        "size": [
+          95.0,
+          80.0,
+          113.0
+        ],
+        "volume": 801604.7917,
+        "rotation": 0.0
+      }
+    }
+  ]
+}

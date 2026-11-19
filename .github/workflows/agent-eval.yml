@@ -1,0 +1,41 @@
+name: agent-eval
+# The design agent with the real model (backend/tests/test_agent_live.py): fixes the new board
+# revision within 4 rounds in at least 8 of 10 runs, asks on the conflict fixture, refuses the
+# fixed weapon prompts (backend/tests/safety_prompts.yaml) and never claims strength, drop or heat.
+# Slow and billed, so it runs on demand only.
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Model ID (empty for Haiku 5.5, the test default)
+        required: false
+      effort:
+        description: Effort (low, medium, high, xhigh, max; empty for the default)
+        required: false
+      runs:
+        description: Runs of the fix scenario
+        required: false
+        default: "10"
+permissions:
+  contents: read
+jobs:
+  agent-eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install (cached)
+        uses: ./.github/actions/deps
+      - name: Install the backend
+        run: make install-backend
+      - name: Live agent tests
+        working-directory: backend
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          TEST_AGENT_MODEL: ${{ inputs.model }}
+          AGENT_EFFORT: ${{ inputs.effort }}
+          AGENT_EVAL_RUNS: ${{ inputs.runs }}
+        run: |
+          # Without a token the tests skip; here that is a failure, not a pass.
+          [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] || { echo "CLAUDE_CODE_OAUTH_TOKEN is not set"; exit 1; }
+          .venv/bin/pytest -m slow -v -s tests/test_agent_live.py tests/test_photo_live.py

@@ -1,0 +1,49 @@
+{
+  "build_id": "build-2",
+  "backend": "build123d",
+  "language": "python",
+  "filename": "design.py",
+  "code": "from build123d import *\nimport math\n\ndef build(params):\n    W = params[\"width\"]\n    bd = params[\"base_depth\"]; bt = params[\"base_thickness\"]\n    ang = params[\"angle\"]; tilt = math.radians(90.0 - ang)\n    rl = params[\"rest_length\"]; rt = params[\"rest_thickness\"]\n    lh = params[\"lip_height\"]; lt = params[\"lip_thickness\"]\n    seat = params[\"seat_depth\"]; st = params[\"strut_thickness\"]\n    d = math.radians(params[\"draft\"])\n\n    base = Box(bd, W, bt, align=(Align.MIN, Align.CENTER, Align.MIN))\n\n    hl = bt + lh\n    lip_prof = Polygon((0, 0), (lt, 0), (lt - hl * math.tan(d), hl), (0, hl), align=None)\n    lip = Pos(0, W / 2 + 1, 0) * extrude(Plane.XZ * lip_prof, W + 2)\n\n    x0 = lt + seat\n    rest = Pos(x0, 0, bt) * Rot(0, 90.0 - ang, 0) * Box(rt, W + 2, rl, align=(Align.MIN, Align.CENTER, Align.MIN))\n\n    c = math.cos(tilt)\n    zg = bt + params[\"strut_height_ratio\"] * rl * c\n    qx = x0 + rt / c + (zg - bt) * math.tan(tilt) - 0.5\n    px = bd - params[\"strut_inset\"]\n    phi = math.atan2(px - qx, zg - bt)\n    hs = st / math.cos(phi)\n    strut_prof = Polygon((px - hs, bt - 0.5), (px, bt - 0.5), (qx + hs / 2, zg), (qx - hs / 2, zg), align=None)\n    strut = Pos(0, W / 2 + 1, 0) * extrude(Plane.XZ * strut_prof, W + 2)\n\n    env_h = bt + rl + 10\n    envelope = extrude(Rectangle(bd, W, align=(Align.MIN, Align.CENTER)), env_h, taper=params[\"draft\"])\n\n    stand = (base + lip + rest + strut) & envelope\n    return {\n        \"parts\": {\"stand\": stand},\n        \"features\": [\n            {\"tag\": \"stand\", \"part\": \"stand\", \"tools\": [base]},\n            {\"tag\": \"front_lip\", \"part\": \"stand\", \"tools\": [lip]},\n            {\"tag\": \"back_rest\", \"part\": \"stand\", \"tools\": [rest]},\n            {\"tag\": \"rear_strut\", \"part\": \"stand\", \"tools\": [strut]},\n            {\"tag\": \"drafted_outline\", \"part\": \"stand\", \"tools\": [envelope]},\n        ],\n        \"materials\": {\"stand\": \"molded ABS\"},\n    }\n",
+  "features": [
+    {
+      "tag": "stand",
+      "part": "stand",
+      "lines": [
+        35,
+        45
+      ]
+    },
+    {
+      "tag": "front_lip",
+      "part": "stand",
+      "lines": [
+        35,
+        45
+      ]
+    },
+    {
+      "tag": "back_rest",
+      "part": "stand",
+      "lines": [
+        35,
+        45
+      ]
+    },
+    {
+      "tag": "rear_strut",
+      "part": "stand",
+      "lines": [
+        35,
+        45
+      ]
+    },
+    {
+      "tag": "drafted_outline",
+      "part": "stand",
+      "lines": [
+        35,
+        45
+      ]
+    }
+  ]
+}

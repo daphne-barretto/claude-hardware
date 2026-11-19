@@ -1,0 +1,105 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  # The work runs in parallel jobs, each with its own timeout and headroom over its
+  # steps. The `ci` job at the end is the required status.
+  # The backend tests are split into shards, one job each, and each shard runs its
+  # tests in parallel. Every shard also lints and runs the other tests,
+  # which take under a minute, so each job is a plain `make test`.
+  test:
+    name: test (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install (cached)
+        uses: ./.github/actions/deps
+      - name: Lint and test
+        run: make test SHARD=${{ matrix.shard }}/4
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install (cached)
+        uses: ./.github/actions/deps
+      - name: End-to-end smoke test
+        # The screenshot comparisons run once the repository variable E2E_VISUAL is 1, after the
+        # Linux baselines are refreshed (.github/workflows/visual-baselines.yml); until then
+        # playwright.config.ts skips only the pixel comparisons.
+        env:
+          E2E_VISUAL: ${{ vars.E2E_VISUAL }}
+        run: make e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          if-no-files-found: ignore
+  image:
+    name: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install (cached)
+        uses: ./.github/actions/deps
+      - name: Build the image
+        run: docker build -t claude-hardware:ci .
+      - name: Generate every enclosure inside the image
+        run: docker run --rm claude-hardware:ci python -m geometry.selftest
+      - name: Sandbox tests in the image
+        # The build sandbox relies on kernel limits (Landlock, seccomp), so check they
+        # hold under the production image and Docker's default seccomp profile too.
+        run: |
+          docker run --rm -w /app/backend \
+            -v "$PWD/backend/tests/test_sandbox.py:/app/backend/tests/test_sandbox.py:ro" \
+            claude-hardware:ci sh -c "pip install --user --quiet --no-warn-script-location \
+              --disable-pip-version-check pytest && python -m pytest -q -p no:cacheprovider tests/test_sandbox.py"
+      - name: Smoke test the image
+        env:
+          E2E_VISUAL: ${{ vars.E2E_VISUAL }}
+        run: |
+          # Start with a data directory that does not exist yet, as on a wiped free-plan disk.
+          docker run -d --name app -p 3000:3000 \
+            -e GIT_COMMIT=${{ github.sha }} -e DATA_DIR=/tmp/wiped/data claude-hardware:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/health && curl -fsS -o /dev/null http://127.0.0.1:3000/; then
+              # A new chat: create a session and post a message.
+              python3 .github/scripts/session_smoke.py http://127.0.0.1:3000 || { docker logs app; exit 1; }
+              cd frontend && E2E_BASE_URL=http://127.0.0.1:3000 E2E_EXPECT_COMMIT=${{ github.sha }} npx playwright test
+              exit
+            fi
+            sleep 2
+          done
+          docker logs app
+          exit 1
+  ci:
+    # The required status. It reports even when a job it needs failed or timed out
+    # (a timeout leaves that job `cancelled`), and passes only if every one succeeded.
+    # It is skipped only when the whole run is cancelled for a newer commit.
+    name: ci
+    needs: [test, e2e, image]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every job succeeded
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null

@@ -1,0 +1,99 @@
+{
+  "params": {
+    "width": 80,
+    "base_depth": 95,
+    "base_thickness": 3,
+    "angle": 70,
+    "rest_length": 100,
+    "rest_thickness": 3,
+    "lip_height": 12,
+    "lip_thickness": 3.5,
+    "seat_depth": 14,
+    "strut_thickness": 3,
+    "strut_height_ratio": 0.7,
+    "strut_inset": 3,
+    "draft": 1.5
+  },
+  "features": [
+    {
+      "tag": "stand",
+      "part": "stand",
+      "centroid": [
+        47.5,
+        0.0,
+        1.5
+      ],
+      "size": [
+        95.0,
+        80.0,
+        3.0
+      ],
+      "volume": 22800.0,
+      "rotation": 0.0
+    },
+    {
+      "tag": "front_lip",
+      "part": "stand",
+      "centroid": [
+        1.6537,
+        0.0,
+        7.3514
+      ],
+      "size": [
+        3.5,
+        82.0,
+        15.0
+      ],
+      "volume": 4063.4349,
+      "rotation": 90.0
+    },
+    {
+      "tag": "back_rest",
+      "part": "stand",
+      "centroid": [
+        36.0105,
+        0.0,
+        49.4716
+      ],
+      "size": [
+        37.0211,
+        82.0,
+        94.9953
+      ],
+      "volume": 24600.0,
+      "rotation": 90.0
+    },
+    {
+      "tag": "rear_strut",
+      "part": "stand",
+      "centroid": [
+        67.1394,
+        0.0,
+        35.6392
+      ],
+      "size": [
+        49.7212,
+        82.0,
+        66.2785
+      ],
+      "volume": 20164.4394,
+      "rotation": 90.0
+    },
+    {
+      "tag": "drafted_outline",
+      "part": "stand",
+      "centroid": [
+        47.5,
+        0.0,
+        55.1717
+      ],
+      "size": [
+        95.0,
+        80.0,
+        113.0
+      ],
+      "volume": 801604.7917,
+      "rotation": 0.0
+    }
+  ]
+}

@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "FlaggedSpot": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Unique in the map",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "thin",
+            "thick",
+            "low_draft"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "description": "The worst value in the spot, in the map's unit",
+          "title": "Value",
+          "type": "number"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/Location"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "value",
+        "message",
+        "location"
+      ],
+      "title": "FlaggedSpot",
+      "type": "object"
+    },
+    "Legend": {
+      "additionalProperties": false,
+      "description": "The color scale. Values outside [min, max] clamp to the end colors.",
+      "properties": {
+        "min": {
+          "title": "Min",
+          "type": "number"
+        },
+        "max": {
+          "title": "Max",
+          "type": "number"
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The standard's limit, drawn as a mark on the legend",
+          "title": "Limit"
+        },
+        "unit": {
+          "enum": [
+            "mm",
+            "deg"
+          ],
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "min",
+        "max",
+        "unit"
+      ],
+      "title": "Legend",
+      "type": "object"
+    },
+    "Location": {
+      "additionalProperties": false,
+      "description": "Where on the model something is: a point (mm, board coordinates) and the faces and edges\nit concerns, by their stable mesh IDs.",
+      "properties": {
+        "point": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Point",
+          "type": "array"
+        },
+        "part": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Part node name, e.g. `lid`",
+          "title": "Part"
+        },
+        "faces": {
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Faces",
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "type": "string"
+          },
+          "title": "Edges",
+          "type": "array"
+        }
+      },
+      "required": [
+        "point"
+      ],
+      "title": "Location",
+      "type": "object"
+    },
+    "PartValues": {
+      "additionalProperties": false,
+      "properties": {
+        "part": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Part",
+          "type": "string"
+        },
+        "values": {
+          "description": "One per vertex of the part's triangle primitive, in vertex order. Null where the analysis does not apply.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "part",
+        "values"
+      ],
+      "title": "PartValues",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "analysis-map/1",
+      "title": "Contract",
+      "type": "string"
+    },
+    "build_id": {
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+      "title": "Build Id",
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "wall_thickness",
+        "draft"
+      ],
+      "title": "Type",
+      "type": "string"
+    },
+    "standard": {
+      "description": "The standard the map is judged against",
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+      "title": "Standard",
+      "type": "string"
+    },
+    "standard_title": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "That standard's title, as people read it",
+      "title": "Standard Title"
+    },
+    "unit": {
+      "enum": [
+        "mm",
+        "deg"
+      ],
+      "title": "Unit",
+      "type": "string"
+    },
+    "legend": {
+      "$ref": "#/$defs/Legend"
+    },
+    "parts": {
+      "items": {
+        "$ref": "#/$defs/PartValues"
+      },
+      "minItems": 1,
+      "title": "Parts",
+      "type": "array"
+    },
+    "flagged": {
+      "items": {
+        "$ref": "#/$defs/FlaggedSpot"
+      },
+      "title": "Flagged",
+      "type": "array"
+    }
+  },
+  "required": [
+    "contract",
+    "build_id",
+    "type",
+    "standard",
+    "unit",
+    "legend",
+    "parts"
+  ],
+  "title": "Analysis map",
+  "type": "object"
+}

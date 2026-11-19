@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Inventory fixture: dead buttons</title></head>
+<body>
+  <main>
+    <!-- Looks like it opens a menu, but has no handler (like "More models" in #106). -->
+    <button type="button" aria-haspopup="menu">More models</button>
+    <!-- Dead too; its inventory entry only expects it to stay visible. -->
+    <button type="button">Refresh</button>
+    <!-- Disabled without looking disabled or saying why. -->
+    <button type="button" disabled>Export</button>
+    <!-- Disabled, dimmed and explained: fine. -->
+    <button type="button" disabled title="Nothing to undo yet" style="opacity: 0.5">Undo</button>
+  </main>
+</body>
+</html>

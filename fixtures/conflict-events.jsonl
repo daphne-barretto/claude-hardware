@@ -1,0 +1,43 @@
+{"id": 1, "delay_ms": 0, "event": {"type": "message_start", "message_id": "msg-2", "role": "assistant"}}
+{"id": 2, "delay_ms": 400, "event": {"type": "progress", "message_id": "msg-2", "round": 1, "rounds": 1, "text": "Rebuilding with floor_top = -7.3 mm locked · round 1 of 1"}}
+{"id": 3, "delay_ms": 400, "event": {"type": "build_ready", "message_id": "msg-2", "build": {"id": "build-1", "created_at": "2026-01-01T00:00:00Z", "board": {"name": "b-parasite", "revision": "2.0"}, "status": "ready", "checks": {"pass": 7, "fail": 5, "untested": 3, "not_applicable": 1}, "maps": ["draft", "wall_thickness"], "mesh_url": "builds/build-1/mesh", "checks_url": "builds/build-1/checks", "source_url": "builds/build-1/source", "board_url": "builds/build-1/board", "step_url": null, "restored_from": null, "failure": null}}}
+{"id": 4, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "With "}}
+{"id": 5, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "floor_top "}}
+{"id": 6, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "= "}}
+{"id": 7, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "-7.3 "}}
+{"id": 8, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "mm "}}
+{"id": 9, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "locked, "}}
+{"id": 10, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "these "}}
+{"id": 11, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "constraints "}}
+{"id": 12, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "clash:\n- "}}
+{"id": 13, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "floor_top: "}}
+{"id": 14, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "= "}}
+{"id": 15, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "-7.3 "}}
+{"id": 16, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "mm\n- "}}
+{"id": 17, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "Minimum "}}
+{"id": 18, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "wall "}}
+{"id": 19, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "thickness: "}}
+{"id": 20, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": ">= "}}
+{"id": 21, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "2 "}}
+{"id": 22, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "mm\n- "}}
+{"id": 23, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "Overall "}}
+{"id": 24, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "height "}}
+{"id": 25, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "limit: "}}
+{"id": 26, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "<= "}}
+{"id": 27, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "15.1 "}}
+{"id": 28, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "mm\n- "}}
+{"id": 29, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "Minimum "}}
+{"id": 30, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "clearance "}}
+{"id": 31, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "to "}}
+{"id": 32, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "components: "}}
+{"id": 33, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": ">= "}}
+{"id": 34, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "0.5 "}}
+{"id": 35, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "mm\n- "}}
+{"id": 36, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "U1 "}}
+{"id": 37, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "(radio "}}
+{"id": 38, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "module): "}}
+{"id": 39, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "= "}}
+{"id": 40, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "2 "}}
+{"id": 41, "delay_ms": 30, "event": {"type": "text", "message_id": "msg-2", "delta": "mm\n\n"}}
+{"id": 42, "delay_ms": 400, "event": {"type": "question", "message_id": "msg-2", "question_id": "q-conflict", "text": "I can't meet all of these at once around U1: they are 0.3 mm apart. Which should give?", "options": [{"id": "unlock-floor_top", "label": "Unlock floor_top", "description": "Use -7 mm instead of -7.3 mm; everything else stays."}, {"id": "relax-max_height", "label": "Relax Overall height limit to 15.4 mm", "description": "The constraint is 15.1 mm; the locks stay."}, {"id": "relax-min_wall", "label": "Relax Minimum wall thickness to 1.85 mm", "description": "The constraint is 2 mm; the locks stay."}, {"id": "ask-board-team", "label": "Ask the board team", "description": "Move or lower U1 on the board."}], "location": {"point": [9.968, 117.092, 5.1], "part": "lid", "faces": ["lid.inner_cap"], "edges": []}, "conflict": {"id": "stackup", "message": "The locked floor_top = -7.3 mm can't meet min_wall (2 mm), max_height (15.1 mm), min_component_clearance (0.5 mm) around U1: 0.3 mm short.", "over_by": 0.3, "constraints": [{"kind": "locked", "id": "floor_top", "label": "floor_top", "relation": "=", "value": -7.3, "unit": "mm", "best": -7.0, "locations": [{"point": [11.0, 105.014, -7.5], "part": "base", "faces": ["base.outer_cap"], "edges": []}]}, {"kind": "standard", "id": "min_wall", "label": "Minimum wall thickness", "relation": ">=", "value": 2.0, "unit": "mm", "best": 1.85, "locations": [{"point": [11.0, 105.014, 7.6], "part": "lid", "faces": ["lid.outer_cap"], "edges": []}, {"point": [11.0, 105.014, -7.5], "part": "base", "faces": ["base.outer_cap"], "edges": []}]}, {"kind": "standard", "id": "max_height", "label": "Overall height limit", "relation": "<=", "value": 15.1, "unit": "mm", "best": 15.4, "locations": [{"point": [11.0, 105.014, 7.6], "part": "lid", "faces": ["lid.outer_cap"], "edges": []}]}, {"kind": "standard", "id": "min_component_clearance", "label": "Minimum clearance to components", "relation": ">=", "value": 0.5, "unit": "mm", "best": 0.2, "locations": [{"point": [9.968, 117.092, 5.1], "part": "lid", "faces": ["lid.inner_cap"], "edges": []}]}, {"kind": "board", "id": "U1", "label": "U1 (radio module)", "relation": "=", "value": 2.0, "unit": "mm", "best": null, "locations": [{"point": [9.968, 117.092, 5.1], "part": "lid", "faces": ["lid.inner_cap"], "edges": []}]}], "location": {"point": [9.968, 117.092, 5.1], "part": "lid", "faces": ["lid.inner_cap"], "edges": []}}}}
+{"id": 43, "delay_ms": 0, "event": {"type": "message_end", "message_id": "msg-2"}}
