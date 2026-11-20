@@ -8,7 +8,6 @@ import {
   importFile,
   ImportError,
   isStepFile,
-  loadNextRevision,
   postMessage,
   queueMessage,
   removeConstraint,
@@ -24,7 +23,6 @@ import {
   updateConstraint,
   uploadAttachment,
   type Attachment,
-  type BoardRef,
   type Constraint,
   type MessageCreate,
   type MessageQueue,
@@ -360,26 +358,6 @@ export function useChatSession(existing?: string, onCreated?: (id: string) => vo
     [post],
   );
 
-  // Loading the next revision starts Claude without anyone typing: the chat shows the load as
-  // the user's message, then the run and its proposal stream in.
-  const loadRevision = useCallback(
-    async (revision: BoardRef, choices: Choices) => {
-      const shown = `local-${nextLocal.current++}`;
-      setMessages((m) => [...m, { id: shown, role: "user", text: `Load ${revision.name} revision ${revision.revision}` }]);
-      setPending(true);
-      try {
-        const stored = await loadNextRevision(await sessionId(), choices);
-        setMessages((m) => adoptStored(m, shown, stored.id));
-        return true;
-      } catch (e) {
-        setPending(false);
-        setMessages((m) => [...m, { id: `local-${nextLocal.current++}`, role: "assistant", text: "", blocks: [failure(e)] }]);
-        return false;
-      }
-    },
-    [sessionId],
-  );
-
   /** Edits or removes a chip. The rebuild and recheck stream in as Claude's next message. */
   const changeConstraint = useCallback(
     async (id: string, value?: number | string) => {
@@ -492,7 +470,6 @@ export function useChatSession(existing?: string, onCreated?: (id: string) => vo
     reviewing,
     send,
     answer,
-    loadRevision,
     constraints,
     changeConstraint,
     reviewRisk,

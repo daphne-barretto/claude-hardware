@@ -4,12 +4,12 @@ import type { CSSProperties } from "react";
  * One layout model for the canvas chrome, so nothing over the 3D view overlaps at any canvas size:
  *
  *   ┌ top bar: revision · compare · changes · units · controls (icons scroll inside, zoom fixed) ┐
- *   │ parts panel      │ tool panels: sketch, parameters,    │ view cube                │
- *   │ (scrolls inside) │ a modeling tool, from the top down, │──────────────────────────│
- *   │                  │ over the view cube; inspection      │ modeling toolbar         │
- *   │ view label,      │ panels: section, measure, map       │ (scrolls inside)         │
- *   │ parts, size      │ legend, bottom-up, below the cube   │                          │
- *   └ bottom bar: comment tools (layout, section and x-ray are in the top bar) ─────────────┘
+ *   │ parts panel      │ tool panels: parameters, from the   │ view cube                │
+ *   │ (scrolls inside) │ top down, over the view cube;       │                          │
+ *   │                  │ inspection panels: section,         │                          │
+ *   │ view label,      │ bottom-up, below the cube           │                          │
+ *   │ parts, size      │                                     │                          │
+ *   └ bottom bar: comment tools (layout and section are in the top bar) ─────────────┘
  *
  * The regions are CSS variables on the canvas root; each piece of chrome is placed against them
  * instead of against a guessed size of its neighbours. Panels shrink and scroll inside, labels
@@ -32,13 +32,11 @@ export const CHROME = {
   belowCube: "13rem",
   /** Right of the parts panel (0.75 rem margin + 14 rem panel + a gap). */
   left: "15.25rem",
-  /** Left of the modeling toolbar (0.75 rem margin + its 2.75 rem width + a gap). */
-  right: "4rem",
   margin: "0.75rem",
 } as const;
 
-/** The CSS variables for the canvas root, given which side columns are shown. */
-export function chromeVars({ parts, toolbar }: { parts: boolean; toolbar: boolean }): CSSProperties {
+/** The CSS variables for the canvas root, given whether the parts panel is shown. */
+export function chromeVars({ parts }: { parts: boolean }): CSSProperties {
   return {
     "--chrome-margin": CHROME.margin,
     "--chrome-top": CHROME.top,
@@ -46,7 +44,7 @@ export function chromeVars({ parts, toolbar }: { parts: boolean; toolbar: boolea
     "--chrome-bar": CHROME.bar,
     "--chrome-below-cube": CHROME.belowCube,
     "--chrome-left": parts ? CHROME.left : CHROME.margin,
-    "--chrome-right": toolbar ? CHROME.right : CHROME.margin,
+    "--chrome-right": CHROME.margin,
   } as CSSProperties;
 }
 
@@ -56,10 +54,10 @@ export function chromeVars({ parts, toolbar }: { parts: boolean; toolbar: boolea
  * them (`PANEL`). Below 30 rem of canvas (a phone) the columns start at the left margin.
  */
 export const PLACE = {
-  /** Tool panels opened from a toolbar: sketch, parameters, a modeling tool. Top down, over the view cube. */
+  /** Tool panels opened from a toolbar: parameters. Top down, over the view cube. */
   tools:
     "pointer-events-none absolute bottom-[var(--chrome-bottom)] left-[var(--chrome-left)] right-[var(--chrome-right)] top-[var(--chrome-top)] z-20 flex flex-col items-start @max-[30rem]:left-[var(--chrome-margin)]",
-  /** Inspection panels: section, measure, the map legend. Bottom up, below the view cube. */
+  /** Inspection panels: section. Bottom up, below the view cube. */
   inspection:
     "pointer-events-none absolute bottom-[var(--chrome-bottom)] left-[var(--chrome-left)] right-[var(--chrome-right)] top-[var(--chrome-below-cube)] z-10 flex flex-col items-end justify-end @max-[30rem]:left-[var(--chrome-margin)]",
   /** The dimensions on the model: the band between the top and bottom bars, the full width. */

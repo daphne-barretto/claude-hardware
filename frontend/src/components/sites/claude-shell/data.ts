@@ -31,10 +31,5 @@ export const EFFORTS = [
   { id: "max", name: "Max", note: "4× or more usage" },
 ] as const;
 
-export const MODES = [
-  { id: "manual", name: "Manual", note: "Claude proposes changes for you to review" },
-  { id: "auto", name: "Auto", note: "Claude applies changes as it goes" },
-] as const;
-
 /** What a new chat starts with. Auto matches the session API's default. */
 export const DEFAULT_CHOICES = { model: modelCatalog.default, effort: "medium", mode: "auto" } as const;

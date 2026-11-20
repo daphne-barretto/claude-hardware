@@ -1,9 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { vertexColors, type AnalysisMap } from "./colormap";
 import { dragDistance, type Point3 } from "./parameters";
 import {
-  bodyCorners,
   componentBody,
   boardShown,
   layoutPlacements,
@@ -11,11 +9,9 @@ import {
   type Axis,
   type Board,
   type Layout,
-  type MeasureTarget,
   type Triangles,
   type Vec3,
 } from "./inspect";
-import { explodeOffsets, offsetAt } from "./explode";
 import { BOARD_PART, boardPartOf, boardPick } from "./boardParts";
 import { partView, type PartIndex, type PartViews, type Picked, type PickKind } from "./selection";
 import {
@@ -174,10 +170,6 @@ export type ViewerState = {
   boardToClip: number[];
   /** The dimension lines' labels and where each line's middle is on the canvas (CSS pixels). */
   dimensions: { label: string; at: [number, number] | null }[];
-  /** The explode amount, 0 (assembled) to 1 (fully exploded). */
-  explode: number;
-  /** Each part's offset along board +Z in mm, as drawn now. */
-  offsets: Record<string, number>;
 };
 
 /**
@@ -213,8 +205,6 @@ export type ModelInfo = {
 
 export type ViewSettings = { edges: boolean; grid: boolean };
 
-/** What an analysis map colored: the vertices per part that got a map color. */
-export type MapStats = Record<string, number>;
 
 const PART_COLORS = [0x8c8a86, 0xa9a6a0, 0x7b8796, 0x9a8a7a];
 const HIGHLIGHT = 0xd97757;
@@ -226,8 +216,6 @@ const COMPONENT_COLOR = 0x2b2b2b;
 /** The component a section goes through. */
 const SECTIONED_COLOR = 0x9b7fd4;
 const DIMENSION_COLOR = 0x6aa7ff;
-/** A click this close to a corner (CSS pixels) measures from the corner. */
-export const SNAP_PX = 8;
 
 /** A section through the model: the plane normal to `axis` at `at` (mm), through component `ref`. */
 export type Section = { axis: Axis; at: number; ref?: string };
@@ -250,8 +238,6 @@ type PartObjects = {
   meshes: THREE.Mesh[];
   lines: THREE.LineSegments[];
   info: PartIndex;
-  /** The part's offset along board +Z (mm) when fully exploded. */
-  explode: number;
 };
 
 export class Viewer {
@@ -260,10 +246,8 @@ export class Viewer {
   private readonly scene = new THREE.Scene();
   private model: THREE.Object3D | null = null;
   private grid: THREE.GridHelper | null = null;
-  /** The bounds of the model as drawn (exploded or not), in three.js world space. */
+  /** The bounds of the model as drawn (in any layout), in three.js world space. */
   private box = new THREE.Box3();
-  /** The explode amount: 0 assembled, 1 fully exploded. */
-  private explodeAmount = 0;
   private fitDist = 1;
   private minZoom = 10;
   private settings: ViewSettings = { edges: true, grid: true };
@@ -271,7 +255,6 @@ export class Viewer {
   private listeners = new Set<(s: ViewerState) => void>();
   private disposed = false;
   private loaded = false;
-  private map: AnalysisMap | null = null;
   private parts = new Map<string, PartObjects>();
   private partViews: PartViews = {};
   /** Highlight overlays, each a child of the part mesh or edge lines it covers. */
@@ -303,7 +286,6 @@ export class Viewer {
   private assembled = new Map<string, { position: THREE.Vector3; quaternion: THREE.Quaternion }>();
   private section: Section | null = null;
   private clip: THREE.Plane | null = null;
-  private xray = false;
   private dimensions: THREE.Object3D | null = null;
   private dimensionList: Dimension[] = [];
 
@@ -359,7 +341,7 @@ export class Viewer {
         if (typeof material === "string") materials[info.part] = material;
         faces += info.faces.length;
         edges += info.edges.length;
-        this.parts.set(info.part, { node: obj, meshes: [], lines: [], info, explode: 0 });
+        this.parts.set(info.part, { node: obj, meshes: [], lines: [], info });
       }
     });
     root.traverse((obj) => {
@@ -406,13 +388,11 @@ export class Viewer {
     this.dimensions = null;
     this.boardGroup = null;
     this.buildBoard();
-    // The exploded view's levels, and the model's size, from where the parts are assembled.
+    // The model's size, from where the parts are assembled.
     const spans = [...this.parts.keys()].flatMap((part) => {
       const b = this.assembledBounds(part);
       return b ? [{ part, min: b.min, max: b.max }] : [];
     });
-    const offsets = explodeOffsets(spans.map(({ part, min, max }) => ({ part, min: min[2], max: max[2] })));
-    for (const p of this.parts.values()) p.explode = offsets[p.info.part] ?? 0;
     const lo = [0, 1, 2].map((k) => (spans.length ? Math.min(...spans.map((b) => b.min[k])) : 0)) as Vec3;
     const hi = [0, 1, 2].map((k) => (spans.length ? Math.max(...spans.map((b) => b.max[k])) : 0)) as Vec3;
     const size = [0, 1, 2].map((k) => hi[k] - lo[k]);
@@ -421,7 +401,6 @@ export class Viewer {
     this.box = this.contentBox();
     this.placeGrid();
     this.applySettings();
-    this.applyMap();
     this.applyPartViews();
     this.applySection();
     // The first model opens in the iso view; later builds keep the user's direction.
@@ -465,7 +444,7 @@ export class Viewer {
     if (!part || !info) return null;
     const p = hit.point;
     // three.js world (x, y, z) is board (x, −z, y); the point is where it is in the assembly.
-    const point: [number, number, number] = [round2(p.x), round2(-p.z), round2(p.y - this.partOffset(part))];
+    const point: [number, number, number] = [round2(p.x), round2(-p.z), round2(p.y)];
     const geometry = (hit.object as THREE.Mesh).geometry;
     if (kind === "face" && hit.face) {
       const id = info.faces[geometry.getAttribute("_face_id")?.getX(hit.face.a) ?? -1]?.id;
@@ -478,67 +457,6 @@ export class Viewer {
     return { pick: { kind: "part", id: part, part }, point };
   }
 
-  /**
-   * The faces (or, for `edges`, the edges) of the shown parts that lie inside a box on the
-   * canvas, in client pixels [left, top, right, bottom]. A face is inside when the centre of one
-   * of its triangles is; an edge when the middle of one of its segments is. Like a CAD crossing
-   * box, it also takes what is behind the nearest surface.
-   */
-  pickInBox(box: [number, number, number, number], edges = false): Picked[] {
-    if (!this.model) return [];
-    const rect = this.renderer.domElement.getBoundingClientRect();
-    const [left, top, right, bottom] = box;
-    this.camera.updateMatrixWorld();
-    const v = new THREE.Vector3();
-    const inside = (local: THREE.Vector3, obj: THREE.Object3D) => {
-      v.copy(local).applyMatrix4(obj.matrixWorld).project(this.camera);
-      if (v.z < -1 || v.z > 1) return false;
-      const x = rect.left + ((v.x + 1) / 2) * rect.width;
-      const y = rect.top + ((1 - v.y) / 2) * rect.height;
-      return x >= left && x <= right && y >= top && y <= bottom;
-    };
-    const out: Picked[] = [];
-    const c = new THREE.Vector3();
-    const t = new THREE.Vector3();
-    for (const { info, meshes, lines } of this.parts.values()) {
-      if (partView(this.partViews, info.part).hidden) continue;
-      const found = new Set<number>();
-      const objects = edges ? lines : meshes;
-      const per = edges ? 2 : 3;
-      for (const obj of objects) {
-        const g = obj.geometry;
-        const pos = g.getAttribute("position");
-        const id = g.getAttribute(edges ? "_edge_id" : "_face_id");
-        if (!pos || !id) continue;
-        const index = g.getIndex();
-        const count = index ? index.count : pos.count;
-        for (let i = 0; i + per - 1 < count; i += per) {
-          const first = index ? index.getX(i) : i;
-          const n = id.getX(first);
-          if (found.has(n)) continue;
-          c.set(0, 0, 0);
-          for (let k = 0; k < per; k++) c.add(t.fromBufferAttribute(pos, index ? index.getX(i + k) : i + k));
-          if (inside(c.divideScalar(per), obj)) found.add(n);
-        }
-      }
-      const items: { id: string }[] = edges ? info.edges : info.faces;
-      for (const n of [...found].sort((a, b) => a - b)) {
-        const item = items[n];
-        if (item) out.push({ kind: edges ? "edge" : "face", id: item.id, part: info.part });
-      }
-    }
-    return out;
-  }
-
-  /**
-   * Gives the left button to the orbit controls, or (box select) takes it away so a left drag,
-   * even with Shift or Cmd held, draws a box. Right-drag panning and the wheel keep working.
-   */
-  setLeftDrag(orbit: boolean) {
-    this.leftDrag = orbit;
-  }
-  private leftDrag = true;
-
   /** Highlights the picked faces, edges and parts, replacing the previous highlight. */
   setHighlight(picks: Picked[]) {
     this.selectedPicks = picks;
@@ -547,7 +465,7 @@ export class Viewer {
 
   /**
    * Previews what a click would pick where the pointer is (a face, an edge, a whole part or a
-   * component, by the Select filter), fainter than the selection; an empty list clears it.
+   * component), fainter than the selection; an empty list clears it.
    */
   setHover(picks: Picked[]) {
     const key = picks.map((p) => `${p.kind}:${p.id}`).join(",");
@@ -701,23 +619,6 @@ export class Viewer {
     this.partViews = views;
     this.applyPartViews();
     this.render();
-  }
-
-  /**
-   * Pulls the parts apart along the assembly direction: 0 is the assembly, exactly; 1 is fully
-   * exploded. Kept across model loads.
-   */
-  setExplode(amount: number) {
-    this.explodeAmount = THREE.MathUtils.clamp(amount, 0, 1);
-    this.applyExplode();
-    this.changed();
-  }
-
-  /** The current explode amount, and each part's offset along board +Z in mm. */
-  explodeState(): { amount: number; offsets: Record<string, number> } {
-    const offsets: Record<string, number> = {};
-    for (const p of this.parts.values()) offsets[p.info.part] = round2(this.partOffset(p.info.part));
-    return { amount: this.explodeAmount, offsets };
   }
 
   /** Frames the whole model, keeping the current direction or switching to `view`. */
@@ -875,17 +776,6 @@ export class Viewer {
     this.render();
   }
 
-  /**
-   * Colors the model by an analysis map (per-vertex values, aligned with each part's
-   * triangle primitive), or back to the part colors with null. Kept across model loads.
-   */
-  setMap(map: AnalysisMap | null): MapStats {
-    this.map = map;
-    const stats = this.applyMap();
-    this.render();
-    return stats;
-  }
-
   /** Marks a spot on the model, in board coordinates (mm), whose screen position the state reports. */
   setMarker(point: [number, number, number] | null) {
     const same = point && this.marker && point.every((v, i) => v === this.marker![i]);
@@ -911,7 +801,7 @@ export class Viewer {
 
   /**
    * Lays the parts out: as designed, exploded along Z, or on the print bed (where the board is
-   * not drawn). Measurements and sections stay in the assembled design's coordinates.
+   * not drawn). Sections stay in the assembled design's coordinates.
    */
   setLayout(layout: Layout) {
     if (layout === this.layout) return;
@@ -932,14 +822,6 @@ export class Viewer {
     this.section = section;
     this.applyBoardVisibility();
     this.applySection();
-    this.render();
-  }
-
-  /** X-ray: every enclosure part see-through, so the board and its components show inside. */
-  setXray(on: boolean) {
-    this.xray = on;
-    this.applyBoardVisibility();
-    this.applyPartViews();
     this.render();
   }
 
@@ -1002,60 +884,6 @@ export class Viewer {
     return concat(p.meshes.map((m) => this.assembledTriangles(m, index)));
   }
 
-  /**
-   * What the measure tool picks under a point on the canvas: a corner within SNAP_PX of the
-   * pointer, else the component, enclosure face or board point under it. Points are in the
-   * assembled design's board coordinates whatever the layout.
-   */
-  measureAt(clientX: number, clientY: number): MeasureTarget | null {
-    if (!this.model) return null;
-    const rect = this.renderer.domElement.getBoundingClientRect();
-    const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(ndc, this.camera);
-    const shown = [...this.parts.values()].filter((p) => !partView(this.partViews, p.info.part).hidden);
-    const board = this.shownBoardMeshes();
-    const hits = this.unclipped(raycaster.intersectObjects([...shown.flatMap((p) => this.pickable(p.meshes)), ...board], false));
-    const solid = hits.filter((h) => !this.seeThrough(partOf(h.object) ?? ""));
-    const hit = solid[0] ?? hits[0];
-    if (!hit) return null;
-    const mouse: [number, number] = [clientX - rect.left, clientY - rect.top];
-    const near = (corners: Vec3[]) => {
-      let best: { p: Vec3; d: number } | null = null;
-      for (const p of corners) {
-        const s = this.project(p);
-        const d = s ? Math.hypot(s[0] - mouse[0], s[1] - mouse[1]) : Infinity;
-        if (d <= SNAP_PX && (!best || d < best.d)) best = { p, d };
-      }
-      return best?.p ?? null;
-    };
-    const ref = hit.object.userData.component as string | undefined;
-    if (ref) {
-      const c = this.board?.components.find((x) => x.ref === ref);
-      const corner = c && this.board ? near(bodyCorners(componentBody(this.board, c))) : null;
-      if (corner) return { kind: "vertex", point: round3(corner), label: `Corner of ${ref}` };
-      return { kind: "component", ref, label: ref };
-    }
-    const part = partOf(hit.object);
-    const mesh = hit.object as THREE.Mesh;
-    const owner = mesh.userData.isCap ? (mesh.parent as THREE.Mesh) : mesh;
-    const info = part ? this.parts.get(part)?.info : undefined;
-    const faceIndex = hit.face ? (owner.geometry.getAttribute("_face_id")?.getX(hit.face.a) ?? -1) : -1;
-    const face = info?.faces[faceIndex];
-    if (part && face) {
-      const tris = this.assembledTriangles(owner, faceIndex);
-      const corners: Vec3[] = [];
-      for (let i = 0; i < tris.length; i += 3) corners.push([tris[i], tris[i + 1], tris[i + 2]]);
-      const corner = near(corners);
-      if (corner) return { kind: "vertex", point: round3(corner), label: `Corner of ${face.id}` };
-      return { kind: "face", part, id: face.id, label: face.id };
-    }
-    // The board itself: the point under the pointer.
-    const local = hit.object.worldToLocal(hit.point.clone());
-    const p = local.applyMatrix4(hit.object.matrix);
-    return { kind: "point", point: round3([p.x, p.y, p.z]), label: "Point on the board" };
-  }
-
   subscribe(listener: (s: ViewerState) => void): () => void {
     this.listeners.add(listener);
     listener(this.state());
@@ -1093,8 +921,6 @@ export class Viewer {
         label: d.label,
         at: this.project(d.from.map((v, i) => (v + d.to[i]) / 2) as Vec3),
       })),
-      explode: this.explodeAmount,
-      offsets: this.explodeState().offsets,
     };
   }
 
@@ -1196,7 +1022,6 @@ export class Viewer {
         pinch = spread();
         return;
       }
-      if (e.button === 0 && !this.leftDrag) return;
       const mode = e.button === 2 || e.shiftKey ? "pan" : "orbit";
       drag = { id: e.pointerId, mode, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, moved: false };
       // A left drag on a draggable face moves the face.
@@ -1205,8 +1030,8 @@ export class Viewer {
     };
     const onMove = (e: PointerEvent) => {
       if (!pointers.has(e.pointerId)) {
-        // Hovering: a face that drags shows the move cursor (not in box select, where left drags select).
-        if (this.drags.length && e.pointerType === "mouse" && this.leftDrag)
+        // Hovering: a face that drags shows the move cursor.
+        if (this.drags.length && e.pointerType === "mouse")
           el.style.cursor = this.faceDragAt(e.clientX, e.clientY) ? "move" : "";
         return;
       }
@@ -1386,48 +1211,6 @@ export class Viewer {
     });
   }
 
-  private applyMap(): MapStats {
-    const stats: MapStats = {};
-    const map = this.map;
-    this.model?.traverse((obj) => {
-      const mesh = obj as THREE.Mesh;
-      if (!mesh.isMesh || mesh.userData.isCap || mesh.userData.board) return;
-      const material = mesh.material as THREE.MeshStandardMaterial;
-      const geometry = mesh.geometry;
-      // The part's own look, saved the first time so clearing the map restores it.
-      mesh.userData.base ??= {
-        color: material.color.clone(),
-        vertexColors: material.vertexColors,
-        attr: geometry.getAttribute("color"),
-      };
-      const base = mesh.userData.base as { color: THREE.Color; vertexColors: boolean; attr?: THREE.BufferAttribute };
-      const part = partOf(mesh);
-      const values = map?.parts.find((p) => p.part === part)?.values;
-      const colors = map && values ? vertexColors(values, geometry.getAttribute("position").count, map.legend) : null;
-      if (colors && part) {
-        // The scale is sRGB (it matches the CSS legend); vertex colors are linear.
-        const c = new THREE.Color();
-        for (let i = 0; i < colors.length; i += 3) {
-          c.setRGB(colors[i], colors[i + 1], colors[i + 2], THREE.SRGBColorSpace);
-          colors[i] = c.r;
-          colors[i + 1] = c.g;
-          colors[i + 2] = c.b;
-        }
-        geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-        material.color.set(0xffffff);
-        material.vertexColors = true;
-        stats[part] = colors.length / 3;
-      } else {
-        if (base.attr) geometry.setAttribute("color", base.attr);
-        else geometry.deleteAttribute("color");
-        material.color.copy(base.color);
-        material.vertexColors = base.vertexColors;
-      }
-      material.needsUpdate = true;
-    });
-    return stats;
-  }
-
   private clearHighlight() {
     for (const overlay of this.overlays) {
       overlay.removeFromParent();
@@ -1441,15 +1224,6 @@ export class Viewer {
     overlay.raycast = () => {};
     target.add(overlay);
     this.overlays.push(overlay);
-  }
-
-  /**
-   * A part's current offset along board +Z (three.js +Y), in mm. Explode pulls apart the
-   * assembled layout; the other layouts place the parts themselves.
-   */
-  private partOffset(part: string | null | undefined): number {
-    const p = part && this.layout === "assembled" ? this.parts.get(part) : undefined;
-    return p ? offsetAt(p.explode, this.explodeAmount) : 0;
   }
 
   /** A point in board coordinates on `part`, in three.js world space where the part is drawn. */
@@ -1475,14 +1249,6 @@ export class Viewer {
     return boardToWorld(point);
   }
 
-  /** Moves each part node to its exploded place, and updates the drawn bounds. */
-  private applyExplode() {
-    if (!this.model) return;
-    this.applyLayout();
-    this.model.updateMatrixWorld(true);
-    this.box = this.contentBox();
-  }
-
   private applyPartViews() {
     for (const { node, meshes, lines, info } of this.parts.values()) {
       const view = partView(this.partViews, info.part);
@@ -1500,7 +1266,7 @@ export class Viewer {
       }
       for (const line of lines) (line.material as THREE.LineBasicMaterial).opacity = transparent ? 0.3 : 0.85;
     }
-    // The board's parts: hidden or see-through by their own views (x-ray is for the enclosure).
+    // The board's parts: hidden or see-through by their own views.
     for (const [name, mesh] of this.boardMeshes) {
       const view = partView(this.partViews, name);
       mesh.visible = !view.hidden;
@@ -1513,9 +1279,9 @@ export class Viewer {
     this.applyBoardVisibility();
   }
 
-  /** A part is see-through when the parts panel says so or in x-ray. */
+  /** A part is see-through when the parts panel says so. */
   private seeThrough(part: string) {
-    return this.xray || partView(this.partViews, part).transparent;
+    return partView(this.partViews, part).transparent;
   }
 
   /** The meshes to raycast for a part: with a section, its cut faces too. */
@@ -1626,16 +1392,6 @@ export class Viewer {
       node.quaternion.premultiply(turn);
       node.updateMatrix();
     }
-    // Explode: each part moved up along board +Z by its offset (in its parent's frame).
-    for (const { part, node } of parts) {
-      const d = this.partOffset(part);
-      if (d === 0 || !node.parent) continue;
-      node.parent.updateMatrixWorld(true);
-      const a = node.parent.worldToLocal(new THREE.Vector3(0, 0, 0));
-      const b = node.parent.worldToLocal(new THREE.Vector3(0, d, 0));
-      node.position.add(b.sub(a));
-      node.updateMatrix();
-    }
     this.applyBoardVisibility();
   }
 
@@ -1646,7 +1402,6 @@ export class Viewer {
     const enclosureHidden = parts.length > 0 && parts.every((p) => partView(this.partViews, p).hidden);
     this.boardGroup.visible = boardShown({
       layout: this.layout,
-      xray: this.xray,
       section: !!this.section,
       enclosureHidden,
     });
@@ -1657,7 +1412,7 @@ export class Viewer {
     return this.boardGroup?.visible ? [...this.boardMeshes.values()].filter((m) => m.visible) : [];
   }
 
-  /** Whether a hit object is see-through: a board part by its own view, an enclosure part as set or in x-ray. */
+  /** Whether a hit object is see-through: a board part by its own view, an enclosure part as set. */
   private hitSeeThrough(obj: THREE.Object3D): boolean {
     const board = obj.userData.boardPart as string | undefined;
     return board ? partView(this.partViews, board).transparent : this.seeThrough(partOf(obj) ?? "");
@@ -1817,10 +1572,6 @@ function concat(parts: Triangles[]): Triangles {
     i += p.length;
   }
   return out;
-}
-
-function round3(p: Vec3): Vec3 {
-  return p.map((v) => Math.round(v * 1000) / 1000) as Vec3;
 }
 
 function round2(v: number) {

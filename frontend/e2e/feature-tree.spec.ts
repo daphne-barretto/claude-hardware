@@ -99,12 +99,6 @@ test("clicking a feature selects its faces; selecting a face highlights its feat
   const face = FACES.find((f) => f.id === picked)!;
   await expect(row(parts, face.part, face.feature)).toHaveAttribute("data-highlighted", "true");
   await expect(parts.locator("li[data-highlighted=true]")).toHaveCount(1);
-
-  // Select by ID, the same: one face of a feature highlights it.
-  await parts.getByRole("textbox", { name: "Select by ID" }).fill(faces[1]);
-  await page.keyboard.press("Enter");
-  await expect(viewer).toHaveAttribute("data-selected", faces[1]);
-  await expect(row(parts, MULTI.part, MULTI.feature)).toHaveAttribute("data-highlighted", "true");
 });
 
 test("each entry links to its lines in the code view", async ({ page, request }) => {

@@ -133,8 +133,7 @@ test("the composer has no buttons that do nothing", async ({ page }) => {
   for (const gone of ["Voice mode", "Hardware project"]) {
     await expect(page.getByRole("button", { name: gone, exact: true })).toHaveCount(0);
   }
-  // The + menu offers files and photos; "Add folder" is behind a feature flag (lib/flags), off by default.
+  // The + menu offers files and photos.
   await chat.getByRole("button", { name: "Add", exact: true }).click();
   await expect(chat.getByRole("menuitem", { name: "Add files or photos" })).toBeVisible();
-  await expect(chat.getByRole("menuitem", { name: "Add folder" })).toHaveCount(0);
 });

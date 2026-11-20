@@ -1,22 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FolderPlus, Paperclip, Plus } from "lucide-react";
-import { ADD_FOLDER } from "@/lib/flags";
+import { Paperclip, Plus } from "lucide-react";
 
 type Props = {
   onAddFiles: () => void;
-  onAddFolder: () => void;
   /** Class for the + button, matching the composer's other icon buttons. */
   buttonClassName: string;
   /** Opens above the + in a chat column, below it in the large home composer. */
   placement?: "above" | "below";
-  /** Shows "Add folder"; off unless the feature flag is on (lib/flags). */
-  folder?: boolean;
 };
 
-/** The composer's + menu: "Add files or photos", and "Add folder" behind a feature flag. */
-export function AddMenu({ onAddFiles, onAddFolder, buttonClassName, placement = "above", folder = ADD_FOLDER }: Props) {
+/** The composer's + menu: "Add files or photos". */
+export function AddMenu({ onAddFiles, buttonClassName, placement = "above" }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -79,12 +75,6 @@ export function AddMenu({ onAddFiles, onAddFolder, buttonClassName, placement = 
             <Paperclip className="size-4 text-[var(--cs-muted)]" />
             Add files or photos
           </button>
-          {folder && (
-            <button type="button" role="menuitem" onClick={() => choose(onAddFolder)} className={item}>
-              <FolderPlus className="size-4 text-[var(--cs-muted)]" />
-              Add folder
-            </button>
-          )}
         </div>
       )}
     </div>

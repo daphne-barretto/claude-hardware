@@ -4,9 +4,8 @@ import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useSta
 import { ArrowUp, Check, FileText, Mic, MousePointer2, X } from "lucide-react";
 import type { Selection } from "@/lib/session-api";
 import type { Choices } from "./chat";
-import { LONG_PASTE_CHARS, LONG_PASTE_LINES, MODES } from "./data";
+import { LONG_PASTE_CHARS, LONG_PASTE_LINES } from "./data";
 import { pickFiles, unsupportedNote } from "./files";
-import { MANUAL_MODE } from "@/lib/flags";
 import { AddMenu } from "./AddMenu";
 import { ModelPicker } from "./ModelPicker";
 import { type DictationParts, formatElapsed, partsText } from "./dictation";
@@ -169,29 +168,6 @@ export function SelectionChip({
         </ul>
       )}
     </span>
-  );
-}
-
-/** Manual (Claude proposes) or Auto (Claude applies), as a two-option radio group. */
-export function ModeToggle({ mode, onChange }: { mode: Choices["mode"]; onChange: (mode: Choices["mode"]) => void }) {
-  return (
-    <div role="radiogroup" aria-label="Mode" className="flex h-8 items-center rounded-lg bg-[var(--cs-hover)] p-0.5 text-[13px]">
-      {MODES.map((m) => (
-        <button
-          key={m.id}
-          type="button"
-          role="radio"
-          aria-checked={mode === m.id}
-          title={m.note}
-          onClick={() => onChange(m.id)}
-          className={`h-7 rounded-md px-2.5 ${
-            mode === m.id ? "bg-[var(--cs-surface)] text-[var(--cs-text)]" : "text-[var(--cs-muted)] hover:text-[var(--cs-text)]"
-          }`}
-        >
-          {m.name}
-        </button>
-      ))}
-    </div>
   );
 }
 
@@ -436,7 +412,6 @@ export function Composer({
                     (names) => setRejected(unsupportedNote(names)),
                   )
                 }
-                onAddFolder={() => pickFiles("folder", addFiles)}
                 buttonClassName={iconBtn}
                 placement={home ? "below" : "above"}
               />
@@ -480,7 +455,6 @@ export function Composer({
       )}
       <div className="mt-1.5 flex items-center px-1">
         <div className="ml-auto flex items-center gap-1">
-          {MANUAL_MODE && <ModeToggle mode={choices.mode} onChange={(mode) => onChoicesChange({ ...choices, mode })} />}
           <ModelPicker
             model={choices.model}
             effort={choices.effort}

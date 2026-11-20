@@ -45,8 +45,7 @@ test("send, stream and answer a live run, then ask about a selected face", async
   const model = MODELS.find((m) => m.id !== DEFAULT_CHOICES.model)!;
   const effort = EFFORTS.find((e) => e.id !== DEFAULT_CHOICES.effort)!;
 
-  // Choose Manual, another model and another effort.
-  await chat.getByRole("radio", { name: "Manual" }).click();
+  // Choose another model and another effort.
   const picker = chat.getByRole("button", { name: /Fable|Opus|Sonnet|Haiku/ });
   await picker.click();
   await chat.getByRole("menuitemradio", { name: new RegExp(model.name) }).click();
@@ -62,12 +61,12 @@ test("send, stream and answer a live run, then ask about a selected face", async
   await chat.getByRole("textbox", { name: "Message" }).fill(SESSION.prompt);
   await chat.getByRole("button", { name: "Send" }).click();
   const session = (await (await created).json()) as { id: string };
-  expect((await sent).postDataJSON()).toMatchObject({ text: SESSION.prompt, model: model.id, effort: effort.id, mode: "manual" });
+  expect((await sent).postDataJSON()).toMatchObject({ text: SESSION.prompt, model: model.id, effort: effort.id, mode: "auto" });
 
   // Stream: the agent's progress lines and text, a build with its checks, then the question.
   // (The session's first build, of the existing enclosure, arrives as a reply of its own.)
   const reply = chat.getByTestId("assistant-message").filter({ hasText: "Run with model" });
-  await expect(reply).toContainText(`Run with model ${model.id}, effort ${effort.id}, mode manual.`, { timeout: 30_000 });
+  await expect(reply).toContainText(`Run with model ${model.id}, effort ${effort.id}, mode auto.`, { timeout: 30_000 });
   await expect(reply.getByTestId("progress-line").filter({ hasText: `Reading board revision ${NEW_REVISION}` })).toBeVisible();
   await expect(reply.getByTestId("build-ready")).toContainText(NEW_REVISION, { timeout: 30_000 });
   const asked = reply.getByRole("group");
@@ -91,41 +90,7 @@ test("send, stream and answer a live run, then ask about a selected face", async
   expect(posts).toBe(0);
   await chat.getByRole("textbox", { name: "Message" }).fill("");
 
-  // Nor can a flagged spot's "Ask Claude to fix" (it posts text), and it says why too.
-  // The session's canvas is on its own page: open it in a second tab while the question waits.
-  const tab = await page.context().newPage();
-  tab.on("pageerror", (err) => errors.push(err.message));
-  tab.on("request", (r) => {
-    if (r.method() === "POST" && /\/messages$/.test(r.url())) posts++;
-  });
-  await open(tab, `/session/${session.id}`);
-  const canvas = tab.getByRole("region", { name: "Canvas" });
-  await expect(tab.getByTestId("viewer")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
-  // There the question is still open: its options can be chosen.
-  await expect(tab.getByRole("region", { name: "Chat" }).getByRole("group").getByRole("button").first()).toBeEnabled();
-  // Show the first map with flagged spots (the menu's first item turns maps off).
-  const fix = canvas.getByRole("list", { name: "Flagged spots" }).getByRole("button", { name: "Ask Claude to fix" });
-  const mapItems = canvas.getByRole("menu", { name: "Analysis maps" }).getByRole("menuitemradio");
-  await canvas.getByRole("button", { name: "Analysis maps" }).click();
-  const mapCount = await mapItems.count();
-  for (let i = 1; i < mapCount; i++) {
-    if (i > 1) await canvas.getByRole("button", { name: "Analysis maps" }).click();
-    await mapItems.nth(i).click();
-    await expect(canvas.getByTestId("map-legend")).toBeVisible({ timeout: 30_000 });
-    if ((await fix.count()) > 0) break;
-  }
-  await expect(fix.first()).toBeVisible();
-  for (const button of await fix.all()) {
-    await expect(button).toBeDisabled();
-    await expect(button).toHaveAttribute("title", "Answer Claude's question first");
-  }
-  await fix.first().click({ force: true });
-  await expect(tab.getByRole("region", { name: "Chat" }).getByText("Could not reach Claude")).toHaveCount(0);
-  expect(posts).toBe(0);
-  await tab.close();
-
-  // Answer with an option button, with Auto chosen this time: the paused run resumes and ends.
-  await chat.getByRole("radio", { name: "Auto" }).click();
+  // Answer with an option button: the paused run resumes and ends.
   const option = asked.getByRole("button").nth(1);
   const optionLabel = await option.locator("span span").first().innerText();
   const answered = messagePosted(page);
@@ -149,7 +114,7 @@ test("send, stream and answer a live run, then ask about a selected face", async
   // The real endpoint stored both messages with the choices they were sent with.
   let messages = (await (await page.request.get(`/api/sessions/${session.id}/messages`)).json()) as Message[];
   expect(messages.filter((m) => m.role === "user")).toMatchObject([
-    { text: SESSION.prompt, model: model.id, effort: effort.id, mode: "manual" },
+    { text: SESSION.prompt, model: model.id, effort: effort.id, mode: "auto" },
     { model: model.id, effort: effort.id, mode: "auto", answer: { option_id: expect.any(String) } },
   ]);
 

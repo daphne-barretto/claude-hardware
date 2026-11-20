@@ -5,8 +5,8 @@ import { constraintItem, openConstraints, pickCheck } from "./fixtures/constrain
 import { openExample } from "./fixtures/sessions";
 
 // The canvas on real builds: the real backend (backend/app/e2e_api.py: the session API,
-// geometry, checks and analysis maps, with only Claude scripted) serves the glTF, the check
-// results and the maps, not the contract fixtures. The dev server sends requests carrying the
+// geometry, checks and analysis maps, with only Claude scripted) serves the glTF and the check
+// results, not the contract fixtures. The dev server sends requests carrying the
 // cookie `e2e-backend=live` to it (playwright.config.ts). Every expected value is read from the
 // real API or from `demos/b-parasite/CHANGES.md`, never written here.
 test.skip(!!process.env.E2E_BASE_URL, "the scripted backend runs only with the local dev servers");
@@ -23,19 +23,10 @@ const MOVED = CHANGES.split("\n")
   .filter((cells) => cells[4].startsWith("moved"))
   .map((cells) => cells[1].replaceAll("`", ""));
 
-type Build = { id: string; mesh_url: string; checks_url: string; maps: string[] };
+type Build = { id: string; mesh_url: string; checks_url: string };
 type Gltf = { nodes: { extras?: { part?: string; faces?: { id: string; feature: string }[] } }[] };
 type Result = { id: string; status: string; location?: { point: [number, number, number] } | null };
 type Report = { build_id: string; results: Result[] };
-type AnalysisMap = {
-  type: string;
-  standard: string;
-  legend: { min: number; max: number; limit?: number | null; unit: "mm" | "deg" };
-  parts: { values: (number | null)[] }[];
-  flagged?: { id: string; message: string }[];
-};
-const LABELS: Record<string, string> = { wall_thickness: "Wall thickness", draft: "Draft" };
-const fmt = (v: number, unit: "mm" | "deg") => (unit === "deg" ? `${v.toFixed(1)}°` : `${v.toFixed(1)} mm`);
 /** The viewer's orbit centre is reported in board coordinates, rounded to 0.1 mm. */
 const target = (p: [number, number, number]) =>
   p
@@ -136,36 +127,6 @@ test("check pins come from the real check results and a failure moves the camera
   await expect(canvas.getByTestId("check-card")).toHaveAttribute("data-check", second.id);
 });
 
-test("the analysis maps render from the real values with a matching legend", async ({ page }) => {
-  const { id, build } = await liveSession(page.request);
-  const types = build.maps.filter((t) => t in LABELS);
-  expect(types.length).toBeGreaterThan(0);
-  const { viewer, canvas } = await openCanvas(page, id);
-  const gl = canvas.locator("canvas");
-  const plain = await gl.screenshot();
-
-  for (const type of types) {
-    const map = await get<AnalysisMap>(page.request, `/api/sessions/${id}/builds/${build.id}/maps/${type}`);
-    await canvas.getByRole("button", { name: "Analysis maps" }).click();
-    await canvas.getByRole("menu", { name: "Analysis maps" }).getByRole("menuitemradio", { name: LABELS[type] }).click();
-    await expect(viewer).toHaveAttribute("data-map", type);
-    const vertices = map.parts.reduce((n, p) => n + p.values.length, 0);
-    await expect(viewer).toHaveAttribute("data-map-vertices", String(vertices));
-    await expect.poll(async () => (await gl.screenshot()).equals(plain)).toBe(false);
-
-    const legend = canvas.getByRole("region", { name: `${LABELS[type]} legend` });
-    await expect(legend).toContainText(map.standard);
-    await expect(legend.getByTestId("legend-min")).toHaveText(fmt(map.legend.min, map.legend.unit));
-    await expect(legend.getByTestId("legend-max")).toHaveText(fmt(map.legend.max, map.legend.unit));
-    if (map.legend.limit != null) {
-      await expect(legend.getByTestId("legend-limit-label")).toHaveText(`limit ${fmt(map.legend.limit, map.legend.unit)}`);
-    }
-    await expect(legend.getByRole("list", { name: "Flagged spots" }).getByRole("listitem")).toHaveCount(
-      map.flagged?.length ?? 0,
-    );
-  }
-});
-
 test("a rebuild that moves an opening keeps the selected face's ID", async ({ page }) => {
   test.setTimeout(120_000);
   expect(MOVED.length).toBeGreaterThan(0);
@@ -176,10 +137,9 @@ test("a rebuild that moves an opening keeps the selected face's ID", async ({ pa
   expect(face, `a face of ${feature} on ${build.id}`).toBeTruthy();
 
   const { viewer, canvas } = await openCanvas(page, id);
-  const byId = canvas.getByRole("region", { name: "Parts" }).getByRole("textbox", { name: "Select by ID" });
-  await byId.fill(face!.id);
-  await byId.press("Enter");
-  await expect(viewer).toHaveAttribute("data-selected", face!.id);
+  // Select the opening's feature: its faces, this one among them.
+  await canvas.getByRole("region", { name: "Parts" }).getByRole("button", { name: `Select feature: ${feature}`, exact: true }).click();
+  await expect(viewer).toHaveAttribute("data-selected", new RegExp(`(^|,)${face!.id}(,|$)`));
   await expect(page.getByTestId("selection-chip")).toBeVisible();
 
   // Claude moves the openings; the rebuild streams in and the canvas shows it.
@@ -211,6 +171,6 @@ test("a rebuild that moves an opening keeps the selected face's ID", async ({ pa
   // ...and its face kept its ID: still selected in the canvas, and on the new mesh.
   const after = await get<Gltf>(page.request, rebuilt!.mesh_url);
   expect(faces(after).find((f) => f.id === face!.id)?.feature).toBe(feature);
-  await expect(viewer).toHaveAttribute("data-selected", face!.id);
+  await expect(viewer).toHaveAttribute("data-selected", new RegExp(`(^|,)${face!.id}(,|$)`));
   await expect(page.getByTestId("selection-chip")).toBeVisible();
 });

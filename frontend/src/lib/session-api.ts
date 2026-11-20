@@ -1,7 +1,6 @@
 // Client for the session API (contracts/session-api.openapi.json, contracts/README.md).
 // The types mirror the pydantic models in backend/app/contracts/session.py.
 import type { FindResult } from "@/components/canvas/api";
-import { MANUAL_MODE } from "./flags";
 import { sessionRoute } from "./share";
 import { followStream, retryStreamsNow } from "./session-stream";
 import type { StreamStatus } from "./stream-hub";
@@ -19,7 +18,7 @@ export type Session = {
   board?: BoardRef | null;
   status: "idle" | "running" | "waiting_for_answer";
   latest_build_id?: string | null;
-  /** The board revision `loadNextRevision` loads; null once it is loaded. */
+  /** The board revision `POST .../revisions/next` loads; null once it is loaded. */
   next_revision?: BoardRef | null;
   /** The standards set chosen with the session's first message. */
   standards?: string | null;
@@ -444,9 +443,9 @@ export const demoHref = (demoId: string) => `/demo/${encodeURIComponent(demoId)}
 /** Where a session list row goes: a demo not opened yet goes to its demo page, which makes this browser's copy. */
 export const listedHref = (s: Session) => (s.sample ? demoHref(s.demo ?? s.id) : sessionHref(s.id));
 
-/** Without the Manual mode flag (`lib/flags`) every message goes in Auto mode. */
-export function lockedMode(body: MessageCreate, manual = MANUAL_MODE): MessageCreate {
-  return !manual && body.mode === "manual" ? { ...body, mode: "auto" } : body;
+/** Every message goes in Auto mode: Claude applies its changes as it goes. */
+export function lockedMode(body: MessageCreate): MessageCreate {
+  return body.mode === "manual" ? { ...body, mode: "auto" } : body;
 }
 
 export function postMessage(sessionId: string, body: MessageCreate): Promise<unknown> {
@@ -487,18 +486,7 @@ export function reviewRisks(sessionId: string, body: { accept?: string[]; reject
   return call<RiskFlags>(`${sessionRoute(sessionId)}/risks`, { method: "POST", body: JSON.stringify(body) });
 }
 
-export type RevisionLoad = { model?: string | null; effort?: Effort | null; mode: Mode };
-
-/**
- * Loads the session's next board revision: Claude starts the work on it with a fixed prompt, and
- * the run (ending with its change set) streams on the session's events. Returns the user message
- * that stands for the load.
- */
-export function loadNextRevision(sessionId: string, body: RevisionLoad): Promise<{ id: string; text: string }> {
-  return call(`${sessionRoute(sessionId)}/revisions/next`, { method: "POST", body: JSON.stringify(body) });
-}
-
-/** Uploads a file to send with a message; `name` defaults to the file's (a relative path for a folder). */
+/** Uploads a file to send with a message; `name` defaults to the file's. */
 export function uploadAttachment(sessionId: string, file: Blob, name = file instanceof File ? file.name : "attachment"): Promise<Attachment> {
   const form = new FormData();
   form.append("file", file, name);

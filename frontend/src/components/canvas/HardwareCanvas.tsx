@@ -2,23 +2,17 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
-  BoxSelect,
   Check,
   ChevronDown,
   Code2,
   Download,
-  History,
   Lock,
   Layers,
-  Palette,
-  PenTool,
   ListChecks,
   Redo2,
   Ruler,
   RulerDimensionLine,
-  ScanEye,
   Scissors,
-  Search,
   SlidersHorizontal,
   Undo2,
 } from "lucide-react";
@@ -31,25 +25,19 @@ import {
 import {
   CodeEditError,
   createExport,
-  findInModel,
   getBoard,
   getChecks,
-  getDiff,
-  getMap,
-  restoreBuild,
   updateSource,
   useBuildSource,
   useChangeSet,
   useParameters,
   type Build,
-  type BuildDiff,
   type BuildSource,
   type CheckReport,
   type Export,
   type Parameter,
-  type FindResult,
 } from "./api";
-import { findCount, findPicks, groupMatches } from "./find";
+import { findPicks } from "./find";
 import {
   featureKey,
   featurePicks,
@@ -71,44 +59,15 @@ import {
 import { formatLength, formatSize, fromMm, LENGTH_UNITS, type LengthUnit } from "./units";
 import {
   AXES,
-  bodyTriangles,
-  componentBody,
   componentClearance,
   LAYOUT_LABELS,
   LAYOUTS,
-  measureDistance,
-  sameTarget,
   type Axis,
   type Board,
   type Clearance,
-  type Closest,
   type Layout,
-  type Measurable,
-  type MeasureTarget,
 } from "./inspect";
-import {
-  buildName,
-  changesHeading,
-  checksLine,
-  compareTarget,
-  featureChangeDetail,
-  featureChangeText,
-  historyEntries,
-  parameterChangeText,
-  restoredText,
-  revisionLabel,
-} from "./history";
-import {
-  fixRequest,
-  isMapType,
-  legendGradient,
-  legendPosition,
-  MAP_LABELS,
-  type AnalysisMap,
-  type FlaggedSpot,
-  type MapType,
-  type MapUnit,
-} from "./colormap";
+import { revisionLabel } from "./history";
 import { reportAction, type Location, type QuestionOption, type Selection } from "@/lib/session-api";
 import type { Block } from "@/components/sites/claude-shell/chat";
 import { QuestionOptions } from "@/components/sites/claude-shell/ChatMessages";
@@ -132,19 +91,15 @@ import { findShortcut, isTypingTarget, type ShortcutAction } from "./shortcuts";
 import { ParametersPanel } from "./ParametersPanel";
 import { CheckOverlay, CheckPins } from "./CheckOverlay";
 import { ConstraintsPanel } from "./ConstraintsPanel";
-import { ModelingPanel } from "./ModelingPanel";
-import { ModelingToolbar } from "./ModelingToolbar";
-import { type EditKind } from "./modeling";
-import { failedLatest, fixFailureText, plainError, shownBuild, stepBlocked, stepTitle, type Direction } from "./designHistory";
+import { pinFilterFor, useOpenChecksRequest, type OpenChecksRequest } from "./openChecks";
+import { failedLatest, fixFailureText, shownBuild, stepBlocked, stepTitle, type Direction } from "./designHistory";
 import { FailedBuildBanner, HistoryToast } from "./HistoryNotices";
 import { useDesignHistory } from "./useDesignHistory";
 import { ChangePanel, ChangePins } from "./ChangeOverlay";
-import { SketchPanel } from "./SketchPanel";
-import { EXPLODE_TOOL, FIND, MAPS, MEASURE_TOOL, XRAY, HISTORY, MODELING_TOOLS, SELECT_FILTERS, SKETCH } from "@/lib/flags";
 import { Dimensions, type Dragging } from "./Dimensions";
 import { draggedValue, type Rect } from "./parameters";
 import { useParameterEdits } from "./useParameterEdits";
-import { boardPartNames, isBoardPick, resolveBoardPart, viewPartsOf } from "./boardParts";
+import { boardPartNames, isBoardPick, viewPartsOf } from "./boardParts";
 import { BoardPartRows, PartRow } from "./PartRow";
 import { locationPart } from "./explode";
 import { chromeVars, outsideBand, PANEL, PLACE } from "./chromeLayout";
@@ -154,8 +109,6 @@ import { sectionTargets, sectionThrough, type SectionTarget } from "./sectionTar
 import { CommentsLayer } from "./comments/CommentsLayer";
 import { useCommentTool } from "./comments/useComments";
 import {
-  addPicks,
-  boxFrom,
   highlightPicks,
   hideParts,
   isIsolated,
@@ -163,21 +116,17 @@ import {
   isolateParts,
   partView,
   pickAs,
-  PICK_KINDS,
   resolveId,
   showAll,
   toCanvasSelection,
   togglePick,
   type Picked,
-  type PickKind,
   type PartViews,
 } from "./selection";
-import { BOX_ON_HINT, BOX_TIP, PICK_TIPS, selectHint } from "./selectHelp";
 import { shownError } from "@/lib/errors";
 
-const PICK_LABELS: Record<PickKind, string> = { face: "Face", edge: "Edge", part: "Part", component: "Component" };
 
-type Menu = "changes" | "revision" | "layout" | "maps" | "export" | "checks" | "history" | "code" | "settings" | "zoom" | "section-component";
+type Menu = "changes" | "layout" | "export" | "checks" | "code" | "settings" | "zoom" | "section-component";
 
 /**
  * The code being edited: the build it was edited from, the text, and why the API refused it.
@@ -206,24 +155,18 @@ const menuItem =
 
 /**
  * The 3D canvas: a three.js viewer of a build's glTF (mesh contract) with orbit, pan, zoom,
- * fit and a view cube, the revision menu and compare (the build next to the latest one on another
- * board revision, with the diff between them), mm/in units and the top-right controls (export,
- * run checks, history with undo, code, view settings, zoom), and the analysis maps (wall thickness, draft) with
- * a legend and their flagged spots, which `onFixRequest` sends to Claude. Clicking picks a face,
- * edge, part or board component, as the selection filter says (shift- or Cmd-click adds or
- * removes); box select picks everything of that kind inside a dragged box. The selection is
+ * fit and a view cube, mm/in units and the top-right controls (undo and redo, export, run
+ * checks, code, view settings, zoom). Clicking picks a face, or a
+ * board component whole (shift- or Cmd-click adds or removes). The selection is
  * highlighted and becomes the chat's selection chip. The parts panel hides, isolates and makes
- * parts see-through, and selects by ID. In the parameters panel a typed value locks a parameter
- * and rebuilds. The sketch panel places a shape on the picked flat face and cuts or extrudes it:
- * a locked feature Claude keeps. Claude's open question about a spot (`question`) is pinned
+ * parts see-through. In the parameters panel a typed value locks a parameter
+ * and rebuilds. Claude's open question about a spot (`question`) is pinned
  * there with its options, which `onAnswer` answers. With dimensions shown, each parameter's
  * dimension is drawn on the model; clicking one types a value, and dragging a face of a
  * draggable feature changes its parameter. Both are hand edits like the panel's.
  * The inspection tools draw the build's board revision inside the enclosure: a
- * section cut through any component with that component's clearance, x-ray, a measure tool that
- * snaps to components, faces and corners, and the Assembled / Exploded / Print layouts. Explode
- * pulls the assembled parts apart along the assembly direction, with a slider for how far; picks
- * and check pins follow the parts.
+ * section cut through any component with that component's clearance, and the Assembled /
+ * Exploded / Print layouts; picks and check pins follow the parts.
  */
 export function HardwareCanvas({
   sessionId,
@@ -264,7 +207,7 @@ export function HardwareCanvas({
   const [ownId, setOwnId] = useState<string | null>(null);
   const selectedId = onSelect ? (shownId ?? null) : ownId;
   const setSelectedId = onSelect ?? setOwnId;
-  // The build shown and acted on (comments, edits, measure, export): never a failed one. A
+  // The build shown and acted on (comments, edits, export): never a failed one. A
   // failed newest build is reported over the last good model instead (`failed`).
   const build = shownBuild(builds, selectedId);
   const failed = failedLatest(builds, build);
@@ -274,45 +217,23 @@ export function HardwareCanvas({
   const [unit, setUnit] = useState<LengthUnit>("mm");
   const [settings, setSettings] = useState<ViewSettings>({ edges: true, grid: true });
   const [menu, setMenu] = useState<Menu | null>(null);
-  const [mapType, setMapType] = useState<MapType | null>(null);
   const [paramsOpen, setParamsOpen] = useState(false);
   const [codeDraft, setCodeDraft] = useState<CodeDraft | null>(null);
-  const [sketchOpen, setSketchOpen] = useState(false);
-  // The modeling tool whose panel is open.
-  const [tool, setTool] = useState<EditKind | null>(null);
   const [dimensionsOn, setDimensionsOn] = useState(false);
   const [dragging, setDragging] = useState<Dragging | null>(null);
   // The canvas follows the rebuild after a hand edit.
   const parameters = useParameterEdits(sessionId, builds, () => setSelectedId(null));
-  // The last map result, for the build, map type and model it was loaded for.
-  const [mapResult, setMapResult] = useState<
-    { key: string; map: AnalysisMap; vertices: number } | { key: string; error: string } | null
-  >(null);
-  const mapTypes = (build?.maps ?? []).filter(isMapType);
-  const activeMap = mapType && mapTypes.includes(mapType) ? mapType : null;
-  const [pickKind, setPickKind] = useState<PickKind>("face");
   const [picks, setPicks] = useState<Picked[]>([]);
-  const [boxMode, setBoxMode] = useState(false);
-  // Something was selected on the model in this session: the Select hint has done its job.
-  const [selectedOnce, setSelectedOnce] = useState(false);
-  const [box, setBox] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const [partViews, setPartViews] = useState<PartViews>({});
-  // Inspection: layout, x-ray, the section cut and the measure tool.
+  // Inspection: layout and the section cut.
   const [layout, setLayout] = useState<Layout>("assembled");
-  const [xray, setXray] = useState(false);
   const [sectionOn, setSectionOn] = useState(false);
   const [sectionRef, setSectionRef] = useState<string | null>(null);
   const [sectionAxis, setSectionAxis] = useState<Axis>("x");
-  const [measuring, setMeasuring] = useState(false);
-  const [measured, setMeasured] = useState<MeasureTarget[]>([]);
-  const [measurement, setMeasurement] = useState<Closest | null>(null);
   // The build's board, once loaded (or why not): only a build checked against a board has one.
   const [loadedBoard, setLoadedBoard] = useState<{ url: string; board: Board | null } | null>(null);
   // Each enclosure part's triangles in the assembled design, for clearances.
   const [enclosure, setEnclosure] = useState<{ part: string; triangles: Float64Array }[]>([]);
-  // The exploded view: parts pulled apart along the assembly direction, by `explodePercent`.
-  const [exploded, setExploded] = useState(false);
-  const [explodePercent, setExplodePercent] = useState(100);
   // The comment tool: a click pins a draft comment instead of selecting.
   const commentTool = useCommentTool();
   const setChatSelection = useSetCanvasSelection();
@@ -322,10 +243,6 @@ export function HardwareCanvas({
   const params = useParameters(sessionId, build?.id);
   // The feature whose lines the Code panel shows, from the tree's code links.
   const [codeFeature, setCodeFeature] = useState<FeatureNode | null>(null);
-  // Compare: the shown build next to the latest build on another board revision.
-  const [comparing, setComparing] = useState(false);
-  const other = compareTarget(builds, build);
-  const compareWith = comparing ? other : undefined;
 
   const [checks, setChecks] = useState<{ buildId: string; report: CheckReport | null; error: string | null } | null>(
     null,
@@ -340,6 +257,15 @@ export function HardwareCanvas({
     savePinFilter(f);
   };
   const [chatShownCheck, setChatShownCheck] = useState<string | null>(null);
+  // A check count clicked (a chat build card, say) opens the Constraints panel on its group (./openChecks).
+  const [revealChecks, setRevealChecks] = useState<OpenChecksRequest | null>(null);
+  useOpenChecksRequest(!!build, (r) => {
+    setMenu("checks");
+    setPinFilter(pinFilterFor(r.status));
+    setRevealChecks(r);
+  });
+  // Closed, the panel forgets the group: opened again from the toolbar it marks none.
+  if (revealChecks && menu !== "checks") setRevealChecks(null);
 
   // The build's check results: the pins and the Constraints panel show them.
   useEffect(() => {
@@ -385,9 +311,6 @@ export function HardwareCanvas({
         if (!live) return;
         setModel(info);
         setEnclosure(viewer.partTriangles());
-        // A measurement belongs to the geometry it was taken on.
-        setMeasured([]);
-        setMeasurement(null);
         setLoadState("ready");
       })
       .catch(() => live && setLoadState("error"));
@@ -441,7 +364,6 @@ export function HardwareCanvas({
   const boardParts = useMemo(() => (board ? boardPartNames(board, model?.parts) : []), [board, model]);
   const allParts = useMemo(() => [...(model?.parts ?? []), ...boardParts], [model, boardParts]);
   useEffect(() => viewerRef.current?.setLayout(layout), [layout]);
-  useEffect(() => viewerRef.current?.setXray(xray), [xray]);
 
   // Every component's clearance to the enclosure, once the model and its board are both loaded.
   const clearances = useMemo<Clearance[]>(
@@ -500,34 +422,11 @@ export function HardwareCanvas({
     [selectedCheck, chatShownCheck],
   );
 
-  // The measure tool: two picks, measured exactly in the assembled design.
-  const measurable = (t: MeasureTarget): Measurable | null => {
-    if ("point" in t) return { point: t.point };
-    if (t.kind === "face") return { triangles: viewerRef.current?.faceTriangles(t.part, t.id) ?? new Float64Array() };
-    const c = board?.components.find((x) => x.ref === t.ref);
-    return c && board ? { triangles: bodyTriangles(componentBody(board, c)) } : null;
-  };
-  const pickMeasure = (target: MeasureTarget) => {
-    // A third pick starts a new measurement; picking the first thing again does nothing.
-    if (measured.length === 1 && sameTarget(measured[0], target)) return;
-    const next = measured.length === 1 ? [measured[0], target] : [target];
-    setMeasured(next);
-    const [a, b] = next.map(measurable);
-    setMeasurement(next.length === 2 && a && b ? measureDistance(a, b) : null);
-  };
-  const clearMeasure = () => {
-    setMeasured([]);
-    setMeasurement(null);
-  };
-
-  // Dimension lines: the section's clearance and the measurement, on the assembled design only.
+  // Dimension lines: the section's clearance, on the assembled design only.
   const dimensions: Dimension[] =
     layout !== "assembled"
       ? []
-      : [
-          ...(sectionClearance && sectionClearance.distance > 0 ? [sectionClearance] : []),
-          ...(measuring && measurement && measurement.distance > 0 ? [measurement] : []),
-        ].map((c) => ({ from: c.from, to: c.to, label: formatPrecise(c.distance, unit) }));
+      : [...(sectionClearance && sectionClearance.distance > 0 ? [sectionClearance] : [])].map((c) => ({ from: c.from, to: c.to, label: formatPrecise(c.distance, unit) }));
   const dimensionKey = JSON.stringify(dimensions);
   useEffect(() => {
     viewerRef.current?.setDimensions(JSON.parse(dimensionKey) as Dimension[]);
@@ -535,18 +434,15 @@ export function HardwareCanvas({
 
   useEffect(() => viewerRef.current?.setSettings(settings), [settings]);
   useEffect(() => viewerRef.current?.setPartViews(partViews), [partViews]);
-  const explodeShown = exploded && !compareWith;
-  useEffect(() => viewerRef.current?.setExplode(explodeShown ? explodePercent / 100 : 0), [explodeShown, explodePercent, model]);
   // Re-applied after a new build loads: face and edge IDs survive rebuilds.
   useEffect(
     () =>
       viewerRef.current?.setHighlight(model ? [...highlightPicks(model.index, picks), ...picks.filter(isBoardPick)] : picks),
     [picks, model, board],
   );
-  useEffect(() => viewerRef.current?.setLeftDrag(!boxMode), [boxMode]);
 
   // The chat consumed the selection (sent it, or the chip was cleared): drop the highlight,
-  // unless the selection was cleared to show find results instead.
+  // unless the selection was cleared to show what Claude found instead.
   const hadSelection = useRef(false);
   const keepPicks = useRef(false);
   useEffect(() => {
@@ -557,12 +453,11 @@ export function HardwareCanvas({
 
   const select = (next: Picked[], point: [number, number, number] | null = null, label?: string) => {
     setPicks(next);
-    if (next.length) setSelectedOnce(true);
     const s = model ? toCanvasSelection(model.index, next, point) : null;
     setChatSelection(s?.selection ?? null, label ?? s?.label);
   };
 
-  // Find in model: matches are highlighted; "Send to chat" makes them the chat's selection.
+  // What Claude found in chat, highlighted without becoming the chat's selection.
   const highlight = (next: Picked[]) => {
     if (chatSelection) {
       keepPicks.current = true;
@@ -608,57 +503,38 @@ export function HardwareCanvas({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [foundRequest, model]);
 
-  // A click (not a drag) picks what is under the pointer; in box select, a drag picks what is
-  // inside the box. Shift or Cmd (Ctrl) adds to the selection.
+  // A click (not a drag) picks the face under the pointer. Shift or Cmd (Ctrl) adds to the
+  // selection.
   const down = useRef<{ x: number; y: number } | null>(null);
   const onPointerDown = (e: React.PointerEvent<HTMLElement>) => {
     e.currentTarget.focus({ preventScroll: true });
     down.current = e.button === 0 ? { x: e.clientX, y: e.clientY } : null;
-    if (down.current && boxMode) (e.target as Element).setPointerCapture?.(e.pointerId);
   };
   const onPointerMove = (e: React.PointerEvent) => {
-    const start = down.current;
-    if (!start && e.pointerType === "mouse") previewHover(e.clientX, e.clientY);
-    if (!boxMode || measuring || !start) return;
-    if (!box && Math.hypot(e.clientX - start.x, e.clientY - start.y) < CLICK_SLOP_PX) return;
-    // Relative to the canvas region, where the box is drawn (the viewer is its right half in compare).
-    const o = (e.currentTarget.parentElement ?? e.currentTarget).getBoundingClientRect();
-    setBox({ x0: start.x - o.left, y0: start.y - o.top, x1: e.clientX - o.left, y1: e.clientY - o.top });
+    if (!down.current && e.pointerType === "mouse") previewHover(e.clientX, e.clientY);
   };
   const onPointerUp = (e: React.PointerEvent) => {
     const start = down.current;
     down.current = null;
-    setBox(null);
     if (!start) return;
     const additive = e.shiftKey || e.metaKey || e.ctrlKey;
-    const moved = Math.hypot(e.clientX - start.x, e.clientY - start.y) >= CLICK_SLOP_PX;
-    if (measuring) {
-      if (moved) return;
-      const target = viewerRef.current?.measureAt(e.clientX, e.clientY);
-      if (target) pickMeasure(target);
-      return;
-    }
-    if (moved) {
-      if (boxMode) selectBox(boxFrom(start, { x: e.clientX, y: e.clientY }), additive);
-      return;
-    }
+    if (Math.hypot(e.clientX - start.x, e.clientY - start.y) >= CLICK_SLOP_PX) return;
     if (commentTool.active) {
       const hit = viewerRef.current?.pickAt(e.clientX, e.clientY, "face");
       commentTool.place(hit ? { face: hit.pick.id, part: hit.pick.part, point: hit.point } : null);
       return;
     }
-    const hit = viewerRef.current?.pickAt(e.clientX, e.clientY, pickKind === "component" ? "face" : pickKind);
-    // A board part is picked whole, whatever the filter.
-    const pick = hit && model ? (hit.board ? hit.pick : pickAs(model.index, hit.pick, pickKind)) : null;
+    const hit = viewerRef.current?.pickAt(e.clientX, e.clientY, "face");
+    // A board part is picked whole.
+    const pick = hit && model ? (hit.board ? hit.pick : pickAs(model.index, hit.pick, "face")) : null;
     if (!hit || !pick) {
       if (!additive) select([]);
       return;
     }
     select(additive ? togglePick(picks, pick) : [pick], hit.point);
   };
-  // What a click would pick under the pointer, previewed on the model (by the Select filter),
-  // once a frame at most (a click picks in box select too). Not while measuring or commenting,
-  // where a click does something else.
+  // What a click would pick under the pointer, previewed on the model, once a frame at most.
+  // Not while commenting, where a click does something else.
   const hoverFrame = useRef<number | null>(null);
   const [hovered, setHovered] = useState("");
   const previewHover = (x: number, y: number) => {
@@ -668,9 +544,9 @@ export function HardwareCanvas({
       const viewer = viewerRef.current;
       if (!viewer || !model) return;
       let pick: Picked | null = null;
-      if (!measuring && !commentTool.active) {
-        const hit = viewer.pickAt(x, y, pickKind === "component" ? "face" : pickKind);
-        pick = hit ? (hit.board ? hit.pick : pickAs(model.index, hit.pick, pickKind)) : null;
+      if (!commentTool.active) {
+        const hit = viewer.pickAt(x, y, "face");
+        pick = hit ? (hit.board ? hit.pick : pickAs(model.index, hit.pick, "face")) : null;
       }
       const shown = pick ? (isBoardPick(pick) ? [pick] : highlightPicks(model.index, [pick])) : [];
       viewer.setHover(shown);
@@ -687,22 +563,11 @@ export function HardwareCanvas({
     },
     [],
   );
-  const selectBox = (rect: [number, number, number, number], additive: boolean) => {
-    const viewer = viewerRef.current;
-    if (!viewer || !model) return;
-    const found = viewer.pickInBox(rect, pickKind === "edge");
-    const inBox = addPicks([], found.flatMap((p) => pickAs(model.index, p, pickKind) ?? []));
-    select(additive ? addPicks(picks, inBox) : inBox);
-  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || menu || (e.target as HTMLElement)?.closest?.("input, textarea")) return;
       down.current = null;
-      setBox(null);
-      setBoxMode(false);
-      setMeasured([]);
-      setMeasurement(null);
       setPicks([]);
       setChatSelection(null);
     };
@@ -717,28 +582,6 @@ export function HardwareCanvas({
     viewerRef.current?.setMarker(pinKey ? (pinKey.split(",").map(Number) as [number, number, number]) : null);
   }, [pinKey]);
 
-  // The selected analysis map for the shown build, colored onto the model once both are loaded.
-  const buildId = build?.id;
-  const mapKey = buildId && activeMap && loadState === "ready" && model ? `${buildId}/${activeMap}/${meshUrl}` : null;
-  const current = mapResult && mapResult.key === mapKey ? mapResult : null;
-  const analysis = current && "map" in current ? current : null;
-  const mapError = current && "error" in current ? current.error : null;
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    viewer?.setMap(null);
-    if (!viewer || !mapKey || !buildId || !activeMap) return;
-    let live = true;
-    getMap(sessionId, { id: buildId }, activeMap)
-      .then((map) => {
-        if (!live) return;
-        const stats = viewer.setMap(map);
-        setMapResult({ key: mapKey, map, vertices: Object.values(stats).reduce((a, b) => a + b, 0) });
-      })
-      .catch((e: Error) => live && setMapResult({ key: mapKey, error: shownError(e) }));
-    return () => {
-      live = false;
-    };
-  }, [sessionId, buildId, activeMap, mapKey]);
 
   // Close an open menu on Escape or a click outside the control bar.
   useEffect(() => {
@@ -761,10 +604,6 @@ export function HardwareCanvas({
   const [hoverTarget, setHoverTarget] = useState<Target | null>(null);
 
   const toggle = (m: Menu) => setMenu((cur) => (cur === m ? null : m));
-  const toggleMeasure = () => {
-    setMeasuring((on) => !on);
-    clearMeasure();
-  };
   // Undo and redo over the design timeline: every change, whoever made it (a hand edit, a
   // Claude run, a review). Off while Claude is working; like a hand edit, on while its question waits.
   const timeline = useDesignHistory(sessionId, builds, fixDisabled);
@@ -791,7 +630,6 @@ export function HardwareCanvas({
   // Keyboard shortcuts (keymap in ./shortcuts): one handler per action the canvas supports.
   // Bindings without a handler stay off the sheet until their feature adds one.
   const [sheetOpen, setSheetOpen] = useState(false);
-  const partsRef = useRef<HTMLElement>(null);
   // The section cut, reported to the session's telemetry log as it turns on and off.
   const toggleSection = () => {
     reportAction(sessionId, { kind: "view", view: "section", value: sectionOn ? "off" : "on" });
@@ -803,12 +641,6 @@ export function HardwareCanvas({
     "view-right": () => setCameraView("right"),
     "view-iso": () => setCameraView("iso"),
     fit: () => viewer()?.fit(),
-    // The select tool: leaves measuring, and its pick-mode control takes the keyboard.
-    "tool-select": () => {
-      setMeasuring(false);
-      partsRef.current?.querySelector<HTMLElement>('[role="radio"][aria-checked="true"]')?.focus();
-    },
-    ...(MEASURE_TOOL ? { "tool-measure": () => toggleMeasure() } : {}),
     "tool-section": toggleSection,
     hide: () => model && setPartViews((v) => hideParts(v, viewPartsOf(picks).filter((p) => allParts.includes(p)))),
     isolate: () =>
@@ -863,19 +695,15 @@ export function HardwareCanvas({
   };
 
   const hasModel = loadState === "ready" && !!model;
-  // Exploding needs at least two parts; compare shows both builds assembled, and the other
-  // layouts place the parts themselves.
-  const canExplode = hasModel && !compareWith && model.parts.length > 1 && layout === "assembled";
-  // The side columns of the chrome (chromeLayout.ts): the parts panel, and the modeling toolbar.
-  const partsShown = hasModel && !compareWith;
-  const toolbarShown = hasModel && !compareWith && !activeMap;
+  // The side column of the chrome (chromeLayout.ts): the parts panel.
+  const partsShown = hasModel;
   // Where the comment tools go: in the bottom bar, with the layout and inspection tools.
   const [commentSlot, setCommentSlot] = useState<HTMLDivElement | null>(null);
 
   return (
     <div
       className="@container absolute inset-0 overflow-clip"
-      style={chromeVars({ parts: partsShown, toolbar: toolbarShown && MODELING_TOOLS })}
+      style={chromeVars({ parts: partsShown })}
       onKeyDown={onCanvasKey}
     >
       <div
@@ -890,13 +718,9 @@ export function HardwareCanvas({
         data-view={view?.view}
         data-target={view?.target.join(",")}
         data-fits={view?.fits ? "true" : "false"}
-        data-map={analysis?.map.type ?? ""}
-        data-map-vertices={analysis?.vertices ?? 0}
         data-edges={settings.edges}
         data-grid={settings.grid}
-        data-pick={pickKind}
         data-commenting={commentTool.active}
-        data-box={boxMode}
         data-dimensions={dimensionsOn ? "true" : "false"}
         data-selected={picks.map((p) => p.id).join(",")}
         data-hidden={allParts.filter((p) => partView(partViews, p).hidden).join(",")}
@@ -909,54 +733,25 @@ export function HardwareCanvas({
         data-up-angle={view?.upAngle ?? ""}
         data-animating={view?.animating ? "true" : "false"}
         data-restored-from={build?.restored_from ?? ""}
-        data-compare={compareWith?.id ?? ""}
         data-animation-progress={view?.progress ?? ""}
         data-layout={layout}
-        data-xray={xray}
         data-section={sectionKey}
-        data-measuring={measuring}
         data-board={board ? `${board.name} ${board.revision}` : ""}
         data-board-to-clip={view?.boardToClip.join(",")}
-        data-explode={view ? Math.round(view.explode * 100) : 0}
-        data-explode-offsets={view ? Object.entries(view.offsets).map(([p, d]) => `${p}:${d}`).join(",") : ""}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerLeave={clearHover}
         data-hover={hovered}
-        aria-label={
-          boxMode
-            ? "3D view. Drag a box to select, shift- or Cmd-drag to add. Click to select. Right-drag to pan, scroll to zoom, arrow keys to turn."
-            : `3D view. Click to select, shift- or Cmd-click to add or remove. Drag to orbit${dimensionsOn ? " (drag a face that has a dimension to change it)" : ""}, right-drag or shift-drag to pan, scroll to zoom, arrow keys to turn.`
-        }
+        aria-label={`3D view. Click to select, shift- or Cmd-click to add or remove. Drag to orbit${dimensionsOn ? " (drag a face that has a dimension to change it)" : ""}, right-drag or shift-drag to pan, scroll to zoom, arrow keys to turn.`}
         role="img"
         tabIndex={0}
-        className={`absolute inset-y-0 right-0 touch-none outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--cs-accent)] ${boxMode || measuring || commentTool.active ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"} ${compareWith ? "left-1/2" : "left-0"}`}
+        className={`absolute inset-y-0 right-0 touch-none outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--cs-accent)] ${commentTool.active ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"} left-0`}
       />
-      {compareWith && build && (
-        <>
-          <div className="absolute inset-y-0 left-0 w-1/2 border-r border-[var(--cs-border)]">
-            <CompareViewer build={compareWith} name={buildName(compareWith, builds)} settings={settings} />
-          </div>
-          <p
-            data-testid="compare-label-old"
-            className="pointer-events-none absolute left-1/4 top-14 -translate-x-1/2 text-[12px] text-[var(--cs-muted)]"
-          >
-            {revisionLabel(compareWith)} · {buildName(compareWith, builds)}
-          </p>
-          <p
-            data-testid="compare-label-new"
-            className="pointer-events-none absolute left-3/4 top-14 -translate-x-1/2 text-[12px] text-[var(--cs-muted)]"
-          >
-            {revisionLabel(build)} · {buildName(build, builds)}
-          </p>
-        </>
-      )}
-      {box && <SelectBox box={box} />}
 
       {/* The newest build failed: said plainly over the last good model, with Undo and a fix;
           and the toast after an undo or redo. */}
-      {(failed || timeline.last || timeline.error) && !compareWith && (
+      {(failed || timeline.last || timeline.error) && (
         <div className="pointer-events-none absolute inset-x-0 top-14 z-30 flex flex-col items-center gap-2 px-4">
           {failed && (
             <FailedBuildBanner
@@ -994,78 +789,14 @@ export function HardwareCanvas({
           toScreen={(loc) => viewerRef.current?.toScreen(loc.point, model && locationPart(loc, model.index)) ?? null}
           onWheel={(e) => viewer()?.forwardWheel(e)}
           onDrag={(down, move) => viewer()?.forwardDrag(down, move)}
-          // Not while a click on the model measures, or a drag on a face changes a dimension.
-          showPins={!measuring && !dimensionsOn}
+          // Not while a drag on a face changes a dimension.
+          showPins={!dimensionsOn}
         />
       )}
 
       <div ref={barRef} className="pointer-events-none absolute inset-x-0 top-0 flex min-w-0 items-start gap-2 p-3">
-        {/* Revision menu: every build to switch between, part of History (lib/flags) */}
-        {HISTORY && (
-        <div data-pin-cover="" className="pointer-events-auto relative shrink-0">
-          <button
-            type="button"
-            aria-label="Revision"
-            aria-haspopup="menu"
-            aria-expanded={menu === "revision"}
-            onClick={() => toggle("revision")}
-            className={`${pill} hover:bg-[var(--cs-surface)]`}
-          >
-            {build ? revisionLabel(build) : "—"}
-            <ChevronDown className="size-3.5 text-[var(--cs-muted)]" />
-          </button>
-          {menu === "revision" && (
-            <div role="menu" aria-label="Revisions" data-pin-cover="" className={`${panel} left-0 w-64`}>
-              {[...builds].reverse().map((b) => (
-                <button
-                  key={b.id}
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={b.id === build?.id}
-                  onClick={() => {
-                    setSelectedId(b.id);
-                    setMenu(null);
-                  }}
-                  className={`${menuItem} text-[var(--cs-muted)]`}
-                >
-                  <Check className={`size-3.5 ${b.id === build?.id ? "" : "invisible"}`} />
-                  <span className="text-[var(--cs-text)]">{revisionLabel(b)}</span>
-                  <span className="truncate">
-                    {b.board?.name ?? "No board"} · {buildName(b, builds)}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        )}
-
-        {/* Compare with the latest build on another revision (History) */}
-        {HISTORY && other && (
-          <button
-            type="button"
-            aria-label={`Compare with ${revisionLabel(other)}`}
-            aria-pressed={!!compareWith}
-            data-pin-cover=""
-            onClick={() => {
-              if (!compareWith) reportAction(sessionId, { kind: "view", view: "compare", value: other.id });
-              setComparing((v) => !v);
-            }}
-            title={`${compareWith ? "Comparing" : "Compare"} with ${revisionLabel(other)}`}
-            className={`pointer-events-auto min-w-0 shrink whitespace-nowrap ${pill} ${
-              compareWith
-                ? "bg-[#1e3557] text-[#a8c7fa]"
-                : "text-[var(--cs-muted)] hover:bg-[var(--cs-surface)] hover:text-[var(--cs-text)]"
-            }`}
-          >
-            <span className="truncate">
-              {compareWith ? "Comparing" : "Compare"} with {revisionLabel(other)}
-            </span>
-          </button>
-        )}
-
         {/* The proposed changes, with accept and reject per change */}
-        {changeSet && !compareWith && (
+        {changeSet && (
           <div className="pointer-events-auto relative shrink-0">
             <button
               type="button"
@@ -1110,8 +841,8 @@ export function HardwareCanvas({
         >
           {/* On a narrow canvas the icons scroll sideways inside the toolbar; the zoom stays in view. */}
           <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto [scrollbar-width:none]">
-          {/* Undo and redo live in the modeling toolbar; without it they lead this one. */}
-          {!MODELING_TOOLS && !readOnly && hasModel && (
+          {/* Undo and redo lead the toolbar. */}
+          {!readOnly && hasModel && (
             <>
               <button type="button" aria-label="Undo" title={stepWhy("undo") ?? stepTitle(timeline.history, "undo", undefined) ?? "Undo (⌘Z)"} disabled={!!stepWhy("undo")} onClick={() => step("undo")} className={`${iconBtn} disabled:opacity-40`}>
                 <Undo2 className="size-3.5" />
@@ -1129,30 +860,12 @@ export function HardwareCanvas({
             aria-pressed={paramsOpen}
             onClick={() => {
               setParamsOpen((v) => !v);
-              setSketchOpen(false);
-              setTool(null);
             }}
             className={`${iconBtn} aria-pressed:bg-[var(--cs-active)] aria-pressed:text-[var(--cs-text)]`}
           >
             <Ruler className="size-3.5" />
           </button>
           {/* A read-only session (a shared link) has no edit tools: they'd be refused. */}
-          {!readOnly && SKETCH && (
-          <button
-            type="button"
-            aria-label="Sketch"
-            title="Sketch on a face"
-            aria-pressed={sketchOpen}
-            onClick={() => {
-              setSketchOpen((v) => !v);
-              setParamsOpen(false);
-              setTool(null);
-            }}
-            className={`${iconBtn} aria-pressed:bg-[var(--cs-active)] aria-pressed:text-[var(--cs-text)]`}
-          >
-            <PenTool className="size-3.5" />
-          </button>
-          )}
           {!readOnly && (
           <button
             type="button"
@@ -1171,32 +884,10 @@ export function HardwareCanvas({
               <button type="button" aria-label="Section cut" title="Section cut" aria-pressed={sectionOn} onClick={toggleSection} className={`${iconBtn} aria-pressed:bg-[var(--cs-active)] aria-pressed:text-[var(--cs-text)]`}>
                 <Scissors className="size-3.5" />
               </button>
-              {XRAY && (
-                <button type="button" aria-label="X-ray" title="X-ray" aria-pressed={xray} onClick={() => setXray((on) => !on)} className={`${iconBtn} aria-pressed:bg-[var(--cs-active)] aria-pressed:text-[var(--cs-text)]`}>
-                  <ScanEye className="size-3.5" />
-                </button>
-              )}
-              {MEASURE_TOOL && (
-                <button type="button" aria-label="Measure" title="Measure" aria-pressed={measuring} onClick={toggleMeasure} className={`${iconBtn} aria-pressed:bg-[var(--cs-active)] aria-pressed:text-[var(--cs-text)]`}>
-                  <Ruler className="size-3.5" />
-                </button>
-              )}
             </>
           )}
-          {MAPS && <MenuButton label="Analysis maps" icon={Palette} open={menu === "maps"} onClick={() => toggle("maps")} />}
           <MenuButton label="Export" icon={Download} open={menu === "export"} onClick={() => toggle("export")} />
           <MenuButton label="Constraints" icon={ListChecks} open={menu === "checks"} onClick={() => toggle("checks")} />
-          {HISTORY && (
-            <MenuButton
-              label="History"
-              icon={History}
-              open={menu === "history"}
-              onClick={() => {
-                if (menu !== "history") reportAction(sessionId, { kind: "view", view: "history" });
-                toggle("history");
-              }}
-            />
-          )}
           <MenuButton
             label="Code"
             icon={Code2}
@@ -1206,19 +897,6 @@ export function HardwareCanvas({
               toggle("code");
             }}
           />
-          {/* Duplicates the bottom bar's Exploded layout, with an amount slider: behind a flag. */}
-          {EXPLODE_TOOL && canExplode && (
-            <button
-              type="button"
-              aria-label="Explode"
-              title={exploded ? "Back to assembled" : "Explode: pull the parts apart"}
-              aria-pressed={exploded}
-              onClick={() => setExploded((v) => !v)}
-              className={`${iconBtn} aria-pressed:bg-[var(--cs-active)] aria-pressed:text-[var(--cs-text)]`}
-            >
-              <Layers className="size-3.5" />
-            </button>
-          )}
           <MenuButton
             label="View settings"
             icon={SlidersHorizontal}
@@ -1240,29 +918,8 @@ export function HardwareCanvas({
           </button>
         </div>
 
-        {menu && menu !== "revision" && menu !== "changes" && menu !== "section-component" && (
+        {menu && menu !== "changes" && menu !== "section-component" && (
           <div className="pointer-events-auto absolute right-3 top-12">
-            {menu === "maps" && (
-              <div role="menu" aria-label="Analysis maps" data-pin-cover="" className={`${panel} right-0 w-48`}>
-                {[null, ...mapTypes].map((t) => (
-                  <button
-                    key={t ?? "off"}
-                    type="button"
-                    role="menuitemradio"
-                    aria-checked={activeMap === t}
-                    onClick={() => {
-                      setMapType(t);
-                      reportAction(sessionId, { kind: "view", view: "map", value: t });
-                      setMenu(null);
-                    }}
-                    className={`${menuItem} text-[var(--cs-muted)]`}
-                  >
-                    <Check className={`size-3.5 ${activeMap === t ? "" : "invisible"}`} />
-                    <span className="text-[var(--cs-text)]">{t ? MAP_LABELS[t] : "No map"}</span>
-                  </button>
-                ))}
-              </div>
-            )}
             {menu === "export" && build && (
               <ExportPanel sessionId={sessionId} build={build} unit={unit} onClose={() => setMenu(null)} />
             )}
@@ -1287,17 +944,7 @@ export function HardwareCanvas({
                 }}
                 pinFilter={pinFilter}
                 onPinFilter={choosePinFilter}
-              />
-            )}
-            {HISTORY && menu === "history" && build && (
-              <HistoryPanel
-                sessionId={sessionId}
-                builds={builds}
-                shown={build}
-                busy={fixDisabled}
-                onShow={(b) => setSelectedId(b.id)}
-                // The canvas follows the restored build when it arrives.
-                onRestored={() => setSelectedId(null)}
+                reveal={revealChecks}
               />
             )}
             {menu === "code" && build && (
@@ -1371,35 +1018,16 @@ export function HardwareCanvas({
           hidden={(part) => partView(partViews, part).hidden}
           dragging={dragging}
           onEdited={() => setParamsOpen(true)}
-          bounds={layout === "assembled" && !explodeShown ? model?.bounds : null}
+          bounds={layout === "assembled" ? model?.bounds : null}
         />
       )}
 
-      {/* How far apart the parts are, from assembled (0%) to fully exploded (100%). */}
-      {canExplode && exploded && (
-        <label data-pin-cover="" className="absolute left-1/2 top-14 flex h-8 -translate-x-1/2 items-center gap-2 rounded-lg bg-[var(--cs-surface-2)] px-2.5 text-[12px] text-[var(--cs-muted)]">
-          Exploded
-          <input
-            type="range"
-            aria-label="Explode amount"
-            min={0}
-            max={100}
-            step={1}
-            value={explodePercent}
-            onChange={(e) => setExplodePercent(Number(e.target.value))}
-            className="h-1 w-20 cursor-pointer accent-[var(--cs-text)]"
-          />
-          <span data-testid="explode-percent" className="w-8 text-right tabular-nums text-[var(--cs-text)]">
-            {explodePercent}%
-          </span>
-        </label>
-      )}
       {sheetOpen && <ShortcutSheet available={hasShortcut} onClose={() => setSheetOpen(false)} />}
       {/* The left column: the parts panel, then the view label and the model's parts and size. It
-          starts under the top bar; with History off (lib/flags) the bar's left end is empty, so on a
-          canvas wide enough to clear the units switch and the toolbar it starts at the top. */}
-      <div className={`pointer-events-none absolute bottom-[var(--chrome-bottom)] left-3 top-[var(--chrome-top)] flex w-56 flex-col gap-2 ${HISTORY ? "" : "@min-[44rem]:top-3"}`}>
-      {loadState === "ready" && model && !compareWith && (
+          starts under the top bar; the bar's left end is empty, so on a canvas wide enough to clear
+          the units switch and the toolbar it starts at the top. */}
+      <div className="pointer-events-none absolute bottom-[var(--chrome-bottom)] left-3 top-[var(--chrome-top)] flex w-56 flex-col gap-2 @min-[44rem]:top-3">
+      {loadState === "ready" && model && (
         <PartsPanel
           tree={featureTree(model.index, code.source?.features ?? null, params, model.materials)}
           highlighted={pickedFeatures(model.index, picks)}
@@ -1408,33 +1036,13 @@ export function HardwareCanvas({
             setCodeFeature(feature);
             setMenu("code");
           }}
-          panelRef={partsRef}
           parts={model.parts}
           boardParts={boardParts}
           views={partViews}
           onViews={setPartViews}
-          pickKind={pickKind}
-          onPickKind={setPickKind}
-          boxMode={boxMode}
-          onBoxMode={setBoxMode}
-          selectedOnce={selectedOnce || picks.length > 0}
           picks={picks}
           onSelect={(next) => select(next)}
-          // The enclosure first, so a reference designator still finds the openings made for it.
-          resolve={(query) => {
-            const found = resolveId(model.index, query);
-            return found.length ? found : resolveBoardPart(boardParts, query);
-          }}
-        >
-          {FIND && build && (
-            <FindBox
-              key={build.id}
-              find={(query) => findInModel(sessionId, build.id, query)}
-              onHighlight={highlight}
-              onSend={(result) => select(findPicks(result), null, result.understood)}
-            />
-          )}
-        </PartsPanel>
+        />
       )}
         <div className="mt-auto flex min-w-0 shrink-0 flex-col gap-0.5 text-[12px] text-[var(--cs-muted)]">
           {hasModel && view && (
@@ -1460,87 +1068,11 @@ export function HardwareCanvas({
           )}
         </div>
       </div>
-      {/* The tool panels: in the tool column (chromeLayout.ts), over the view cube, left of the
-          modeling toolbar, which stays usable while one is open. */}
+      {/* The tool panels: in the tool column (chromeLayout.ts), over the view cube. */}
       {paramsOpen && (
         <div className={PLACE.tools}>
           <div data-canvas-panel data-pin-cover="" className={PANEL}>
             <ParametersPanel parameters={parameters} unit={unit} readOnly={readOnly} />
-          </div>
-        </div>
-      )}
-      {SKETCH && sketchOpen && (
-        <div className={PLACE.tools}>
-          <div data-canvas-panel data-pin-cover="" className={PANEL}>
-          {/* The canvas follows the rebuild after a sketch. */}
-          <SketchPanel
-            sessionId={sessionId}
-            build={build}
-            builds={builds}
-            picks={picks}
-            unit={unit}
-            busy={fixDisabled}
-            onSketched={() => setSelectedId(null)}
-          />
-          </div>
-        </div>
-      )}
-
-      {tool && (
-        <div className={PLACE.tools}>
-          <div data-canvas-panel data-pin-cover="" className={PANEL}>
-          {/* The canvas follows the rebuild after an edit. */}
-          <ModelingPanel
-            key={tool}
-            sessionId={sessionId}
-            build={build}
-            builds={builds}
-            picks={picks}
-            index={model?.index ?? []}
-            unit={unit}
-            tool={tool}
-            parameters={parameters}
-            busy={fixDisabled}
-            fixBlocked={fixBlocked}
-            onEdited={() => setSelectedId(null)}
-            onFixRequest={onFixRequest && ((text) => onFixRequest({ text, selection: chatSelection ?? { faces: [], edges: [] } }))}
-          />
-          </div>
-        </div>
-      )}
-      {toolbarShown && MODELING_TOOLS && (
-        // Down the right side, under the view cube and above the bottom bar, scrolling inside when
-        // the canvas is short. Hidden while comparing or showing a map, whose views own the canvas.
-        <div className="pointer-events-none absolute bottom-[var(--chrome-bottom)] right-3 top-[var(--chrome-below-cube)] z-10 flex flex-col">
-          <div data-pin-cover="" className="cs-scroll pointer-events-auto min-h-0 overflow-y-auto rounded-xl [scrollbar-width:none]">
-          {readOnly ? (
-            // No modeling tools on a read-only session: say why instead.
-            <p
-              data-testid="modeling-read-only"
-              role="note"
-              className="max-w-[9rem] rounded-xl bg-[var(--cs-surface-2)] px-2.5 py-2 text-[12px] leading-4 text-[var(--cs-muted)]"
-            >
-              {readOnly}. Continue from it to edit.
-            </p>
-          ) : (
-          <ModelingToolbar
-            tool={tool}
-            disabledWhy={readOnly}
-            onTool={(t) => {
-              setTool(t);
-              if (t) {
-                setSketchOpen(false);
-                setParamsOpen(false);
-              }
-            }}
-            onUndo={() => step("undo")}
-            onRedo={() => step("redo")}
-            undoWhy={stepWhy("undo")}
-            redoWhy={stepWhy("redo")}
-            undoTitle={stepTitle(timeline.history, "undo", undefined)}
-            redoTitle={stepTitle(timeline.history, "redo", undefined)}
-          />
-          )}
           </div>
         </div>
       )}
@@ -1567,66 +1099,29 @@ export function HardwareCanvas({
         </div>
       )}
 
-      {compareWith && build && (
-        <div data-canvas-panel data-pin-cover="" className="absolute bottom-14 left-1/2 w-[min(34rem,calc(100%-1.5rem))] -translate-x-1/2">
-          <ChangeList sessionId={sessionId} from={compareWith} to={build} unit={unit} />
-        </div>
-      )}
-
-      {/* The section and measure panels and the map legend: stacked up from the bottom bar, between
-          the parts panel and the modeling toolbar, below the view cube (chromeLayout.ts). */}
-      {(activeMap || (hasModel && (sectionOn || measuring))) && (
+      {/* The section panel: stacked up from the bottom bar, between
+          the parts panel and the right edge, below the view cube (chromeLayout.ts). */}
+      {hasModel && sectionOn && (
         <div className={PLACE.inspection}>
         <div data-canvas-panel data-pin-cover="" className="pointer-events-none flex max-h-full w-72 max-w-full flex-col items-stretch gap-2">
-          {hasModel && (sectionOn || measuring) && (
-            <div className="pointer-events-none flex min-h-0 flex-col gap-2">
-              {sectionOn && (
-                <SectionPanel
-                  targets={targets}
-                  boardFailed={boardFailed}
-                  current={sectionTarget}
-                  onComponent={(ref) => {
-                    setSectionRef(ref);
-                    setMenu(null);
-                  }}
-                  axis={sectionAxis}
-                  onAxis={setSectionAxis}
-                  section={section}
-                  clearance={sectionClearance}
-                  unit={unit}
-                  menuOpen={menu === "section-component"}
-                  onMenu={() => toggle("section-component")}
-                />
-              )}
-              {measuring && (
-                <MeasurePanel
-                  picks={measured}
-                  measurement={measurement}
-                  unit={unit}
-                  assembled={layout === "assembled"}
-                  onClear={clearMeasure}
-                />
-              )}
-            </div>
-          )}
-          {activeMap && (
-            <>
-              {mapError ? (
-                <p className="rounded-xl border border-[var(--cs-border)] bg-[#262626] p-3 text-[12px] text-[var(--cs-accent)]">The {MAP_LABELS[activeMap].toLowerCase()} map could not be loaded.</p>
-              ) : (
-                analysis && (
-                  <MapLegend
-                    map={analysis.map}
-                    standardTitle={report?.results.find((r) => r.standard === analysis.map.standard)?.title}
-                    unit={unit}
-                    onFix={onFixRequest && ((spot) => onFixRequest(fixRequest(analysis.map, spot)))}
-                    fixDisabled={fixDisabled}
-                    fixBlocked={fixBlocked}
-                  />
-                )
-              )}
-            </>
-          )}
+          <div className="pointer-events-none flex min-h-0 flex-col gap-2">
+            <SectionPanel
+              targets={targets}
+              boardFailed={boardFailed}
+              current={sectionTarget}
+              onComponent={(ref) => {
+                setSectionRef(ref);
+                setMenu(null);
+              }}
+              axis={sectionAxis}
+              onAxis={setSectionAxis}
+              section={section}
+              clearance={sectionClearance}
+              unit={unit}
+              menuOpen={menu === "section-component"}
+              onMenu={() => toggle("section-component")}
+            />
+          </div>
         </div>
         </div>
       )}
@@ -1647,7 +1142,7 @@ export function HardwareCanvas({
         />
       )}
 
-      {changeSet && !compareWith && (
+      {changeSet && (
         <ChangePins
           changeSet={changeSet}
           // Only on the build the changes apply to, once it has loaded.
@@ -1690,12 +1185,12 @@ export function HardwareCanvas({
             ),
         )}
 
-      {/* The bottom bar: the comment tools. Layouts, section, and x-ray are in the toolbar. */}
+      {/* The bottom bar: the comment tools. Layouts and section are in the toolbar. */}
       <div className="pointer-events-none absolute inset-x-3 bottom-[var(--chrome-bar)] flex min-w-0 items-center justify-end gap-2">
         <div ref={setCommentSlot} className="flex shrink-0 empty:hidden" />
       </div>
 
-      {build && !compareWith && (
+      {build && (
         <CommentsLayer
           sessionId={sessionId}
           build={build}
@@ -1957,73 +1452,9 @@ function SectionPanel({
   );
 }
 
-/** A length to 0.01 mm (or 0.001 in): measurements are compared with check values. */
+/** A length to 0.01 mm (or 0.001 in): clearances are compared with check values. */
 function formatPrecise(mm: number, unit: LengthUnit) {
   return `${fromMm(mm, unit).toFixed(unit === "in" ? 4 : 2)} ${unit}`;
-}
-
-/** The measure tool: what was picked, and the exact distance between the two picks. */
-function MeasurePanel({
-  picks,
-  measurement,
-  unit,
-  assembled,
-  onClear,
-}: {
-  picks: MeasureTarget[];
-  measurement: Closest | null;
-  unit: LengthUnit;
-  assembled: boolean;
-  onClear: () => void;
-}) {
-  const delta = measurement ? measurement.to.map((v, i) => v - measurement.from[i]) : null;
-  return (
-    <section
-      aria-label="Measure"
-      className="cs-scroll pointer-events-auto flex min-h-0 flex-col gap-1 overflow-y-auto rounded-xl border border-[var(--cs-border)] bg-[#262626]/95 p-2.5 text-[12px] shadow-xl"
-    >
-      {picks.length === 0 && (
-        <p className="text-[var(--cs-muted)]">Click a face, a component or a corner to measure from.</p>
-      )}
-      {picks.length === 1 && (
-        <p className="text-[var(--cs-muted)]">
-          From <b data-testid="measure-from" className="font-medium text-[var(--cs-text)]">{picks[0].label}</b>. Click
-          something else to measure to.
-        </p>
-      )}
-      {picks.length === 2 && measurement && delta && (
-        <>
-          <p className="text-[var(--cs-muted)]">
-            <b className="font-medium text-[var(--cs-text)]">{picks[0].label}</b> to{" "}
-            <b className="font-medium text-[var(--cs-text)]">{picks[1].label}</b>
-          </p>
-          <p
-            data-testid="measure-result"
-            data-value={measurement.distance.toFixed(3)}
-            data-from={picks[0].label}
-            data-to={picks[1].label}
-            className="text-[14px] text-[var(--cs-text)]"
-          >
-            {formatPrecise(measurement.distance, unit)}
-            <span className="ml-2 text-[12px] text-[var(--cs-muted)]">
-              Δx {formatPrecise(Math.abs(delta[0]), unit)} · Δy {formatPrecise(Math.abs(delta[1]), unit)} · Δz{" "}
-              {formatPrecise(Math.abs(delta[2]), unit)}
-            </span>
-          </p>
-          {!assembled && <p className="text-[var(--cs-muted)]">Measured on the assembled design.</p>}
-        </>
-      )}
-      {picks.length > 0 && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="h-6 self-start rounded-md px-1.5 text-[var(--cs-muted)] hover:bg-[var(--cs-hover)] hover:text-[var(--cs-text)]"
-        >
-          Clear measurement
-        </button>
-      )}
-    </section>
-  );
 }
 
 function MenuAction({ label, onClick }: { label: string; onClick: () => void }) {
@@ -2338,229 +1769,6 @@ function CodePanel({
   );
 }
 
-/** The build compared with, in a second viewer beside the shown one. */
-function CompareViewer({ build, name, settings }: { build: Build; name: string; settings: ViewSettings }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const viewerRef = useRef<Viewer | null>(null);
-  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
-  useEffect(() => {
-    const viewer = new Viewer(ref.current!);
-    viewerRef.current = viewer;
-    return () => {
-      viewer.dispose();
-      viewerRef.current = null;
-    };
-  }, []);
-  const meshUrl = build.mesh_url;
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer) return;
-    let live = true;
-    setState("loading");
-    viewer
-      .load(meshUrl)
-      .then(() => live && setState("ready"))
-      .catch(() => live && setState("error"));
-    return () => {
-      live = false;
-    };
-  }, [meshUrl]);
-  useEffect(() => viewerRef.current?.setSettings(settings), [settings]);
-  return (
-    <div
-      ref={ref}
-      data-testid="compare-viewer"
-      data-build={build.id}
-      data-state={state}
-      role="img"
-      aria-label={`${revisionLabel(build)} (${name}), for comparison`}
-      className="absolute inset-0"
-    >
-      {state === "error" && (
-        <p className="absolute bottom-3 left-3 text-[12px] text-[var(--cs-accent)]">The model could not be loaded.</p>
-      )}
-    </div>
-  );
-}
-
-/** The diff between the compared builds (`GET .../diff`): the features that changed, then the parameters. */
-function ChangeList({ sessionId, from, to, unit }: { sessionId: string; from: Build; to: Build; unit: LengthUnit }) {
-  const key = `${from.id}>${to.id}`;
-  const [loaded, setLoaded] = useState<{ key: string; diff?: BuildDiff; error?: string } | null>(null);
-  useEffect(() => {
-    let live = true;
-    getDiff(sessionId, to.id, from.id)
-      .then((diff) => live && setLoaded({ key, diff }))
-      .catch((e: Error) => live && setLoaded({ key, error: shownError(e) }));
-    return () => {
-      live = false;
-    };
-  }, [sessionId, from.id, to.id, key]);
-  const current = loaded?.key === key ? loaded : null;
-  const diff = current?.diff;
-  return (
-    <section
-      aria-label="Changes"
-      data-testid="changes"
-      data-old={from.id}
-      data-new={to.id}
-      data-state={diff ? "ready" : current?.error ? "error" : "loading"}
-      className="rounded-xl border border-[var(--cs-border)] bg-[#262626] p-3 text-[13px] shadow-xl"
-    >
-      {!current && <p className="text-[var(--cs-muted)]">Comparing…</p>}
-      {current?.error && <p className="text-[var(--cs-accent)]">The changes could not be loaded: {current.error}</p>}
-      {diff && (
-        <>
-          <h2 data-testid="changes-heading" className="font-medium">
-            {changesHeading(diff, from)}
-          </h2>
-          <div className="cs-scroll mt-1 max-h-48 overflow-y-auto">
-            {diff.features.length > 0 && (
-              <ul aria-label="Feature changes" className="flex flex-col">
-                {diff.features.map((c) => (
-                  <li
-                    key={c.tag}
-                    data-tag={c.tag}
-                    data-change={c.change}
-                    className="flex justify-between gap-3 border-t border-[var(--cs-border)] py-1.5 first:border-t-0"
-                  >
-                    <span>{featureChangeText(c)}</span>
-                    <span className="shrink-0 text-[var(--cs-muted)]">{featureChangeDetail(c, unit)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {diff.features.length === 0 && (
-              <p className="text-[var(--cs-muted)]">No feature moved, appeared or went.</p>
-            )}
-            {diff.parameters.length > 0 && (
-              <>
-                <h3 className="mt-2 text-[12px] text-[var(--cs-muted)]">
-                  {diff.parameters.length} {diff.parameters.length === 1 ? "parameter" : "parameters"} changed
-                </h3>
-                <ul aria-label="Parameter changes" className="flex flex-col text-[12px]">
-                  {diff.parameters.map((p) => (
-                    <li key={p.name} data-name={p.name} className="truncate py-0.5 font-mono text-[11px]">
-                      {parameterChangeText(p)}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </div>
-        </>
-      )}
-    </section>
-  );
-}
-
-/**
- * The history timeline: every build, newest first, with its revision, time and checks. Show
- * puts a build on the canvas; Restore (undo) brings back its design as a new build.
- */
-function HistoryPanel({
-  sessionId,
-  builds,
-  shown,
-  busy,
-  onShow,
-  onRestored,
-}: {
-  sessionId: string;
-  builds: Build[];
-  shown: Build;
-  busy: boolean;
-  onShow: (build: Build) => void;
-  onRestored: (build: Build) => void;
-}) {
-  const [restoring, setRestoring] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const entries = historyEntries(builds);
-  const restore = (b: Build) => {
-    setRestoring(b.id);
-    setError(null);
-    restoreBuild(sessionId, b.id)
-      .then(onRestored)
-      .catch((e: Error) => setError(plainError(shownError(e), "Couldn't restore that build. Try again.")))
-      .finally(() => setRestoring(null));
-  };
-  const reason = busy
-    ? "Claude is working: restore when the run has finished"
-    : restoring
-      ? "Restoring a build"
-      : undefined;
-  const btn =
-    "h-6 rounded-md bg-[var(--cs-surface)] px-2 text-[12px] hover:bg-[var(--cs-hover)] disabled:cursor-not-allowed disabled:opacity-50";
-  return (
-    <section aria-label="History" data-pin-cover="" className={`${panel} right-0 w-80 p-2`}>
-      <h2 className="px-1 pb-1 text-[12px] text-[var(--cs-muted)]">History · {builds.length} builds</h2>
-      <ol aria-label="Builds" className="cs-scroll flex max-h-80 flex-col overflow-y-auto">
-        {entries.map((b, i) => {
-          const name = buildName(b, builds);
-          const label = `${revisionLabel(b)} · ${name}`;
-          return (
-            <li
-              key={b.id}
-              data-build={b.id}
-              data-latest={i === 0}
-              data-shown={b.id === shown.id}
-              className={`relative border-l-2 py-1.5 pl-3 pr-1 ${b.id === shown.id ? "border-[var(--cs-text)]" : "border-[var(--cs-border)]"}`}
-            >
-              <p className="flex items-baseline gap-1.5">
-                <b className="font-medium">{revisionLabel(b)}</b>
-                <span className="truncate text-[var(--cs-muted)]">{name}</span>
-                {i === 0 && <span className="text-[11px] text-[var(--cs-muted)]">Latest</span>}
-                {b.id === shown.id && <span className="text-[11px] text-[var(--cs-muted)]">Shown</span>}
-              </p>
-              <p className="text-[12px] text-[var(--cs-muted)]">
-                <time dateTime={b.created_at}>
-                  {new Date(b.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </time>{" "}
-                · <span data-testid="history-checks">{b.status === "ready" ? checksLine(b) : "build failed"}</span>
-              </p>
-              {b.restored_from && (
-                <p data-testid="history-restored" className="text-[12px] text-[var(--cs-muted)]">
-                  {restoredText(b.restored_from, builds)}
-                </p>
-              )}
-              {(b.id !== shown.id || i > 0) && (
-                <div className="mt-1 flex gap-1">
-                  {b.id !== shown.id && b.status === "ready" && (
-                    <button type="button" aria-label={`Show ${label}`} onClick={() => onShow(b)} className={btn}>
-                      Show
-                    </button>
-                  )}
-                  {i > 0 && (
-                    <button
-                      type="button"
-                      aria-label={`Restore ${label}`}
-                      disabled={busy || !!restoring || b.status !== "ready"}
-                      title={
-                        b.status !== "ready"
-                          ? "This build failed: there's no model of it to restore"
-                          : (reason ?? "Bring back this build's design as the current one, rebuilt")
-                      }
-                      onClick={() => restore(b)}
-                      className={btn}
-                    >
-                      {restoring === b.id ? "Restoring…" : "Restore"}
-                    </button>
-                  )}
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-      {error && (
-        <p role="alert" className="px-1 pt-1 text-[12px] text-[var(--cs-accent)]">
-          {error}
-        </p>
-      )}
-    </section>
-  );
-}
-
 /** Selects a 1-based line of the code editor and scrolls the editor's box to it. */
 function selectLine(el: HTMLTextAreaElement | null, box: HTMLElement | null, line: number) {
   if (!el) return;
@@ -2623,103 +1831,13 @@ function SettingsPanel({
 }
 
 /** A map value as display text: lengths follow the mm/in toggle, angles are degrees. */
-export function formatMapValue(value: number, unit: MapUnit, lengthUnit: LengthUnit): string {
+export function formatMapValue(value: number, unit: "mm" | "deg", lengthUnit: LengthUnit): string {
   if (unit === "deg") return `${value.toFixed(1)}°`;
   return `${fromMm(value, lengthUnit).toFixed(lengthUnit === "in" ? 3 : 1)} ${lengthUnit}`;
 }
 
-/** The legend of an analysis map (its range, color scale and the standard's limit) and its flagged spots. */
-function MapLegend({
-  map,
-  unit,
-  onFix,
-  fixDisabled,
-  fixBlocked,
-  standardTitle,
-}: {
-  map: AnalysisMap;
-  /** The title of the standard the map is judged against, as the checks name it (never its ID). */
-  standardTitle?: string;
-  unit: LengthUnit;
-  onFix?: (spot: FlaggedSpot) => void;
-  fixDisabled: boolean;
-  fixBlocked?: string;
-}) {
-  const [sent, setSent] = useState<string[]>([]);
-  const { legend } = map;
-  const fmt = (v: number) => formatMapValue(v, legend.unit, unit);
-  const flagged = map.flagged ?? [];
-  const label = MAP_LABELS[map.type];
-  return (
-    <section
-      aria-label={`${label} legend`}
-      data-testid="map-legend"
-      className="cs-scroll pointer-events-auto min-h-0 w-full overflow-y-auto rounded-xl border border-[var(--cs-border)] bg-[#262626]/95 p-3 text-[12px] shadow-xl"
-    >
-      <p className="flex items-baseline justify-between gap-2 text-[13px]">
-        <span className="shrink-0">{label}</span>
-        {(map.standard_title ?? standardTitle) && (
-          <span className="min-w-0 truncate text-[var(--cs-muted)]" title={map.standard_title ?? standardTitle}>
-            {map.standard_title ?? standardTitle}
-          </span>
-        )}
-      </p>
-      <div className="relative mt-2 h-2.5 rounded-full" data-testid="legend-bar" style={{ background: legendGradient() }}>
-        {legend.limit != null && (
-          <span
-            data-testid="legend-limit"
-            data-position={legendPosition(legend.limit, legend)}
-            className="absolute -inset-y-1 w-0.5 -translate-x-1/2 rounded bg-white"
-            style={{ left: `${legendPosition(legend.limit, legend) * 100}%` }}
-          />
-        )}
-      </div>
-      <div className="mt-1 flex justify-between text-[var(--cs-muted)]">
-        <span data-testid="legend-min">{fmt(legend.min)}</span>
-        {legend.limit != null && <span data-testid="legend-limit-label">limit {fmt(legend.limit)}</span>}
-        <span data-testid="legend-max">{fmt(legend.max)}</span>
-      </div>
-      {flagged.length > 0 && (
-        <>
-          <p className="mt-3 text-[var(--cs-muted)]">
-            {flagged.length} flagged spot{flagged.length > 1 ? "s" : ""}
-          </p>
-          <ul aria-label="Flagged spots" className="cs-scroll mt-1 flex max-h-48 flex-col gap-1 overflow-y-auto">
-            {flagged.map((spot) => (
-              <li key={spot.id} data-spot={spot.id} className="rounded-md bg-[var(--cs-surface-2)] px-2 py-1.5">
-                <p className="text-[var(--cs-text)]">{spot.message}</p>
-                {onFix && (
-                  <button
-                    type="button"
-                    disabled={fixDisabled || !!fixBlocked || sent.includes(spot.id)}
-                    title={
-                      sent.includes(spot.id)
-                        ? "Already sent to Claude: the fix request is in the chat"
-                        : fixDisabled
-                          ? "Claude is still replying"
-                          : fixBlocked
-                    }
-                    onClick={() => {
-                      onFix(spot);
-                      setSent((s) => [...s, spot.id]);
-                    }}
-                    className="mt-1 h-6 rounded-md bg-[var(--cs-surface)] px-2 hover:bg-[var(--cs-hover)] disabled:opacity-60"
-                  >
-                    {sent.includes(spot.id) ? "Sent to Claude" : "Ask Claude to fix"}
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-    </section>
-  );
-}
-
 /**
- * The selection tools and the feature tree, which is also the parts tree: pick mode (face,
- * edge, part), select by ID, and per part its material, select, hide, isolate and
+ * The feature tree, which is also the parts tree: per part its material, select, hide, isolate and
  * see-through, with the part's features nested under it. A feature shows the parameters that
  * drive it; clicking it selects its faces, and its line link opens the code that creates it.
  * A feature with a picked face or edge is highlighted. The board revision follows the
@@ -2730,46 +1848,26 @@ function PartsPanel({
   highlighted,
   unit,
   onShowCode,
-  panelRef,
   parts,
   boardParts,
   views,
   onViews,
-  pickKind,
-  onPickKind,
-  boxMode,
-  onBoxMode,
-  selectedOnce,
   picks,
   onSelect,
-  resolve,
-  children,
 }: {
   tree: PartNode[];
   highlighted: Set<string>;
   unit: LengthUnit;
   onShowCode: (feature: FeatureNode) => void;
-  panelRef?: React.Ref<HTMLElement>;
   /** The enclosure's parts. */
   parts: string[];
   /** The board's parts: the board, then its components. */
   boardParts: string[];
   views: PartViews;
   onViews: (v: PartViews) => void;
-  pickKind: PickKind;
-  onPickKind: (k: PickKind) => void;
-  boxMode: boolean;
-  onBoxMode: (on: boolean) => void;
-  /** Something was selected in this session: the hint under the filters is no longer needed. */
-  selectedOnce: boolean;
   picks: Picked[];
   onSelect: (picks: Picked[]) => void;
-  resolve: (query: string) => Picked[];
-  children?: React.ReactNode;
 }) {
-  const [query, setQuery] = useState("");
-  const [notFound, setNotFound] = useState(false);
-  const hint = selectHint(pickKind, boxMode, selectedOnce);
   const listRef = useRef<HTMLUListElement>(null);
   const all = [...parts, ...boardParts];
   const anyHidden = all.some((p) => partView(views, p).hidden);
@@ -2787,81 +1885,11 @@ function PartsPanel({
 
   return (
     <section
-      ref={panelRef}
       aria-label="Parts"
       data-canvas-panel
       data-pin-cover=""
       className="cs-scroll pointer-events-auto min-h-0 w-56 shrink overflow-y-auto rounded-xl border border-[var(--cs-border)] bg-[#262626] p-1.5 text-[12px]"
     >
-      {/* What a click selects, and box select: behind a flag (lib/flags); off, a click selects a face. */}
-      {SELECT_FILTERS && (
-        <>
-      <div className="flex items-center gap-1">
-        <span aria-hidden="true" className="shrink-0 pl-1 text-[11px] text-[var(--cs-muted)]">
-          Select
-        </span>
-        <div role="radiogroup" aria-label="Select" title="What a click on the model selects" className="flex min-w-0 flex-1 rounded-lg bg-[var(--cs-surface-2)] p-0.5">
-          {PICK_KINDS.map((k) => (
-            <button
-              key={k}
-              type="button"
-              role="radio"
-              aria-checked={pickKind === k}
-              title={PICK_TIPS[k]}
-              onClick={() => onPickKind(k)}
-              className={`h-6 flex-auto rounded-md px-0.5 text-[11px] ${pickKind === k ? "bg-[var(--cs-surface)] text-[var(--cs-text)]" : "text-[var(--cs-muted)] hover:text-[var(--cs-text)]"}`}
-            >
-              {PICK_LABELS[k]}
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          aria-label="Box select"
-          aria-pressed={boxMode}
-          title={boxMode ? `Box select is on. ${BOX_ON_HINT}` : BOX_TIP}
-          onClick={() => onBoxMode(!boxMode)}
-          className="grid size-6 shrink-0 place-items-center rounded-lg bg-[var(--cs-surface-2)] text-[var(--cs-muted)] hover:text-[var(--cs-text)] aria-pressed:bg-[var(--cs-surface)] aria-pressed:text-[var(--cs-accent)]"
-        >
-          <BoxSelect className="size-3.5" />
-        </button>
-      </div>
-
-      {hint && (
-        <p data-testid="select-hint" role="status" className={`mt-1 px-1 text-[11px] ${boxMode ? "text-[var(--cs-accent)]" : "text-[var(--cs-muted)]"}`}>
-          {hint}
-        </p>
-      )}
-        </>
-      )}
-
-      {SELECT_FILTERS && (
-      <form
-        className="mt-1.5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const found = resolve(query);
-          setNotFound(!found.length);
-          if (found.length) onSelect(found);
-        }}
-      >
-        <input
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setNotFound(false);
-          }}
-          aria-label="Select by ID"
-          aria-invalid={notFound}
-          placeholder="Select by ID…"
-          className="h-7 w-full rounded-md bg-[var(--cs-surface-2)] px-2 outline-none focus:ring-1 focus:ring-[var(--cs-accent)] placeholder:text-[var(--cs-faint)] aria-invalid:text-[var(--cs-accent)]"
-        />
-        {notFound && <p className="mt-1 px-1 text-[var(--cs-accent)]">No part, face, edge, or component with that ID.</p>}
-      </form>
-      )}
-
-      {children}
-
       <ul ref={listRef} aria-label="Part list" className="cs-scroll relative mt-1.5 flex max-h-[55vh] flex-col overflow-y-auto">
         {[...parts, ...tree.map((n) => n.part).filter((p) => !parts.includes(p))].map((part) => {
           const v = partView(views, part);
@@ -3019,112 +2047,6 @@ export function formatParameter(p: Pick<Parameter, "value" | "unit">, unit: Leng
   if (p.unit === "mm") return formatMapValue(p.value, "mm", unit);
   if (p.unit === "deg") return formatMapValue(p.value, "deg", unit);
   return String(p.value);
-}
-
-/** The box being dragged in box select, drawn over the canvas. */
-function SelectBox({ box }: { box: { x0: number; y0: number; x1: number; y1: number } }) {
-  const [left, top, right, bottom] = boxFrom({ x: box.x0, y: box.y0 }, { x: box.x1, y: box.y1 });
-  return (
-    <div
-      data-testid="select-box"
-      aria-hidden
-      className="pointer-events-none absolute border border-[var(--cs-accent)] bg-[var(--cs-accent)]/10"
-      style={{ left, top, width: right - left, height: bottom - top }}
-    />
-  );
-}
-
-/**
- * Find in model: a query in words ("all M3 holes", "faces under 1° of draft") resolved by the
- * session API from the build's feature tags, parameters and analysis maps. Matches are
- * highlighted and listed by feature, and can be sent to chat as the selection. A query that
- * isn't understood shows what was understood and the question.
- */
-function FindBox({
-  find,
-  onHighlight,
-  onSend,
-}: {
-  find: (query: string) => Promise<FindResult>;
-  onHighlight: (picks: Picked[]) => void;
-  onSend: (result: FindResult) => void;
-}) {
-  const [query, setQuery] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<FindResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim() || busy) return;
-    setBusy(true);
-    setError(null);
-    find(query.trim())
-      .then((r) => {
-        setResult(r);
-        if (r.status === "found") onHighlight(findPicks(r));
-      })
-      .catch((err: Error) => {
-        setResult(null);
-        setError(shownError(err));
-      })
-      .finally(() => setBusy(false));
-  };
-  const count = result ? findCount(result) : "";
-  return (
-    <form role="search" aria-label="Find in model" className="mt-1.5" onSubmit={submit}>
-      <div className="flex h-7 items-center gap-1.5 rounded-md bg-[var(--cs-surface-2)] px-2 focus-within:ring-1 focus-within:ring-[var(--cs-accent)]">
-        <Search aria-hidden className="size-3 shrink-0 text-[var(--cs-faint)]" />
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          aria-label="Find in model"
-          placeholder="Find, e.g. low draft…"
-          className="h-full min-w-0 flex-1 bg-transparent outline-none placeholder:text-[var(--cs-faint)]"
-        />
-      </div>
-      {busy && <p className="mt-1 px-1 text-[var(--cs-muted)]">Finding…</p>}
-      {error && <p className="mt-1 px-1 text-[var(--cs-accent)]">{error}</p>}
-      {result && !busy && (
-        <div data-testid="find-result" data-status={result.status} aria-live="polite" className="mt-1.5 flex flex-col gap-1 px-1">
-          <p data-testid="find-understood">
-            <span className="text-[var(--cs-muted)]">Understood: </span>
-            {result.understood}
-          </p>
-          {result.status === "unclear" && result.question && (
-            <p data-testid="find-question" className="text-[var(--cs-accent)]">
-              {result.question}
-            </p>
-          )}
-          {count && (
-            <p data-testid="find-count" className="text-[var(--cs-muted)]">
-              {count}
-            </p>
-          )}
-          {result.matches.length > 0 && (
-            <>
-              <ul aria-label="Matches" className="flex max-h-32 flex-col gap-0.5 overflow-y-auto">
-                {groupMatches(result.matches).map((g) => (
-                  <li key={g.feature} data-feature={g.feature} className="flex justify-between gap-2 text-[var(--cs-muted)]">
-                    <span className="truncate text-[var(--cs-text)]">{g.feature}</span>
-                    <span className="shrink-0">
-                      {g.faces.length} · {g.value ?? g.part}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <button
-                type="button"
-                onClick={() => onSend(result)}
-                className="h-6 rounded-md bg-[var(--cs-surface)] px-2 hover:bg-[var(--cs-hover)]"
-              >
-                Send to chat
-              </button>
-            </>
-          )}
-        </div>
-      )}
-    </form>
-  );
 }
 
 /** Triangle sets end to end. */

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import type { Build } from "@/components/canvas/api";
-import { getMap } from "@/components/canvas/api";
-import { buildName, buildTitle, restoredText } from "@/components/canvas/history";
+import { getChecks } from "@/components/canvas/api";
+import { buildName, buildTitle } from "@/components/canvas/history";
 import { checkTitle, proofText, type Change } from "@/components/canvas/changes";
 import type { ChatMessage } from "@/components/sites/claude-shell/chat";
 import { ChatMessages } from "@/components/sites/claude-shell/ChatMessages";
@@ -26,8 +26,6 @@ describe("build names", () => {
     expect(buildTitle(builds[1], builds)).toBe("Build 2 · b-parasite 2.0");
     expect(buildTitle({ ...builds[0], board: null } as unknown as Build, builds)).toBe("Build 1");
     expect(buildName(build("build-ffffffffffff"), builds)).toBe("Build");
-    expect(restoredText(builds[0].id, builds)).toBe("Restored from Build 1");
-    expect(restoredText("build-gone", builds)).toBe("Restored from an earlier build");
   });
 
   it("shows a chat build card as Build N, without the ID", () => {
@@ -72,7 +70,7 @@ describe("check names in a change", () => {
 describe("errors in canvas panels", () => {
   it("says a server error in a plain sentence, not its HTTP status", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("Internal Server Error", { status: 500, statusText: "Internal Server Error" })));
-    const err = await getMap("session-1", { id: "build-1" }, "wall_thickness").catch((e: Error) => e);
+    const err = await getChecks({ checks_url: "/api/sessions/session-1/builds/build-1/checks" } as Build).catch((e: Error) => e);
     expect(err).toBeInstanceOf(Error);
     expect((err as Error).message).not.toMatch(/500|Internal Server Error/);
     expect((err as Error).message).toMatch(/server/i);
@@ -80,13 +78,13 @@ describe("errors in canvas panels", () => {
 
   it("keeps the server's own plain words", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => Response.json({ detail: "That face is too small to sketch on." }, { status: 409 })));
-    const err = await getMap("session-1", { id: "build-1" }, "wall_thickness").catch((e: Error) => e);
+    const err = await getChecks({ checks_url: "/api/sessions/session-1/builds/build-1/checks" } as Build).catch((e: Error) => e);
     expect((err as Error).message).toBe("That face is too small to sketch on.");
   });
 
   it("says a dropped connection plainly", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new TypeError("Failed to fetch"))));
-    const err = await getMap("session-1", { id: "build-1" }, "wall_thickness").catch((e: Error) => e);
+    const err = await getChecks({ checks_url: "/api/sessions/session-1/builds/build-1/checks" } as Build).catch((e: Error) => e);
     expect((err as Error).message).not.toMatch(/Failed to fetch/);
     expect((err as Error).message).toMatch(/reach the server/);
   });

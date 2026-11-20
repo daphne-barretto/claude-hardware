@@ -15,10 +15,11 @@ const target = (p: number[]) => p.map((v) => Math.round(v * 10) / 10 || 0).join(
 test("flagged risks show in chat with Accept and Ignore, and on the canvas", async ({ page, request }) => {
   expect(flags.length).toBeGreaterThan(0);
   const session = await (await request.post("/api/sessions", { data: {} })).json();
+  // Loading the next board revision starts the recorded run, which ends with the risk flags.
+  await request.post(`/api/sessions/${encodeURIComponent(session.id)}/revisions/next`, { data: { mode: "auto" } });
   await page.goto(`/session/${encodeURIComponent(session.id)}`);
   const chat = page.getByRole("region", { name: "Chat" });
   const canvas = page.getByRole("region", { name: "Canvas" });
-  await chat.getByRole("button", { name: "Load next revision" }).click();
 
   const risks = chat.getByRole("region", { name: "Flagged risks" });
   await expect(risks).toBeVisible({ timeout: 30_000 });

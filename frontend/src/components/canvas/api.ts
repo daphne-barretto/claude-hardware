@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { AnalysisMap, MapType } from "./colormap";
 import type { ChangeReview, ChangeSet } from "./changes";
 import type { CheckUnit, LengthUnit } from "./units";
 import type { Board } from "./inspect";
@@ -176,13 +175,6 @@ export function getChecks(build: Build): Promise<CheckReport> {
   return fetch(build.checks_url).then((r) => json<CheckReport>(r));
 }
 
-/** A build's analysis map (analysis-map contract), at `/api/sessions/{id}/builds/{build}/maps/{type}`. */
-export function getMap(sessionId: string, build: Pick<Build, "id">, type: MapType): Promise<AnalysisMap> {
-  return fetch(`${sessionPath(sessionId)}/builds/${encodeURIComponent(build.id)}/maps/${type}`).then((r) =>
-    json<AnalysisMap>(r),
-  );
-}
-
 /** The board revision a build is for (board JSON, `backend/app/boards/SCHEMA.md`), at the build's `board_url`. */
 export function getBoard(build: Pick<Build, "board_url">): Promise<Board> {
   return fetch(build.board_url).then((r) => json<Board>(r));
@@ -190,21 +182,6 @@ export function getBoard(build: Pick<Build, "board_url">): Promise<Board> {
 
 export function getSource(build: Build): Promise<BuildSource> {
   return fetch(build.source_url).then((r) => json<BuildSource>(r));
-}
-
-/** What changed from build `against` to build `buildId`. */
-export function getDiff(sessionId: string, buildId: string, against: string): Promise<BuildDiff> {
-  const q = new URLSearchParams({ against });
-  return fetch(`${sessionPath(sessionId)}/builds/${encodeURIComponent(buildId)}/diff?${q}`).then((r) =>
-    json<BuildDiff>(r),
-  );
-}
-
-/** Undo in the history: brings back a build's design; the rebuild also arrives as a `build_ready`. */
-export function restoreBuild(sessionId: string, buildId: string): Promise<Build> {
-  return fetch(`${sessionPath(sessionId)}/builds/${encodeURIComponent(buildId)}/restore`, { method: "POST" })
-    .then((r) => json<Build>(r))
-    .then((b) => resolveBuild(sessionId, b));
 }
 
 /** One change to the design in the session's timeline (`HistoryStep`), whoever made it. */
@@ -309,15 +286,6 @@ export type FindResult = {
   question?: string | null;
   matches: FindMatch[];
 };
-
-/** Find in model: the faces of a build that a query in words describes. */
-export function findInModel(sessionId: string, buildId: string, query: string): Promise<FindResult> {
-  return fetch(`${sessionPath(sessionId)}/builds/${encodeURIComponent(buildId)}/find`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
-  }).then((r) => json<FindResult>(r));
-}
 
 /** Why edited code was refused (`CodeError`): it doesn't parse, or it doesn't build. */
 export class CodeEditError extends Error {

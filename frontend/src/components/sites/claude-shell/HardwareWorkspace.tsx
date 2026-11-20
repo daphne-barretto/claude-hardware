@@ -1,9 +1,8 @@
 "use client";
 
-import { BOARD_FILES, LOAD_REVISION } from "@/lib/flags";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Box, FileText, Image as ImageIcon, Maximize2, Minimize2, PanelLeft, RefreshCw, X } from "lucide-react";
+import { Box, Image as ImageIcon, Maximize2, Minimize2, PanelLeft, X } from "lucide-react";
 import { ArtifactsIcon } from "./ArtifactsIcon";
 import { useShell } from "./AppShell";
 import { CanvasSlot } from "./CanvasSlot";
@@ -38,14 +37,14 @@ import {
   type ShowRequest,
 } from "./canvas-selection";
 import { HardwareCanvas } from "@/components/canvas/HardwareCanvas";
+import { OpenChecksContext, useOpenChecksValue } from "@/components/canvas/openChecks";
 import { ConstraintsBeforeBuild } from "@/components/canvas/ConstraintsPanel";
 import { ConstraintsContext, type ConstraintsValue } from "@/components/canvas/constraintsContext";
 import { useSessionBuilds } from "@/components/canvas/api";
 import { reportAction } from "@/lib/session-api";
 
 const START_OPTIONS: { kind: FileKind; label: string; icon: typeof Box }[] = [
-  // Board files (KiCad and the like) are behind a flag: for now a start is a STEP file or a photo.
-  ...(BOARD_FILES ? [{ kind: "board" as const, label: "Start from a board file", icon: FileText }] : []),
+  // A start is a STEP file or a photo.
   { kind: "cad", label: "Import STEP", icon: Box },
   { kind: "image", label: "Photo or scan", icon: ImageIcon },
 ];
@@ -132,7 +131,7 @@ export function HardwareWorkspace({ initialPrompt, initialFiles = [], initialCho
   const [staged, setStaged] = useState<string[]>([]);
   const [canvasOpen, setCanvasOpen] = useState(true);
   const [canvasMax, setCanvasMax] = useState(false);
-  // The build the user picked (build card or revision menu). It stays shown until a newer
+  // The build the user picked (a build card). It stays shown until a newer
   // build arrives, which then shows instead.
   const latestBuild = builds.at(-1)?.id;
   const [picked, setPicked] = useState<{ id: string; latest: string | undefined } | null>(null);
@@ -150,20 +149,13 @@ export function HardwareWorkspace({ initialPrompt, initialFiles = [], initialCho
   useEffect(() => {
     if (sessionTitle) refreshSessions();
   }, [sessionTitle, refreshSessions]);
-  // The board revision Claude can start on: hidden once loaded.
-  const [loadedRevision, setLoadedRevision] = useState(false);
-  const nextRevision = sessionId && !loadedRevision ? session?.next_revision : null;
+  // Why the session's constraint set can't be changed now.
   const loadReason = busy ? "Claude is working" : blocked;
-  const loadRevision = async () => {
-    if (!nextRevision) return;
-    setLoadedRevision(true);
-    if (!(await chat.loadRevision(nextRevision, choices))) setLoadedRevision(false);
-  };
 
-  // Model, effort and mode choices go to the session's telemetry log.
+  // Model and effort choices go to the session's telemetry log.
   const changeChoices = (next: Choices) => {
     if (sessionId) {
-      for (const setting of ["model", "effort", "mode"] as const) {
+      for (const setting of ["model", "effort"] as const) {
         if (next[setting] !== choices[setting]) reportAction(sessionId, { kind: "choice", setting, value: next[setting] });
       }
     }
@@ -214,11 +206,14 @@ export function HardwareWorkspace({ initialPrompt, initialFiles = [], initialCho
     setCanvasOpen(true);
     setPane("canvas");
   };
+  // A check count in the chat opens the canvas (shown first if hidden) on its build's Constraints panel.
+  const openChecks = useOpenChecksValue();
 
   return (
     <SelectionContext.Provider value={context}>
       <ShowLocationContext.Provider value={showRequest}>
       <FoundContext.Provider value={foundRequest}>
+      <OpenChecksContext.Provider value={openChecks}>
       <div className="flex h-full min-h-0">
         {/* Hidden, not unmounted, while the canvas is expanded (or shown on a phone), so the draft and model choice survive. */}
         <section
@@ -236,24 +231,12 @@ export function HardwareWorkspace({ initialPrompt, initialFiles = [], initialCho
             <h1 className="ml-2 min-w-0 truncate text-[14px]" title={title}>
               {title}
             </h1>
-            {LOAD_REVISION && nextRevision && (
-              <button
-                type="button"
-                onClick={loadRevision}
-                disabled={!!loadReason}
-                title={loadReason ?? `Load ${nextRevision.name} revision ${nextRevision.revision}: Claude starts the work on it`}
-                className="ml-auto flex h-7 shrink-0 items-center gap-1.5 rounded-lg border border-[var(--cs-border)] px-2 text-[12px] enabled:hover:bg-[var(--cs-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <RefreshCw aria-hidden className="size-3.5 text-[var(--cs-muted)]" />
-                Load next revision
-              </button>
-            )}
             {sessionId && session && !missing && (
               <SessionStandards
                 sessionId={sessionId}
                 value={session.standards ?? null}
                 disabledReason={loadReason ?? null}
-                className={LOAD_REVISION && nextRevision ? "" : "ml-auto"}
+                className="ml-auto"
               />
             )}
             {/* On a phone it switches to the canvas; Close canvas switches back. */}
@@ -315,6 +298,15 @@ export function HardwareWorkspace({ initialPrompt, initialFiles = [], initialCho
                     : undefined
                 }
                 onShowBuild={showBuild}
+                onOpenChecks={
+                  sessionCanvas
+                    ? (buildId, status) => {
+                        if (builds.some((b) => b.id === buildId)) showBuild(buildId);
+                        showCanvas();
+                        openChecks.open(status);
+                      }
+                    : undefined
+                }
                 onOpenSession={(id) => router.push(`/session/${encodeURIComponent(id)}`)}
                 onStop={sessionId ? chat.stop : undefined}
                 stopping={chat.stopping}
@@ -441,6 +433,7 @@ export function HardwareWorkspace({ initialPrompt, initialFiles = [], initialCho
           </section>
         )}
       </div>
+      </OpenChecksContext.Provider>
       </FoundContext.Provider>
       </ShowLocationContext.Provider>
     </SelectionContext.Provider>

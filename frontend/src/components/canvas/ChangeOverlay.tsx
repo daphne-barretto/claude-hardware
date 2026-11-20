@@ -7,6 +7,8 @@ import { reviewChanges, type CheckReport } from "./api";
 import { changeAnchor, changeGhost, changesSummary, proofText, reviewFor, type Change, type ChangeSet, type Point3 } from "./changes";
 import { spreadPins, type ScreenPoint } from "./checks";
 import { useFitInside } from "./fitPanel";
+import { CheckCounts } from "./CheckCounts";
+import { useOpenChecks } from "./openChecks";
 import type { LengthUnit } from "./units";
 import { shownError } from "@/lib/errors";
 
@@ -162,6 +164,8 @@ export function ChangePanel({
 }) {
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // A count opens the Constraints panel on its group (./openChecks).
+  const openChecks = useOpenChecks();
   // Opened from the Changes button: on a phone it would run past the screen's right edge.
   const ref = useRef<HTMLElement>(null);
   useFitInside(ref);
@@ -183,7 +187,7 @@ export function ChangePanel({
         {changesSummary(changeSet)}
       </h2>
       <p data-testid="change-checks" className="text-[12px] text-[var(--cs-muted)]">
-        Checks: {changeSet.checks.pass} pass · {changeSet.checks.fail} fail · {changeSet.checks.untested} untested
+        Checks: <CheckCounts summary={changeSet.checks} onOpen={openChecks} />
       </p>
       <ol aria-label="Changes to review" className="cs-scroll mt-2 flex max-h-[min(50vh,24rem)] flex-col overflow-y-auto">
         {changeSet.changes.map((c, i) => {

@@ -12,8 +12,6 @@ export type ShortcutAction =
   | "view-right"
   | "view-iso"
   | "fit"
-  | "tool-select"
-  | "tool-measure"
   | "tool-section"
   | "tool-comment"
   | "hide"
@@ -50,8 +48,6 @@ export const SHORTCUTS: Shortcut[] = [
   { action: "view-right", label: "Right view", group: "Views", bindings: [{ key: "3" }] },
   { action: "view-iso", label: "Isometric view", group: "Views", bindings: [{ key: "0" }] },
   { action: "fit", label: "Zoom to fit", group: "Views", bindings: [letter("F")] },
-  { action: "tool-select", label: "Select", group: "Tools", bindings: [letter("S")] },
-  { action: "tool-measure", label: "Measure", group: "Tools", bindings: [letter("M")] },
   { action: "tool-section", label: "Section", group: "Tools", bindings: [letter("X")] },
   { action: "tool-comment", label: "Comment", group: "Tools", bindings: [letter("C")] },
   { action: "hide", label: "Hide selection", group: "Visibility", bindings: [letter("H")] },

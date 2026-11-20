@@ -1,5 +1,4 @@
 import type { Locator, Page } from "@playwright/test";
-import { TOOLS } from "../../src/components/canvas/modeling";
 import { answer, BOX, boardlessSession, boardDemo, openBoardDemo, exampleSession, expect, keepIfAsked, openPage, openSession, send } from "./live";
 
 // The QA states: each is a session made on the real backend (`create`,
@@ -152,33 +151,6 @@ const TOOLS_OPEN: Tool[] = [
     },
   },
   {
-    id: "measure",
-    what: "Measure, a point picked",
-    open: async (page) => {
-      await tool(page, "Measure").click();
-      await clickModel(page);
-      await visible(page.getByRole("region", { name: "Measure" }));
-    },
-  },
-  { id: "xray", what: "X-ray", open: async (page) => tool(page, "X-ray").click() },
-  {
-    id: "map",
-    what: "An analysis map",
-    open: async (page) => {
-      await tool(page, "Analysis maps").click();
-      await page.getByRole("menu", { name: "Analysis maps" }).getByRole("menuitemradio").nth(1).click();
-      await visible(canvas(page).getByRole("region", { name: / legend$/ }));
-    },
-  },
-  {
-    id: "exploded",
-    what: "Exploded view",
-    open: async (page) => {
-      await tool(page, "Explode").click();
-      await visible(canvas(page).getByRole("slider", { name: "Explode amount" }));
-    },
-  },
-  {
     id: "parameters",
     what: "Parameters panel",
     open: async (page) => {
@@ -216,14 +188,6 @@ const TOOLS_OPEN: Tool[] = [
     open: async (page) => {
       await tool(page, "Export").click();
       await visible(page.getByRole("region", { name: "Export" }));
-    },
-  },
-  {
-    id: "history",
-    what: "History panel",
-    open: async (page) => {
-      await tool(page, "History").click();
-      await visible(page.getByRole("region", { name: "History" }));
     },
   },
   { id: "settings", what: "View settings", open: async (page) => tool(page, "View settings").click() },
@@ -265,24 +229,6 @@ const TOOLS_OPEN: Tool[] = [
       await visible(page.getByRole("region", { name: "Comments list" }));
     },
   },
-  {
-    id: "sketch",
-    what: "Sketch on a face (a face picked)",
-    open: async (page) => {
-      await clickModel(page);
-      await tool(page, "Sketch").click();
-      await visible(page.getByRole("region", { name: "Sketch" }));
-    },
-  },
-  ...TOOLS.map((t) => ({
-    id: `modeling-${t.kind}`,
-    what: `Modeling tool: ${t.label}`,
-    open: async (page: Page) => {
-      if (t.target === "face") await clickModel(page);
-      await canvas(page).getByRole("toolbar", { name: "Modeling tools" }).getByRole("button", { name: t.label, exact: true }).click();
-      await visible(page.getByRole("region", { name: "Modeling" }));
-    },
-  })),
 ];
 
 const withTool = (base: Base, t: Tool, viewports: Viewport[] = ["laptop"]): QaState => ({
@@ -296,10 +242,10 @@ const withTool = (base: Base, t: Tool, viewports: Viewport[] = ["laptop"]): QaSt
   viewports,
 });
 
-const PHONE_TOOLS = new Set(["section", "export", "comment", "modeling-hole"]);
+const PHONE_TOOLS = new Set(["section", "export", "comment"]);
 // Tools whose panels are placed by the canvas layout model (chromeLayout.ts), or that open a
 // dialog the check pins must stay under: every size, from a phone to a wide screen.
-const LAYOUT_TOOLS = new Set(["map", "sketch", "parameters", "dimensions", "comment", "shortcuts"]);
+const LAYOUT_TOOLS = new Set(["parameters", "dimensions", "comment", "shortcuts"]);
 const toolViewports = (id: string): Viewport[] =>
   LAYOUT_TOOLS.has(id) ? ["phone", "laptop", "wide"] : PHONE_TOOLS.has(id) ? ["phone", "laptop"] : ["laptop"];
 
@@ -336,18 +282,6 @@ export const STATES: QaState[] = [
   { ...BASES.run, viewports: ["laptop"] },
   { ...BASES.changes, viewports: ["phone", "laptop", "wide"] },
   {
-    id: "run.compare",
-    what: "After a run; Compare with the previous build",
-    create: BASES.run.create,
-    open: async (page, id) => {
-      await BASES.run.open(page, id);
-      await tool(page, /^Compare with /).click();
-      await visible(page.getByRole("region", { name: "Changes" }));
-    },
-    viewports: ["laptop", "wide"],
-  },
-  withTool(BASES.run, TOOLS_OPEN.find((t) => t.id === "history")!, ["laptop", "wide"]),
-  {
     // A comment pinned low on the model and sent to Claude, who asks in the thread (the scripted
     // Claude asks its revision question): the card and its options stay inside the canvas.
     id: "board.comment-question",
@@ -375,6 +309,5 @@ export const STATES: QaState[] = [
   },
   { ...BASES.boardless, viewports: ["phone", "laptop", "wide"] },
   ...TOOLS_OPEN.map((t) => withTool(BASES.board, t, toolViewports(t.id))),
-  // A one-part design has nothing to explode.
-  ...TOOLS_OPEN.filter((t) => t.id !== "exploded").map((t) => withTool(BASES.boardless, t, LAYOUT_TOOLS.has(t.id) ? toolViewports(t.id) : ["laptop"])),
+  ...TOOLS_OPEN.map((t) => withTool(BASES.boardless, t, LAYOUT_TOOLS.has(t.id) ? toolViewports(t.id) : ["laptop"])),
 ];

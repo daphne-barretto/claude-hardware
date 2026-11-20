@@ -1,5 +1,4 @@
 import { defineConfig, devices } from "@playwright/test";
-import { FLAGGED_SPECS, FLAGGED_TITLES } from "./e2e/flagged";
 
 // Set E2E_BASE_URL to test an already running app (for example the Docker image);
 // otherwise Playwright starts the mock session API (backend/app/mock_api.py, serving the
@@ -25,9 +24,6 @@ const visual = process.env.E2E_VISUAL === "1";
 export default defineConfig({
   testDir: "./e2e",
   ignoreSnapshots: !visual,
-  // The app runs as shipped, every feature flag off: tests of flagged features are skipped (e2e/flagged.ts).
-  testIgnore: FLAGGED_SPECS.map((s) => `**/${s}`),
-  grepInvert: FLAGGED_TITLES,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

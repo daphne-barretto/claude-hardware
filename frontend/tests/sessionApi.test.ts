@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { subscribe } from "@/lib/session-api";
+import { lockedMode, subscribe } from "@/lib/session-api";
 import { resetStreams } from "@/lib/session-stream";
 
 /** A stand-in EventSource; it calls its listeners directly, so their exceptions reach the test. */
@@ -54,5 +54,12 @@ describe("subscribe", () => {
     const close = subscribe("s-1", vi.fn());
     close();
     expect(FakeEventSource.last!.closed).toBe(true);
+  });
+});
+
+describe("lockedMode", () => {
+  it("sends every message in Auto mode, whatever was chosen before", () => {
+    expect(lockedMode({ text: "Hi", mode: "manual" })).toMatchObject({ mode: "auto" });
+    expect(lockedMode({ text: "Hi", mode: "auto" })).toMatchObject({ mode: "auto" });
   });
 });

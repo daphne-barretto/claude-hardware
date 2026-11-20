@@ -1,7 +1,7 @@
 import { recordedEvents, sessionOpenApi } from "./fixtures";
 import { describe, expect, it } from "vitest";
 import { answerQuestion, applyEvent, fromStored, openQuestion, withAnswers, type Block, type ChatMessage } from "@/components/sites/claude-shell/chat";
-import { EFFORTS, MODES } from "@/components/sites/claude-shell/data";
+import { EFFORTS } from "@/components/sites/claude-shell/data";
 import type { SessionEvent } from "@/lib/session-api";
 
 // The recorded run and the contract come from the generated files, never copied values.
@@ -193,8 +193,5 @@ describe("picker values match the session API contract", () => {
   it("efforts", () => {
     const allowed = body.effort.anyOf.find((s: { enum?: string[] }) => s.enum).enum;
     for (const e of EFFORTS) expect(allowed).toContain(e.id);
-  });
-  it("modes", () => {
-    expect(MODES.map((m) => m.id).sort()).toEqual([...body.mode.enum].sort());
   });
 });

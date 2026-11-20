@@ -39,7 +39,6 @@ test("New → message → build on the canvas → reload keeps it → Recents", 
   await open(page, "/");
   const id = await startFromNew(page, SESSION.prompt);
   const chat = page.getByRole("region", { name: "Chat" });
-  const canvas = page.getByRole("region", { name: "Canvas" });
   const viewer = page.getByTestId("viewer");
 
   // The same workspace keeps streaming, and the canvas follows the same session.
@@ -50,12 +49,9 @@ test("New → message → build on the canvas → reload keeps it → Recents", 
   await expect(chat.getByRole("group", { name: question.text })).toBeVisible({ timeout: 30_000 });
   await expect(chat.getByTestId("assistant-message")).not.toHaveAttribute("aria-busy");
 
-  // The build card shows its build and selects its revision in the menu.
+  // The build card shows its build.
   await chat.getByTestId("build-ready").click();
   await expect(viewer).toHaveAttribute("data-build", BUILD.id);
-  await canvas.getByRole("button", { name: "Revision" }).click();
-  await expect(canvas.getByRole("menuitemradio", { name: new RegExp(BUILD.id) })).toHaveAttribute("aria-checked", "true");
-  await page.keyboard.press("Escape");
 
   // The session is in Recents, marked as the current page.
   const recents = page.getByRole("list", { name: "Recents" });

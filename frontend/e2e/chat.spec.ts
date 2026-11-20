@@ -29,9 +29,7 @@ test("send, stream and answer against the mock API", async ({ page, request }) =
   const model = MODELS.find((m) => m.id !== DEFAULT_CHOICES.model)!;
   const effort = EFFORTS.find((e) => e.id !== DEFAULT_CHOICES.effort)!;
 
-  // Choose Manual, another model and another effort.
-  await chat.getByRole("radio", { name: "Manual" }).click();
-  await expect(chat.getByRole("radio", { name: "Manual" })).toHaveAttribute("aria-checked", "true");
+  // Choose another model and another effort.
   const picker = chat.getByRole("button", { name: /Fable|Opus|Sonnet|Haiku/ });
   await picker.click();
   await chat.getByRole("menuitemradio", { name: new RegExp(model.name) }).click();
@@ -51,7 +49,7 @@ test("send, stream and answer against the mock API", async ({ page, request }) =
     text: "Check the enclosure against the new revision",
     model: model.id,
     effort: effort.id,
-    mode: "manual",
+    mode: "auto",
   });
 
   // Stream: progress lines in order, the streamed text, then the question.
@@ -67,8 +65,7 @@ test("send, stream and answer against the mock API", async ({ page, request }) =
   await expect(asked.getByRole("button")).toHaveCount(question.options!.length);
   await expect(reply).not.toHaveAttribute("aria-busy");
 
-  // Answer with an option button, with Auto chosen this time.
-  await chat.getByRole("radio", { name: "Auto" }).click();
+  // Answer with an option button.
   const option = question.options![1];
   const answered = page.waitForRequest((r) => r.url().endsWith("/messages") && r.method() === "POST");
   await asked.getByRole("button", { name: new RegExp(option.label) }).click();
@@ -88,7 +85,7 @@ test("send, stream and answer against the mock API", async ({ page, request }) =
   const messages = await (await request.get(`/api/sessions/${session.id}/messages`)).json();
   const fromUser = messages.filter((m: { role: string }) => m.role === "user");
   expect(fromUser).toMatchObject([
-    { model: model.id, effort: effort.id, mode: "manual" },
+    { model: model.id, effort: effort.id, mode: "auto" },
     { model: model.id, effort: effort.id, mode: "auto", answer: { option_id: option.id } },
   ]);
   expect(errors).toEqual([]);

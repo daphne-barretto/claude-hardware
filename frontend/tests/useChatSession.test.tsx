@@ -12,7 +12,6 @@ vi.mock("@/lib/session-api", () => ({
   createSession: vi.fn(async () => ({ id: "session-1" })),
   postMessage: vi.fn(async () => ({})),
   uploadAttachment: vi.fn(),
-  loadNextRevision: vi.fn(),
   subscribe: vi.fn((_id: string, onEvent: (event: SessionEvent) => void, onError?: () => void) => {
     api.onEvent = onEvent;
     api.onError = onError ?? null;

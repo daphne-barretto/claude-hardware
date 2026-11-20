@@ -1,5 +1,5 @@
 /**
- * Geometry for the inspection tools (section cut, measure, clearance), free of three.js so it
+ * Geometry for the inspection tools (section cut, clearance), free of three.js so it
  * can be tested on its own. Everything is in board coordinates (millimetres, Z up), the frame of
  * `backend/app/boards/SCHEMA.md` and of the mesh contract's parts in their assembled positions.
  *
@@ -81,11 +81,6 @@ export function bodyTriangles(b: Body): Triangles {
   const out: number[] = [];
   for (const [p, q, r, s] of quads) out.push(...p, ...q, ...r, ...p, ...r, ...s);
   return Float64Array.from(out);
-}
-
-/** The 8 corners of a body. */
-export function bodyCorners(b: Body): Vec3[] {
-  return [...b.corners.map((p): Vec3 => [p[0], p[1], b.z0]), ...b.corners.map((p): Vec3 => [p[0], p[1], b.z1])];
 }
 
 // ---------------------------------------------------------------------------------------
@@ -377,7 +372,7 @@ export type Layout = "assembled" | "exploded" | "print";
  * (a soil probe, a connector) shows as it would in the hand. The other fields are kept so callers
  * pass the whole viewing state and the rule can grow without changing them.
  */
-export function boardShown(s: { layout: Layout; xray: boolean; section: boolean; enclosureHidden: boolean }): boolean {
+export function boardShown(s: { layout: Layout; section: boolean; enclosureHidden: boolean }): boolean {
   return s.layout !== "print";
 }
 export const LAYOUTS: Layout[] = ["assembled", "exploded", "print"];
@@ -433,36 +428,4 @@ export function layoutPlacements(layout: Layout, parts: { part: string; bounds: 
     x += max[0] - min[0] + PRINT_GAP;
   }
   return out;
-}
-
-// ---------------------------------------------------------------------------------------
-// Measure
-
-/** What the measure tool picked: an enclosure face, a component's body, a corner or a point. */
-export type MeasureTarget =
-  | { kind: "face"; part: string; id: string; label: string }
-  | { kind: "component"; ref: string; label: string }
-  | { kind: "vertex" | "point"; point: Vec3; label: string };
-
-/** A measured thing as geometry: a point, or a surface's triangles. */
-export type Measurable = { point: Vec3 } | { triangles: Triangles };
-
-/** The exact shortest distance between two measured things, with the closest points. */
-export function measureDistance(a: Measurable, b: Measurable): Closest {
-  if ("point" in a && "point" in b) return { distance: Math.sqrt(dist2(a.point, b.point)), from: a.point, to: b.point };
-  if ("point" in a) return pointDistance(a.point, (b as { triangles: Triangles }).triangles);
-  if ("point" in b) {
-    const c = pointDistance(b.point, a.triangles);
-    return { distance: c.distance, from: c.to, to: c.from };
-  }
-  return surfaceDistance(a.triangles, b.triangles);
-}
-
-/** Two targets are the same thing (a second click on it starts nothing new). */
-export function sameTarget(a: MeasureTarget, b: MeasureTarget): boolean {
-  if (a.kind !== b.kind) return false;
-  if (a.kind === "face" && b.kind === "face") return a.part === b.part && a.id === b.id;
-  if (a.kind === "component" && b.kind === "component") return a.ref === b.ref;
-  if ("point" in a && "point" in b) return dist2(a.point, b.point) < 1e-12;
-  return false;
 }

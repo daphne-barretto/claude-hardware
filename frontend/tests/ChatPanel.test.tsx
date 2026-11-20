@@ -8,8 +8,6 @@ import { DEFAULT_CHOICES, EFFORTS, MODELS } from "@/components/sites/claude-shel
 import { HardwareWorkspace, useCanvasSelection, useSetCanvasSelection } from "@/components/sites/claude-shell/HardwareWorkspace";
 import type { Selection, SessionEvent } from "@/lib/session-api";
 
-// These tests choose Manual mode, which is behind a flag (lib/flags).
-vi.mock("@/lib/flags", async (real) => ({ ...(await real<object>()), MANUAL_MODE: true }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/new", useRouter: () => ({ push: () => {} }) }));
 
 const recorded = recordedEvents;
@@ -93,25 +91,23 @@ async function sendText(chat: HTMLElement, text: string) {
 }
 
 describe("chat panel", () => {
-  it("sends the model, effort and Manual/Auto choices with the next message", async () => {
+  it("sends the model and effort choices with the next message", async () => {
     const chat = renderWorkspace();
     const model = MODELS.find((m) => m.id !== DEFAULT_CHOICES.model)!;
     const effort = EFFORTS.find((e) => e.id !== DEFAULT_CHOICES.effort)!;
 
-    within(chat).getByRole("radio", { name: "Manual" }).click();
     fireEvent.click(within(chat).getByRole("button", { expanded: false, name: /Opus|Fable|Sonnet|Haiku/ }));
     fireEvent.click(within(chat).getByRole("menuitemradio", { name: new RegExp(model.name) }));
     fireEvent.click(within(chat).getByRole("button", { expanded: false, name: /Opus|Fable|Sonnet|Haiku/ }));
     fireEvent.click(within(chat).getByRole("menuitem", { name: /Effort/ }));
     fireEvent.click(within(chat).getByRole("menuitemradio", { name: new RegExp(`^${effort.name}`) }));
-    expect(within(chat).getByRole("radio", { name: "Manual" })).toHaveProperty("ariaChecked", "true");
 
     await sendText(chat, "Check the enclosure");
     expect(posted[0].url).toBe("/api/sessions");
     expect(window.location.pathname).toBe("/session/s-1");
     expect(messagesPosted()[0]).toEqual({
       url: "/api/sessions/s-1/messages",
-      body: { text: "Check the enclosure", model: model.id, effort: effort.id, mode: "manual", selection: null, attachments: [] },
+      body: { text: "Check the enclosure", model: model.id, effort: effort.id, mode: "auto", selection: null, attachments: [] },
     });
     expect(FakeEventSource.all[0].url).toBe("/api/sessions/s-1/events");
   });
@@ -129,14 +125,12 @@ describe("chat panel", () => {
     act(() => source.emit(question));
     const option = within(chat).getByRole("button", { name: new RegExp(question.options[0].label) });
     expect(option).toHaveProperty("disabled", false);
-    fireEvent.click(within(chat).getByRole("radio", { name: "Manual" }));
     fireEvent.click(option);
 
     await waitFor(() => expect(messagesPosted()).toHaveLength(2));
     expect(messagesPosted()[1].body).toEqual({
       text: "",
       ...DEFAULT_CHOICES,
-      mode: "manual",
       answer: { question_id: question.question_id, option_id: question.options[0].id },
     });
     expect(option).toHaveProperty("ariaPressed", "true");

@@ -5,7 +5,8 @@ import { Lock } from "lucide-react";
 import { getChecks, type Build, type CheckReport } from "./api";
 import { CheckRow } from "./CheckRow";
 import { displayUnit, failingChecks, formatParameter, parseParameter, rebuiltBuild, type Parameter } from "./parameters";
-import { summaryLine } from "./history";
+import { CheckCounts } from "./CheckCounts";
+import { useOpenChecks } from "./openChecks";
 import type { LengthUnit } from "./units";
 import { parameterLabel as label, withKey, type Parameters, type Rebuild } from "./useParameterEdits";
 import { shownError } from "@/lib/errors";
@@ -156,6 +157,7 @@ export function ParametersPanel({ parameters, unit, readOnly }: { parameters: Pa
 
 export function RebuildResult({ rebuild, unit }: { rebuild: Rebuild; unit: LengthUnit }) {
   const failing = rebuild.state === "done" ? failingChecks(rebuild.report) : [];
+  const openChecks = useOpenChecks();
   return (
     <section
       aria-label="Rebuild"
@@ -171,7 +173,7 @@ export function RebuildResult({ rebuild, unit }: { rebuild: Rebuild; unit: Lengt
       {rebuild.state === "done" && (
         <>
           <p data-testid="rebuild-summary">
-            Rebuilt and checked: {summaryLine(rebuild.report.summary)}
+            Rebuilt and checked: <CheckCounts summary={rebuild.report.summary} onOpen={openChecks} />
           </p>
           {failing.length > 0 ? (
             <ul aria-label="Failing checks" className="mt-1 flex flex-col gap-1">

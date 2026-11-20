@@ -2,7 +2,7 @@
 
 /**
  * The slot the 3D canvas fills. The shell owns the panel around it (title, Share, expand,
- * close); everything inside the slot (viewer, revision menu, view controls, tool
+ * close); everything inside the slot (viewer, view controls, tool
  * toolbar, Constraints panel) belongs to the canvas. Pass the viewer as `children`; with no
  * children the slot shows the empty state from the New mockup, with `overlay` over it (the
  * Constraints panel before the first build).

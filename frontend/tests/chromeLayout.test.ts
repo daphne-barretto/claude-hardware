@@ -20,7 +20,7 @@ describe("the panel columns", () => {
 
   it("start at the left margin on a canvas too narrow for a panel beside the parts panel", () => {
     for (const column of [PLACE.tools, PLACE.inspection]) expect(column).toContain("@max-[30rem]:left-[var(--chrome-margin)]");
-    expect(chromeVars({ parts: true, toolbar: true })).toMatchObject({ "--chrome-margin": "0.75rem" });
+    expect(chromeVars({ parts: true })).toMatchObject({ "--chrome-margin": "0.75rem" });
   });
 
   it("let clicks through to the model around a panel, and a panel scrolls inside rather than overflow", () => {

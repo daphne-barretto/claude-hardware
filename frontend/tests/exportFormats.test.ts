@@ -18,9 +18,9 @@ describe("export formats", () => {
     expect([...EXPORT_FORMATS]).toEqual(schema.enum);
   });
 
-  it("offer a checkbox for every format but the build note, which has its own", () => {
-    expect(FORMAT_OPTIONS.map((o) => o.format).sort()).toEqual(EXPORT_FORMATS.filter((f) => f !== "build_note").sort());
-    expect(new Set(FORMAT_OPTIONS.map((o) => o.label)).size).toBe(FORMAT_OPTIONS.length);
+  it("offer STEP and the source code, STEP checked by default", () => {
+    expect(FORMAT_OPTIONS.map((o) => o.format)).toEqual(["step", "source"]);
+    expect(DEFAULT_FORMATS).toEqual(["step"]);
   });
 
   it("request the checked formats in contract order, the note last", () => {
@@ -31,9 +31,8 @@ describe("export formats", () => {
   });
 
   it("count the files a download gives: the source is the code and its parameters", () => {
-    expect(fileCount(["step", "build_note"])).toBe(2);
     expect(fileCount(["source"])).toBe(2);
-    expect(fileCount([...EXPORT_FORMATS])).toBe(EXPORT_FORMATS.length + 1);
+    expect(fileCount(["step", "build_note"])).toBe(2);
     expect(downloadLabel(1)).toBe("Download 1 file");
     expect(downloadLabel(3)).toBe("Download 3 files");
   });

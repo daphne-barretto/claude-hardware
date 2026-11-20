@@ -3,7 +3,7 @@ import path from "node:path";
 import { expect, test, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { BOARD_PART } from "../src/components/canvas/boardParts";
 import { componentBody, bodyCenter, type Board } from "../src/components/canvas/inspect";
-import { indexFromGltf, resolveId } from "../src/components/canvas/selection";
+import { indexFromGltf } from "../src/components/canvas/selection";
 import { answerOpenQuestion } from "./inventory/ui-inventory";
 
 // The build's board revision as parts against the mock session API (docs/architecture.md).
@@ -127,16 +127,4 @@ test("a drawn component is picked whole by a click, and shows its reference desi
   await expect(viewer).toHaveAttribute("data-selected", target.ref);
   await expect(parts.getByRole("button", { name: `Select ${target.ref}`, exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(chat.getByTestId("selection-chip")).toContainText(target.ref);
-});
-
-test("select by ID finds the board and its components after the enclosure's IDs", async ({ page, request }) => {
-  const { viewer, parts } = await openCanvas(page, request);
-  const box = parts.getByRole("textbox", { name: "Select by ID" });
-  for (const id of [BOARD_PART, ...REFS]) {
-    // An ID the enclosure knows (an opening named after a component) still selects that first.
-    const enclosure = resolveId(INDEX, id).map((p) => p.id);
-    await box.fill(id.toLowerCase());
-    await box.press("Enter");
-    await expect(viewer).toHaveAttribute("data-selected", (enclosure.length ? enclosure : [id]).join(","));
-  }
 });

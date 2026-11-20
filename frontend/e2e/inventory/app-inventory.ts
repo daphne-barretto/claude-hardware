@@ -2,21 +2,9 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { parse } from "yaml";
 import { CHOOSE_STANDARDS, DEFAULT_CHOICES, EFFORTS, EMPTY_HEADING, MODELS, MORE_MODELS } from "../../src/components/sites/claude-shell/data";
-import { isMapType, MAP_LABELS } from "../../src/components/canvas/colormap";
 import { BOARD_PART } from "../../src/components/canvas/boardParts";
 import { featureTree } from "../../src/components/canvas/featureTree";
-import { changesHeading, featureChangeText } from "../../src/components/canvas/history";
 import { indexFromGltf } from "../../src/components/canvas/selection";
-import {
-  fieldLabel,
-  OPERATION_LABELS,
-  SHAPE_LABELS,
-  SKETCH_OPERATIONS,
-  SKETCH_SHAPES,
-  sketchFields,
-} from "../../src/components/canvas/sketch";
-import { sketchTargets } from "../sketchFaces";
-import { editFields, fieldLabel as editFieldLabel, TOOLS } from "../../src/components/canvas/modeling";
 import { loadInventory } from "./ui-inventory";
 import { checkLabel, locatedResults, untestedResults } from "../../src/components/canvas/checks";
 import { placeLabel, requiredLabel } from "../../src/components/canvas/constraintGroups";
@@ -40,7 +28,7 @@ const conflict = readFileSync(path.join(root, "fixtures/conflict-events.jsonl"),
   .map((line) => JSON.parse(line).event)
   .find((e) => e.type === "question");
 
-// The session canvas: the fixture build, its source, checks and analysis maps.
+// The session canvas: the fixture build, its source and checks.
 const fixture = (name: string) => JSON.parse(readFileSync(path.join(root, "fixtures", name), "utf8"));
 // The fixture build's parts and faces (fixtures/enclosure.gltf), for the canvas selection.
 type Feature = { id: string; feature: string };
@@ -74,8 +62,8 @@ const located = locatedResults(report)
   .map((r) => ({ ...r, label: checkLabel(r), target: viewerTarget(r.location.point), item: itemLabel(r), place: placeLabel(r) }))
   .sort((a, b) => Number(b.check === "opening_alignment") - Number(a.check === "opening_alignment"));
 
-// The session canvas: the fixture build, its source, checks and analysis maps.
-const build = fixture("build.json") as { maps: string[]; board: { name: string; revision: string } };
+// The session canvas: the fixture build, its source and checks.
+const build = fixture("build.json") as { board: { name: string; revision: string } };
 // The components of the build's board revision (demos/b-parasite/), for the section cut.
 const boardComponents = (
   JSON.parse(readFileSync(path.join(root, `demos/b-parasite/${build.board.name}-${build.board.revision}.json`), "utf8")) as {
@@ -83,13 +71,7 @@ const boardComponents = (
   }
 ).components;
 const previousBuild = fixture("previous-build.json");
-const diff = fixture("diff.json");
 const buildSource = fixture("build-source.json") as { code: string };
-const maps = build.maps.filter(isMapType).map((type) => ({
-  type,
-  label: MAP_LABELS[type],
-  flagged: ((fixture(`maps/${type}.json`) as { flagged?: unknown[] }).flagged ?? []).length,
-}));
 
 // The design parameters, as the parameters panel labels them, with a new value to type: one
 // more for a number (a valid length or angle), a changed word for text.
@@ -171,12 +153,11 @@ export const vars = {
   session: fixture("session.json"),
   samples,
   // As the canvas labels a revision (revisionLabel in HardwareCanvas).
-  // Numbered as the chat and History name builds: the older revision's build is the session's
+  // Numbered as the chat names builds: the older revision's build is the session's
   // first, this one its second, a hand edit's rebuild its third.
   build: { ...build, revision: `v${build.board.revision}`, number: 2, next_number: 3 },
-  // The build on the older revision, and the diff from it, as the compare view shows them.
+  // The build on the older revision.
   previous_build: { ...previousBuild, revision: `v${previousBuild.board.revision}`, number: 1 },
-  diff: { heading: changesHeading(diff, previousBuild), first_change: featureChangeText(diff.features[0]) },
   build_source: { ...buildSource, first_line: buildSource.code.split("\n")[0] },
   checks: {
     ...report,
@@ -185,8 +166,6 @@ export const vars = {
     untested: untestedResults(report).length,
   },
   changes,
-  maps,
-  flagged_map: maps.find((m) => m.flagged > 0),
   parts: meshParts.map((p) => p.part),
   faces: meshParts.flatMap((p) => (p.faces ?? []).map((f) => ({ ...f, part: p.part }))),
   edges: meshParts.flatMap((p) => (p.edges ?? []).map((e) => ({ ...e, part: p.part }))),
@@ -195,26 +174,9 @@ export const vars = {
   length_param: parameters.find((p) => typeof p.value === "number"),
   tagged_features: treeFeatures.filter((f) => f.faces.length).map((f) => ({ ...f, face_ids: f.faces.join(",") })),
   coded_features: treeFeatures.filter((f) => f.lines).map((f) => ({ ...f, lines_attr: f.lines!.join("-") })),
-  // Sketch on a face: a full flat face of the fixture mesh, and the panel's choices. Each
-  // shape or operation names another to check first, so checking it has an effect.
-  sketch_face: sketchTargets().flat,
-  sketch_shapes: SKETCH_SHAPES.map((id, i) => ({
-    id,
-    label: SHAPE_LABELS[id],
-    other: SHAPE_LABELS[SKETCH_SHAPES[i === 0 ? SKETCH_SHAPES.length - 1 : 0]],
-  })),
-  sketch_operations: SKETCH_OPERATIONS.map((id, i) => ({
-    id,
-    label: OPERATION_LABELS[id],
-    other: OPERATION_LABELS[SKETCH_OPERATIONS[i === 0 ? 1 : 0]],
-  })),
-  sketch_fields: sketchFields("circle").map((f) => fieldLabel(f, "circle", "cut")),
   // The parameters drawn as dimensions on the model, and the one the editing state types.
   dimensions: parameters.filter((p) => p.dimension),
   dimension_param: parameters.find((p) => p.dimension),
-  // Modeling tools: the toolbar's tools, and the hole tool's fields (the modeling state's tool).
-  modeling_tools: TOOLS.map((t) => ({ id: t.kind, label: t.label, hint: t.hint })),
-  hole_fields: editFields("hole").map((f) => editFieldLabel(f, "hole")),
   components: boardComponents,
   board_part: BOARD_PART,
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { BookOpen, Check, ChevronRight, ListChecks, Circle, CircleDashed, CircleMinus, MessageSquareQuote, Pencil, Undo2, X } from "lucide-react";
 import type { Constraint } from "@/lib/session-api";
 import type { CheckReport, CheckResult } from "./api";
@@ -18,6 +18,7 @@ import { useConstraints } from "./constraintsContext";
 import { summaryLine } from "./history";
 import { PIN_FILTER_LABELS, PIN_FILTERS, type PinFilter } from "./pinVisibility";
 import { lengthsInText, type LengthUnit } from "./units";
+import type { OpenChecksRequest } from "./openChecks";
 
 /** Where a constraint came from, in full: the rule in the session's constraint set, the user's words, or an edit. */
 export function sourceText(c: Constraint, setName?: string | null) {
@@ -72,6 +73,7 @@ export function ConstraintsPanel({
   onPinFilter,
   className = "",
   header,
+  reveal = null,
 }: {
   report: CheckReport | null;
   unit: LengthUnit;
@@ -91,6 +93,8 @@ export function ConstraintsPanel({
   className?: string;
   /** Extra controls in the header (a Close button). */
   header?: ReactNode;
+  /** A check count was clicked (./openChecks): its group's rows are marked and the first scrolled to. */
+  reveal?: OpenChecksRequest | null;
 }) {
   const { constraints, onChange, disabledReason, setName } = useConstraints();
   const groups = constraintGroups(constraints, report, unit);
@@ -101,6 +105,23 @@ export function ConstraintsPanel({
   const shown = showNotApplicable ? groups : groups.filter((g) => g.status !== "not_applicable");
   const selectedKey = selectedId ? groups.find((g) => g.results.some((r) => r.id === selectedId))?.key : undefined;
   const building = !!onRun;
+  // A count for "not applicable" shows those rows, hidden by default (set while rendering, once per request).
+  const [revealN, setRevealN] = useState(0);
+  if (reveal && reveal.n !== revealN) {
+    setRevealN(reveal.n);
+    if (reveal.status === "not_applicable") setShowNotApplicable(true);
+  }
+  const revealStatus = reveal?.status;
+  const firstRevealed = revealStatus ? shown.find((g) => g.status === revealStatus)?.key : undefined;
+  const scrolled = useRef(0);
+  useEffect(() => {
+    // Once per request, when its rows are there (the report can still be loading).
+    if (!reveal || !firstRevealed || scrolled.current === reveal.n) return;
+    scrolled.current = reveal.n;
+    const row = rows.current.get(firstRevealed);
+    row?.scrollIntoView?.({ block: "nearest" });
+    row?.focus({ preventScroll: true });
+  }, [reveal, firstRevealed]);
 
   const collapse = (key: string) => {
     setOpenKey(null);
@@ -183,10 +204,11 @@ export function ConstraintsPanel({
                   data-constraint={g.key}
                   data-status={g.status}
                   data-selected={g.key === selectedKey ? "true" : undefined}
+                  data-revealed={revealStatus && g.status === revealStatus ? "true" : undefined}
                   aria-label={groupName(g)}
                   aria-expanded={open}
                   onClick={() => setOpenKey(open ? null : g.key)}
-                  className="flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1 text-left hover:bg-[var(--cs-hover)] data-[selected]:bg-[var(--cs-active)]"
+                  className="flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1 text-left hover:bg-[var(--cs-hover)] data-[revealed]:bg-[var(--cs-hover)] data-[selected]:bg-[var(--cs-active)]"
                 >
                   <StatusIcon status={g.status} className="size-3.5" />
                   <span className="min-w-0 flex-1">{g.label}</span>

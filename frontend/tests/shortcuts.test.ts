@@ -19,7 +19,7 @@ describe("canvas keymap", () => {
     expect(new Set(actions).size).toBe(actions.length);
     for (const a of [
       "view-front", "view-top", "view-right", "view-iso", "fit",
-      "tool-select", "tool-measure", "tool-section", "tool-comment",
+      "tool-section", "tool-comment",
       "hide", "isolate", "show-all", "undo", "redo", "help",
     ] as ShortcutAction[]) {
       expect(actions).toContain(a);

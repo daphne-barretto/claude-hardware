@@ -27,7 +27,7 @@
 #     within: an ancestor in the accessibility tree, `role "name"`, chained with " >> ".
 #     nth: which of several controls with the same role and name the behaviour test uses.
 #     states: state id patterns (* matches anything) the entry is present in; except: ones it isn't.
-#     each: a list in the sample data (models, more_models, efforts, question.options, maps, parts,
+#     each: a list in the sample data (models, more_models, efforts, question.options, parts,
 #       checks.located, standards, standard_kinds: the rule catalogue, fixtures/standards-kinds.json);
 #       one entry per item, with {it.<field>} (or {it} for a list of names)
 #       filled in. Other {values}: default.model, default.effort,
@@ -35,20 +35,15 @@
 #       id, title), sized_standard (the first built-in rule whose kind gives sizes: title, sizes,
 #       material) and spec (a description giving one standard a value: text, id, title), and for
 #       the session canvas (from fixtures/): session, build (+ revision), previous_build
-#       (+ revision: the build on the older revision), diff (heading, first_change: as the
-#       compare view shows fixtures/diff.json), build_source (+ first_line), checks (+ located and
+#       (+ revision: the build on the older revision), build_source (+ first_line), checks (+ located and
 #       failed: the results with a pin, with label and target, the viewer's data-target, item:
 #       the label of its item in the Constraints bar, and place: its place in that item's detail;
-#       untested: the count), maps (type, label, flagged),
-#       flagged_map, the fixture build's parts, faces and edges (fixtures/enclosure.gltf:
+#       untested: the count), the fixture build's parts, faces and edges (fixtures/enclosure.gltf:
 #       {faces.0.id}, {faces.0.feature}), changes (fixtures/change-set.json: id, title, n: its
 #       pin number), parameters (name, label, index, edit: a new value to
 #       type), length_param (the first numeric parameter), components (the build's board
 #       revision in demos/b-parasite/: ref, role), board_part (the part name of the board) and conflict
-#       (the question of fixtures/conflict-events.jsonl); for sketching, sketch_face (a
-#       full flat face, e2e/sketchFaces.ts), sketch_shapes and sketch_operations (id, label,
-#       and `other`, one to check first) and sketch_fields (the circle's); for the modeling
-#       tools, modeling_tools (id, label, hint) and hole_fields (the hole tool's).
+#       (the question of fixtures/conflict-events.jsonl).
 #     dynamic: true marks a list from the session API (Recents, search results). It may be
 #       empty (staging has no sessions; the mock API has whatever other tests created), so
 #       coverage doesn't require it, and the behaviour test uses its first item.
@@ -321,17 +316,8 @@ states:
     screen: canvas selection
     from: session
     steps:
-      - { fill: parts.select-by-id, text: "{faces.0.id}" }
-      - { press: Enter }
+      - { click_on: testid "viewer", position: [378, 380] }
       - { wait: 'region "Chat" >> button "Clear selection"' }
-  # Find in model: a query whose matches are highlighted and listed, ready to send to chat.
-  - id: session.found
-    screen: canvas selection
-    from: session
-    steps:
-      - { fill: parts.find, text: low draft }
-      - { press: Enter }
-      - { wait: 'region "Parts" >> button "Send to chat"' }
   # Find in model from chat: the question answered, then a "Find ..." message; the
   # mock replies with Claude's find, highlighted on the canvas and listed in the chat.
   - id: session.chat-found
@@ -353,12 +339,6 @@ states:
       - { click: canvas.cube-right-bottom }
       - { click: canvas.cube-back-left-bottom }
       - { wait: 'region "Canvas" >> button "Back"' }
-  # Box select on: a left drag draws a box instead of orbiting.
-  - id: session.box
-    screen: canvas selection
-    from: session
-    steps: [{ click: parts.box-select }]
-
   # The can't-satisfy state: a mock session sent the conflict fixture's locks, so
   # Claude's question comes with the conflict and is pinned on the model.
   - id: session.conflict
@@ -371,40 +351,12 @@ states:
   - id: session.conflict.closed
     from: session.conflict
     steps: [{ click: conflict.pin }]
-  - id: session.revisions
-    from: session
-    steps: [{ click: canvas.revision }]
-  # Compare: the build on the older revision next to the latest, with the diff between them.
   # The proposed changes panel, expanded from its button.
   - id: session.changes
     from: session
     steps:
       - { click: changes.toggle }
       - { wait: 'region "Proposed changes" >> list "Changes to review"' }
-  - id: session.compare
-    from: session
-    steps:
-      - { click: canvas.compare }
-      - { wait: 'region "Changes" >> list "Feature changes"' }
-  - id: session.history
-    from: session
-    steps:
-      - { click: canvas.history }
-      - { wait: 'region "History" >> list "Builds"' }
-  - id: session.maps
-    from: session
-    steps: [{ click: canvas.maps }]
-  - id: session.map
-    from: session.maps
-    steps:
-      - { click_on: 'menu "Analysis maps" >> menuitemradio "{flagged_map.label}"' }
-      - { wait: 'region "{flagged_map.label} legend" >> list "Flagged spots"' }
-  # A flagged spot sent to Claude, once Claude has replied.
-  - id: session.map.sent
-    from: session.map
-    steps:
-      - { click: canvas.ask-fix }
-      - { wait: 'region "{flagged_map.label} legend" >> button "Ask Claude to fix"', enabled: true }
   - id: session.export
     from: session
     steps: [{ click: canvas.export }]
@@ -435,12 +387,6 @@ states:
   - id: session.zoom
     from: session
     steps: [{ click: canvas.zoom }]
-  # The exploded view: the parts pulled apart, with the explode amount slider.
-  - id: session.exploded
-    from: session
-    steps:
-      - { click: canvas.explode }
-      - { wait: 'region "Canvas" >> slider "Explode amount"' }
   # The parameters panel; then with a value typed, so the parameter is locked and rebuilt.
   - id: session.parameters
     from: session
@@ -454,43 +400,11 @@ states:
       - { press: Enter }
       - { wait: 'region "Parameters" >> button "Unlock {length_param.label}"' }
       - { wait: 'region "Parameters" >> region "Rebuild" >> testid "rebuild-summary"' }
-  # Sketch on a face: a flat face picked by ID and the sketch panel open; then a circle
-  # cut into it, so it is a locked feature and the design rebuilt.
-  - id: session.sketch
-    from: session
+  # Undo took the hand edit back: the toast says so, with Redo.
+  - id: session.undone
+    from: session.parameters.locked
     steps:
-      - { fill: parts.select-by-id, text: "{sketch_face.id}" }
-      - { press: Enter }
-      - { click: canvas.sketch }
-      - { wait: 'region "Sketch" >> button "Cut circle"', enabled: true }
-  - id: session.sketch.made
-    from: session.sketch
-    steps:
-      - { click: sketch.submit }
-      - { wait: 'region "Sketch" >> testid "sketch-made"' }
-      - { wait: 'region "Sketch" >> region "Rebuild" >> testid "rebuild-summary"' }
-      - { wait: 'region "Parts" >> button "Lines of sketch_1"' }
-  # Modeling tools: the hole tool open with a flat face picked; then a hole added, so it
-  # is a locked feature, the design rebuilt, and undo has something to undo.
-  - id: session.modeling
-    from: session
-    steps:
-      - { fill: parts.select-by-id, text: "{sketch_face.id}" }
-      - { press: Enter }
-      - { click: "modeling.tool[2]" }
-      - { wait: 'region "Modeling" >> button "Add hole"', enabled: true }
-  - id: session.modeling.made
-    from: session.modeling
-    steps:
-      - { click: modeling.submit }
-      - { wait: 'region "Modeling" >> testid "edit-notice"' }
-      - { wait: 'region "Modeling" >> region "Rebuild" >> testid "rebuild-summary"' }
-      - { wait: 'region "Parts" >> button "Lines of hole_hand_1"' }
-  # Undo took the hole back: the toast says so, with Redo.
-  - id: session.modeling.undone
-    from: session.modeling.made
-    steps:
-      - { click: modeling.undo }
+      - { click: canvas.undo }
       - { wait: 'region "Canvas" >> status "Design history"' }
   # Claude's change didn't build (the mock's "Break the build" run): the banner over the last good model.
   - id: session.failed
@@ -536,8 +450,7 @@ states:
       - { click: canvas.checks }
       - { click: constraint.item }
       - { wait: 'region "Canvas" >> region "/^Constraint: /"' }
-  # Inspection tools: the section cut and its component menu, and the measure tool, before
-  # and after a pick (a click on the middle of the model).
+  # Inspection tools: the section cut and its component menu.
   - id: session.section
     screen: canvas inspection
     from: session
@@ -547,15 +460,6 @@ states:
   - id: session.section.components
     from: session.section
     steps: [{ click: canvas.section-through }]
-  - id: session.measure
-    screen: canvas inspection
-    from: session
-    steps: [{ click: canvas.measure }]
-  - id: session.measure.picked
-    from: session.measure
-    steps:
-      - { click_on: 'testid "viewer"' }
-      - { wait: 'region "Measure" >> button "Clear measurement"' }
   # Comments: the comment tool on and a click on the model (a draft comment there); the
   # comment pinned as a note (its thread open); then the comments list.
   - id: session.comment-draft
@@ -893,35 +797,6 @@ entries:
     expect:
       - value: { of: textbox "Message", contains: Dictated words }
       - visible: button "Dictate"
-  - id: composer.add-folder
-    screen: composer
-    role: button
-    name: Add folder
-    states: ["new*", "session*", gone]
-    except: ["*expanded*"]
-    expect:
-      - filechooser: { multiple: true, directory: true }
-  - id: composer.mode-manual
-    screen: composer
-    role: radio
-    name: Manual
-    within: radiogroup "Mode"
-    states: ["home*", "new*", "session*", gone, "demo*"]
-    except: ["*expanded*"]
-    expect:
-      - attribute: { name: aria-checked, value: "true" }
-      - attribute: { of: radio "Auto", name: aria-checked, value: "false" }
-  - id: composer.mode-auto
-    screen: composer
-    role: radio
-    name: Auto
-    within: radiogroup "Mode"
-    states: ["home*", "new*", "session*", gone, "demo*"]
-    except: ["*expanded*"]
-    before: [{ click: composer.mode-manual }]
-    expect:
-      - attribute: { name: aria-checked, value: "true" }
-      - attribute: { of: radio "Manual", name: aria-checked, value: "false" }
   # ---------------------------------------------------------------- Model and effort picker
   - id: picker.button
     screen: model and effort picker
@@ -1113,17 +988,6 @@ entries:
       - visible: button "Show canvas"
     # On a phone the toggle is always Show canvas: it switches to the canvas, and Close canvas back.
     phone: hidden
-  # Loading the next board revision: Claude starts the work without anyone typing, and the
-  # run's proposal shows in the chat. Hidden once loaded.
-  - id: workspace.load-revision
-    screen: workspace
-    role: button
-    name: Load next revision
-    within: region "Chat"
-    states: ["session*", new.question, new.answered, "demo*"]
-    expect:
-      - visible: region "Chat" >> list "Proposed changes"
-      - hidden: region "Chat" >> button "Load next revision"
   - id: workspace.show-canvas
     screen: workspace
     role: button
@@ -1421,16 +1285,6 @@ entries:
     expect:
       - attribute: { name: aria-expanded, value: "true" }
       - visible: text "/needs new code/"
-  - id: workspace.start-board
-    screen: new canvas
-    role: button
-    name: Start from a board file
-    within: region "Chat"
-    states: ["new*"]
-    except: ["*expanded*", new.question, new.answered, "new.spec*", new.editing, new.working, "new.queued*"]
-    expect:
-      - filechooser: { multiple: true, accept: .kicad_pcb, files: [sample.kicad_pcb] }
-      - visible: button "Remove sample.kicad_pcb"
   - id: workspace.start-cad
     screen: new canvas
     role: button
@@ -1900,52 +1754,6 @@ entries:
     expect:
       - filechooser: { multiple: true, files: [sample.step] }
       - visible: button "Remove sample.step"
-  # ---------------------------------------------------------------- Session canvas (a build on the mock API)
-  - id: canvas.revision
-    screen: session canvas
-    role: button
-    name: Revision
-    within: region "Canvas"
-    states: ["session*", new.question, new.answered]
-    expect:
-      - attribute: { name: aria-expanded, value: "true" }
-      - visible: region "Canvas" >> menu "Revisions"
-  - id: canvas.revision-option
-    screen: session canvas
-    role: menuitemradio
-    name: "{build.revision} {build.board.name} · Build {build.number}"
-    within: region "Canvas" >> menu "Revisions"
-    states: [session.revisions]
-    expect:
-      - hidden: menu "Revisions"
-      - attribute: { of: testid "viewer", name: data-build, value: "{build.id}" }
-      - attribute: { of: region "Canvas" >> button "Revision", name: aria-expanded, value: "false" }
-  - id: canvas.revision-option-previous
-    screen: session canvas
-    role: menuitemradio
-    name: "{previous_build.revision} {previous_build.board.name} · Build {previous_build.number}"
-    within: region "Canvas" >> menu "Revisions"
-    states: [session.revisions]
-    # The existing enclosure's build on the revision it was designed for (fixtures/previous-build.json).
-    expect:
-      - hidden: menu "Revisions"
-      - attribute: { of: testid "viewer", name: data-build, value: "{previous_build.id}" }
-      - visible: region "Canvas" >> button "Revision" >> text "{previous_build.revision}"
-  - id: canvas.compare
-    screen: session canvas
-    role: button
-    name: "Compare with {previous_build.revision}"
-    within: region "Canvas"
-    states: ["session*", new.question, new.answered]
-    # The conflict run has one build, on the newer revision: nothing to compare with.
-    except: ["session.conflict*"]
-    # Side by side with the build on the other revision, and the diff (fixtures/diff.json).
-    expect:
-      - attribute: { name: aria-pressed, value: "true" }
-      - attribute: { of: testid "compare-viewer", name: data-build, value: "{previous_build.id}" }
-      - attribute: { of: testid "viewer", name: data-compare, value: "{previous_build.id}" }
-      - visible: 'region "Changes" >> text "{diff.heading}"'
-      - visible: 'region "Changes" >> list "Feature changes" >> text "{diff.first_change}"'
   - id: canvas.unit-in
     screen: session canvas
     role: radio
@@ -1965,67 +1773,6 @@ entries:
     expect:
       - attribute: { name: aria-checked, value: "true" }
       - visible: region "Canvas" >> text "/ × .* mm$/"
-  - id: canvas.maps
-    screen: session canvas
-    role: button
-    name: Analysis maps
-    within: region "Canvas" >> toolbar "Canvas controls"
-    states: ["session*", new.question, new.answered]
-    expect:
-      - attribute: { name: aria-expanded, value: "true" }
-      - visible: region "Canvas" >> menu "Analysis maps"
-  - id: canvas.no-map
-    screen: session canvas
-    role: menuitemradio
-    name: No map
-    within: region "Canvas" >> menu "Analysis maps"
-    states: [session.maps]
-    test_in: session
-    # With a map shown: No map takes it off the model and hides its legend.
-    before:
-      - { click: canvas.maps }
-      - { click: "canvas.map[0]" }
-      - { wait: 'region "{maps.0.label} legend"' }
-      - { click: canvas.maps }
-    expect:
-      - hidden: menu "Analysis maps"
-      - hidden: region "{maps.0.label} legend"
-      - attribute: { of: testid "viewer", name: data-map, value: "" }
-  - id: canvas.map
-    screen: session canvas
-    each: maps
-    role: menuitemradio
-    name: "{it.label}"
-    within: region "Canvas" >> menu "Analysis maps"
-    states: [session.maps]
-    expect:
-      - hidden: menu "Analysis maps"
-      - visible: region "{it.label} legend"
-      - attribute: { of: testid "viewer", name: data-map, value: "{it.type}" }
-  - id: canvas.ask-fix
-    screen: session canvas
-    role: button
-    name: Ask Claude to fix
-    within: region "{flagged_map.label} legend" >> list "Flagged spots"
-    # One per flagged spot; the behaviour test sends the first. Disabled, saying why, while
-    # Claude is replying and while Claude's question is open (live-chat.spec.ts).
-    nth: 0
-    states: [session.map, session.map.sent]
-    expect:
-      - request: { method: POST, url: "/messages$" }
-      - visible: region "{flagged_map.label} legend" >> button "Sent to Claude"
-  - id: canvas.fix-sent
-    screen: session canvas
-    role: button
-    name: Sent to Claude
-    within: region "{flagged_map.label} legend" >> list "Flagged spots"
-    # Always disabled: a sent spot can't be sent again. Tested by sending one.
-    states: [session.map.sent]
-    test_in: session.map
-    action: [{ click: canvas.ask-fix }]
-    expect:
-      - attribute: { of: 'region "{flagged_map.label} legend" >> button "Sent to Claude"', name: disabled, value: "" }
-      - attribute: { of: 'region "{flagged_map.label} legend" >> button "Sent to Claude"', name: title, value: "Already sent to Claude: the fix request is in the chat" }
   - id: canvas.export
     screen: session canvas
     role: button
@@ -2042,55 +1789,7 @@ entries:
     within: region "Export"
     states: [session.export, session.exported]
     expect:
-      - attribute: { of: region "Export", name: data-formats, value: "stl,build_note" }
-  - id: canvas.export-format-stl
-    screen: session canvas
-    role: checkbox
-    name: STL
-    within: region "Export"
-    states: [session.export, session.exported]
-    expect:
-      - attribute: { of: region "Export", name: data-formats, value: "step,build_note" }
-  - id: canvas.export-format-3mf
-    screen: session canvas
-    role: checkbox
-    name: 3MF
-    within: region "Export"
-    states: [session.export, session.exported]
-    expect:
-      - attribute: { of: region "Export", name: data-formats, value: "step,stl,3mf,build_note" }
-  - id: canvas.export-format-obj
-    screen: session canvas
-    role: checkbox
-    name: OBJ
-    within: region "Export"
-    states: [session.export, session.exported]
-    expect:
-      - attribute: { of: region "Export", name: data-formats, value: "step,stl,obj,build_note" }
-  - id: canvas.export-format-glb
-    screen: session canvas
-    role: checkbox
-    name: GLB
-    within: region "Export"
-    states: [session.export, session.exported]
-    expect:
-      - attribute: { of: region "Export", name: data-formats, value: "step,stl,glb,build_note" }
-  - id: canvas.export-format-dxf
-    screen: session canvas
-    role: checkbox
-    name: DXF
-    within: region "Export"
-    states: [session.export, session.exported]
-    expect:
-      - attribute: { of: region "Export", name: data-formats, value: "step,stl,dxf,build_note" }
-  - id: canvas.export-format-pdf
-    screen: session canvas
-    role: checkbox
-    name: PDF drawing
-    within: region "Export"
-    states: [session.export, session.exported]
-    expect:
-      - attribute: { of: region "Export", name: data-formats, value: "step,stl,pdf,build_note" }
+      - attribute: { of: region "Export", name: data-formats, value: "build_note" }
   - id: canvas.export-format-source
     screen: session canvas
     role: checkbox
@@ -2098,7 +1797,7 @@ entries:
     within: region "Export"
     states: [session.export, session.exported]
     expect:
-      - attribute: { of: region "Export", name: data-formats, value: "step,stl,source,build_note" }
+      - attribute: { of: region "Export", name: data-formats, value: "step,source,build_note" }
   - id: canvas.export-build-note
     screen: session canvas
     role: checkbox
@@ -2106,7 +1805,7 @@ entries:
     within: region "Export"
     states: [session.export, session.exported]
     expect:
-      - attribute: { of: region "Export", name: data-formats, value: "step,stl" }
+      - attribute: { of: region "Export", name: data-formats, value: "step" }
   - id: canvas.export-cancel
     screen: session canvas
     role: button
@@ -2147,36 +1846,6 @@ entries:
     expect:
       - attribute: { name: aria-expanded, value: "true" }
       - visible: region "Constraints" >> text "{checks.summary.pass} pass · {checks.summary.fail} fail · {checks.summary.untested} untested"
-  - id: canvas.history
-    screen: session canvas
-    role: button
-    name: History
-    within: region "Canvas" >> toolbar "Canvas controls"
-    states: ["session*", new.question, new.answered]
-    # Every build, newest first.
-    expect:
-      - attribute: { name: aria-expanded, value: "true" }
-      - visible: 'region "History" >> list "Builds" >> text "Build {build.number}"'
-      - visible: 'region "History" >> list "Builds" >> text "Build {previous_build.number}"'
-  - id: canvas.history-show
-    screen: session canvas
-    role: button
-    name: "Show {previous_build.revision} · Build {previous_build.number}"
-    within: region "History" >> list "Builds"
-    states: [session.history]
-    expect:
-      - attribute: { of: testid "viewer", name: data-build, value: "{previous_build.id}" }
-  # Undo: the earlier build's design comes back as a new build, restored from it.
-  - id: canvas.history-restore
-    screen: session canvas
-    role: button
-    name: "Restore {previous_build.revision} · Build {previous_build.number}"
-    within: region "History" >> list "Builds"
-    states: [session.history]
-    expect:
-      - request: { method: POST, url: "/builds/{previous_build.id}/restore$" }
-      - attribute: { of: testid "viewer", name: data-restored-from, value: "{previous_build.id}" }
-      - visible: 'region "History" >> text "Restored from Build {previous_build.number}"'
   - id: canvas.code
     screen: session canvas
     role: button
@@ -2220,29 +1889,6 @@ entries:
     expect:
       - attribute: { of: region "Code" >> textbox "Generator code", name: data-edited, value: "false" }
       - value: { of: region "Code" >> textbox "Generator code", contains: "{build_source.first_line}" }
-  - id: canvas.explode
-    screen: session canvas
-    role: button
-    name: Explode
-    within: region "Canvas" >> toolbar "Canvas controls"
-    states: ["session*"]
-    # Compare shows both builds assembled.
-    except: ["session.compare*"]
-    test_in: session
-    expect:
-      - attribute: { name: aria-pressed, value: "true" }
-      - attribute: { of: testid "viewer", name: data-explode, value: "100" }
-      - visible: region "Canvas" >> slider "Explode amount"
-  - id: canvas.explode-amount
-    screen: session canvas
-    role: slider
-    name: Explode amount
-    within: region "Canvas"
-    states: ["session.exploded*"]
-    action: [{ fill: self, text: "40" }]
-    expect:
-      - attribute: { of: testid "viewer", name: data-explode, value: "40" }
-      - visible: region "Canvas" >> text "40%"
   - id: canvas.settings
     screen: session canvas
     role: button
@@ -2301,111 +1947,24 @@ entries:
       - request: { method: PATCH, url: "/parameters/{length_param.name}$", body: { locked: false } }
       - hidden: region "Parameters" >> button "Unlock {length_param.label}"
       - visible: region "Parameters" >> text "/{length_param.label} is Claude's again/"
-  # Sketch on a face.
-  - id: canvas.sketch
-    screen: session canvas
-    role: button
-    name: Sketch
-    within: region "Canvas" >> toolbar "Canvas controls"
-    states: ["session*"]
-    test_in: session
-    expect:
-      - attribute: { name: aria-pressed, value: "true" }
-      - visible: region "Canvas" >> region "Sketch" >> text "/Pick a flat face on the model/"
-  - id: sketch.shape
-    screen: session canvas
-    each: sketch_shapes
-    role: radio
-    name: "{it.label}"
-    within: region "Sketch" >> radiogroup "Shape"
-    states: ["session.sketch*"]
-    test_in: session.sketch
-    before: [{ click_on: 'region "Sketch" >> radio "{it.other}"' }]
-    expect:
-      - attribute: { name: aria-checked, value: "true" }
-      - visible: region "Sketch" >> button "Cut {it.id}"
-  - id: sketch.operation
-    screen: session canvas
-    each: sketch_operations
-    role: radio
-    name: "{it.label}"
-    within: region "Sketch" >> radiogroup "Operation"
-    states: ["session.sketch*"]
-    test_in: session.sketch
-    before: [{ click_on: 'region "Sketch" >> radio "{it.other}"' }]
-    expect:
-      - attribute: { name: aria-checked, value: "true" }
-      - visible: region "Sketch" >> button "{it.label} circle"
-  # The circle's fields (the panel's first shape): typed sizes and position.
-  - id: sketch.field
-    screen: session canvas
-    each: sketch_fields
-    role: textbox
-    name: "{it}"
-    within: region "Sketch"
-    states: ["session.sketch*"]
-    test_in: session.sketch
-    action: [{ fill: self, text: "2.5" }]
-    expect:
-      - value: { equals: "2.5" }
-  - id: sketch.submit
-    screen: session canvas
-    role: button
-    name: Cut circle
-    within: region "Sketch"
-    states: ["session.sketch*"]
-    test_in: session.sketch
-    expect:
-      - request: { method: POST, url: "/sketches$", body: { face_id: "{sketch_face.id}", shape: circle, operation: cut } }
-      - visible: region "Sketch" >> testid "sketch-made"
-      - visible: region "Sketch" >> region "Rebuild"
-  # The sketched feature in the tree, locked, with its line link into the code.
-  - id: sketch.lines
-    screen: session canvas
-    role: button
-    name: Lines of sketch_1
-    within: region "Parts" >> list "Part list"
-    states: [session.sketch.made]
-    expect:
-      - visible: region "Code" >> testid "code-feature"
-      - visible: region "Code" >> text "/sketch_1/"
-  # Modeling tools: the toolbar down the right of the canvas, one button per tool, then
-  # undo and redo over the build history.
-  - id: modeling.tool
-    screen: session canvas
-    each: modeling_tools
-    role: button
-    name: "{it.label}"
-    within: region "Canvas" >> toolbar "Modeling tools"
-    states: ["session*"]
-    # Hidden while comparing or showing an analysis map.
-    except: [session.compare, session.map, session.map.sent]
-    test_in: session
-    expect:
-      - attribute: { name: aria-pressed, value: "true" }
-      - visible: region "Canvas" >> region "Modeling"
-  - id: modeling.undo
+  - id: canvas.undo
     screen: session canvas
     role: button
     name: Undo
-    within: region "Canvas" >> toolbar "Modeling tools"
+    within: region "Canvas" >> toolbar "Canvas controls"
     states: ["session*"]
-    # Hidden while comparing or showing an analysis map.
-    except: [session.compare, session.map, session.map.sent]
-    test_in: session.modeling.made
+    test_in: session.parameters.locked
     expect:
       - request: { method: POST, url: "/history/undo$" }
       - visible: 'region "Canvas" >> status "Design history"'
-  - id: modeling.redo
+  - id: canvas.redo
     screen: session canvas
     role: button
     name: Redo
-    within: region "Canvas" >> toolbar "Modeling tools"
+    within: region "Canvas" >> toolbar "Canvas controls"
     states: ["session*"]
-    # Hidden while comparing or showing an analysis map.
-    except: [session.compare, session.map, session.map.sent]
-    test_in: session.modeling.made
-    before: [{ click: modeling.undo }, { wait: 'region "Canvas" >> toolbar "Modeling tools" >> button "Redo"', enabled: true }]
+    test_in: session.parameters.locked
+    before: [{ click: canvas.undo }, { wait: 'region "Canvas" >> toolbar "Canvas controls" >> button "Redo"', enabled: true }]
     expect:
       - request: { method: POST, url: "/history/redo$" }
   # The toast after an undo or redo: "Undid: You: hole ⌀3 mm", with Redo (Undo after a redo).
@@ -2414,7 +1973,7 @@ entries:
     role: button
     name: Redo
     within: region "Canvas" >> status "Design history"
-    states: [session.modeling.undone]
+    states: [session.undone]
     expect:
       - request: { method: POST, url: "/history/redo$" }
   - id: history.toast-dismiss
@@ -2422,7 +1981,7 @@ entries:
     role: button
     name: Dismiss
     within: region "Canvas" >> status "Design history"
-    states: [session.modeling.undone]
+    states: [session.undone]
     expect:
       - hidden: 'region "Canvas" >> status "Design history"'
   # The newest build failed: said plainly over the last good model, with Undo and a fix.
@@ -2442,85 +2001,6 @@ entries:
     states: [session.failed]
     expect:
       - request: { method: POST, url: "/messages$" }
-  - id: modeling.insert
-    screen: session canvas
-    role: checkbox
-    name: Heat-set insert
-    within: region "Modeling"
-    states: ["session.modeling*"]
-    test_in: session.modeling
-    expect:
-      - hidden: region "Modeling" >> textbox "Diameter"
-  # The hole's fields: typed sizes and position.
-  - id: modeling.field
-    screen: session canvas
-    each: hole_fields
-    role: textbox
-    name: "{it}"
-    within: region "Modeling"
-    states: ["session.modeling*"]
-    test_in: session.modeling
-    action: [{ fill: self, text: "1.5" }]
-    expect:
-      - value: { equals: "1.5" }
-  - id: modeling.submit
-    screen: session canvas
-    role: button
-    name: Add hole
-    within: region "Modeling"
-    states: ["session.modeling*"]
-    test_in: session.modeling
-    expect:
-      - request: { method: POST, url: "/edits$", body: { face_id: "{sketch_face.id}", kind: hole } }
-      - visible: region "Modeling" >> testid "edit-notice"
-      - visible: region "Modeling" >> region "Rebuild"
-  # The rebuild fails checks: Claude can be asked for a fix that keeps the edit. Disabled,
-  # saying why, while Claude replies or its question is open (modeling.spec.ts answers it).
-  - id: modeling.ask-fix
-    screen: session canvas
-    role: button
-    name: Ask Claude for a fix that keeps my edit
-    within: region "Modeling"
-    # The panel keeps the last edit's rebuild open, also after an undo.
-    states: [session.modeling.made, session.modeling.undone]
-    test_in: session.modeling.made
-    expect:
-      - request: { method: POST, url: "/messages$" }
-      - visible: region "Modeling" >> button "Asked Claude for a fix"
-  - id: modeling.edit
-    screen: session canvas
-    role: button
-    name: Edit hole_hand_1
-    within: region "Modeling" >> region "Hand edits"
-    states: [session.modeling.made]
-    expect:
-      - visible: region "Modeling" >> button "Save hole_hand_1"
-  - id: modeling.suppress
-    screen: session canvas
-    role: button
-    name: Suppress hole_hand_1
-    within: region "Modeling" >> region "Hand edits"
-    states: [session.modeling.made]
-    expect:
-      - request: { method: PATCH, url: "/edits/hole_hand_1$", body: { suppressed: true } }
-  - id: modeling.delete
-    screen: session canvas
-    role: button
-    name: Delete hole_hand_1
-    within: region "Modeling" >> region "Hand edits"
-    states: [session.modeling.made]
-    expect:
-      - request: { method: DELETE, url: "/edits/hole_hand_1$" }
-  # The modeled feature in the tree, locked, with its line link into the code.
-  - id: modeling.lines
-    screen: session canvas
-    role: button
-    name: Lines of hole_hand_1
-    within: region "Parts" >> list "Part list"
-    states: [session.modeling.made]
-    expect:
-      - visible: region "Code" >> testid "code-feature"
-      - visible: region "Code" >> text "/hole_hand_1/"
   # Dimensions on the model: clicking one types a value, dragging a face of a draggable
   # feature changes its parameter (frontend/e2e/dimensions.spec.ts drags).
   - id: canvas.dimensions
@@ -3091,15 +2571,6 @@ entries:
     action: [{ press: "?" }]
     expect:
       - visible: region "Canvas" >> dialog "Keyboard shortcuts"
-  - id: canvas.shortcut-select
-    screen: session canvas
-    role: shortcut
-    key: S
-    states: [session]
-    before: [{ focus: canvas.view-home }]
-    action: [{ press: s }]
-    expect:
-      - focused: region "Parts" >> radiogroup "Select" >> radio "Face"
   - id: canvas.shortcut-hide
     screen: canvas selection
     role: shortcut
@@ -3157,7 +2628,6 @@ entries:
     name: Proposed changes
     within: region "Canvas"
     states: ["session*", new.answered]
-    except: ["session.compare*"]
     test_in: session
     expect:
       - attribute: { name: aria-expanded, value: "true" }
@@ -3170,7 +2640,7 @@ entries:
     within: region "Canvas"
     states: ["session*", new.answered]
     # Pins are on the build the changes apply to; a hand edit rebuilds without them.
-    except: ["session.compare*", session.parameters.locked, session.sketch.made, session.modeling.made, session.modeling.undone]
+    except: [session.parameters.locked, session.undone]
     test_in: session
     expect:
       - attribute: { name: aria-pressed, value: "true" }
@@ -3197,6 +2667,27 @@ entries:
     expect:
       - request: { method: POST, url: "/changes$", body: { accept: [], reject: ["{it.id}"] } }
       - attribute: { name: title, value: Already rejected }
+  # The proposal's check counts open the Constraints panel on their group.
+  - id: changes.open-checks
+    screen: session canvas
+    role: button
+    name: "/^Open constraints: \\d+ (pass|fail|untested|not applicable)$/"
+    within: region "Canvas" >> region "Proposed changes"
+    nth: 0
+    states: [session.changes]
+    expect:
+      - visible: region "Canvas" >> region "Constraints"
+  # So do the rebuild's after a hand edit.
+  - id: parameters.open-checks
+    screen: session canvas
+    role: button
+    name: "/^Open constraints: \\d+ (pass|fail|untested|not applicable)$/"
+    within: region "Canvas" >> region "Parameters" >> region "Rebuild"
+    nth: 0
+    states: [session.parameters.locked, session.undone]
+    test_in: session.parameters.locked
+    expect:
+      - visible: region "Canvas" >> region "Constraints"
   # ---------------------------------------------------------------- Session canvas: comments
   # Comments pinned to geometry: the comment tool, a draft, a pinned thread and the list.
   # Hidden while comparing.
@@ -3206,7 +2697,6 @@ entries:
     name: Comment
     within: region "Canvas" >> toolbar "Comment tools"
     states: ["session*"]
-    except: ["session.compare*"]
     test_in: session
     expect:
       - attribute: { name: aria-pressed, value: "true" }
@@ -3217,7 +2707,6 @@ entries:
     name: Comments
     within: region "Canvas" >> toolbar "Comment tools"
     states: ["session*"]
-    except: ["session.compare*"]
     test_in: session
     expect:
       - attribute: { name: aria-expanded, value: "true" }
@@ -3348,8 +2837,6 @@ entries:
     name: "{it.label}: {it.status}"
     within: region "Canvas"
     states: ["session*", new.question, new.answered]
-    # Measuring hides the pins, so a click on the model measures.
-    except: ["session.measure*"]
     # A pin stays on its spot even under a panel: pick its place in the Constraints panel first,
     # which centres the view on it, and close the panel and the card.
     before:
@@ -3450,16 +2937,6 @@ entries:
     expect:
       - attribute: { name: aria-checked, value: "true" }
       - attribute: { of: testid "viewer", name: data-layout, value: assembled }
-  - id: canvas.measure
-    screen: session canvas
-    role: button
-    name: Measure
-    within: region "Canvas" >> toolbar "Canvas controls"
-    states: ["session*", new.question, new.answered]
-    expect:
-      - attribute: { name: aria-pressed, value: "true" }
-      - attribute: { of: testid "viewer", name: data-measuring, value: "true" }
-      - visible: region "Canvas" >> region "Measure"
   - id: canvas.section
     screen: session canvas
     role: button
@@ -3470,15 +2947,6 @@ entries:
       - attribute: { name: aria-pressed, value: "true" }
       - attribute: { of: testid "viewer", name: data-section, value: "/^[^:]+:x:/" }
       - visible: region "Canvas" >> region "Section" >> testid "section-clearance"
-  - id: canvas.xray
-    screen: session canvas
-    role: button
-    name: X-ray
-    within: region "Canvas" >> toolbar "Canvas controls"
-    states: ["session*", new.question, new.answered]
-    expect:
-      - attribute: { name: aria-pressed, value: "true" }
-      - attribute: { of: testid "viewer", name: data-xray, value: "true" }
   - id: canvas.section-through
     screen: canvas inspection
     role: button
@@ -3532,34 +3000,6 @@ entries:
     expect:
       - attribute: { name: aria-checked, value: "true" }
       - attribute: { of: testid "viewer", name: data-section, value: "/:x:/" }
-  # In measure mode a click on the model picks what to measure from (or to).
-  - id: canvas.measure-pick
-    screen: canvas inspection
-    role: pointer
-    key: click on the model while measuring
-    states: [session.measure]
-    action: [{ click_on: 'testid "viewer"' }]
-    expect:
-      - visible: region "Measure" >> testid "measure-from"
-      - visible: region "Measure" >> button "Clear measurement"
-  - id: canvas.measure-clear
-    screen: canvas inspection
-    role: button
-    name: Clear measurement
-    within: region "Canvas" >> region "Measure"
-    states: [session.measure.picked]
-    expect:
-      - hidden: region "Measure" >> testid "measure-from"
-      - visible: region "Measure" >> text "Click a face, a component or a corner to measure from."
-  - id: canvas.shortcut-measure
-    screen: session canvas
-    role: shortcut
-    key: M
-    states: [session]
-    before: [{ focus: canvas.view-home }]
-    action: [{ press: m }]
-    expect:
-      - attribute: { of: region "Canvas" >> toolbar "Canvas controls" >> button "Measure", name: aria-pressed, value: "true" }
   - id: canvas.shortcut-section
     screen: session canvas
     role: shortcut
@@ -3569,16 +3009,6 @@ entries:
     action: [{ press: x }]
     expect:
       - attribute: { of: region "Canvas" >> toolbar "Canvas controls" >> button "Section cut", name: aria-pressed, value: "true" }
-  - id: canvas.shortcut-select-measuring
-    screen: session canvas
-    role: shortcut
-    key: S
-    states: [session.measure]
-    before: [{ focus: canvas.view-home }]
-    action: [{ press: s }]
-    expect:
-      - attribute: { of: testid "viewer", name: data-measuring, value: "false" }
-      - hidden: region "Canvas" >> region "Measure"
   # ---------------------------------------------------------------- Session chat
   - id: chat.build-card
     screen: chat
@@ -3600,7 +3030,6 @@ entries:
     name: "/^Build {previous_build.number} /"
     within: region "Chat"
     states: ["session*", new.question, new.answered]
-    except: ["session.compare*"]
     test_in: new.question
     expect:
       - visible: region "Canvas"
@@ -3630,136 +3059,20 @@ entries:
       # The rebuild's own build, not the one the session had (its ID differs between the mock
       # and the real backend).
       - attribute: { of: testid "viewer", name: data-build, value: "/^(?!{build.id}$)build-\\S+$/" }
-  # ---------------------------------------------------------------- Canvas selection, hide and isolate
-  - id: parts.pick-face
-    screen: canvas selection
-    role: radio
-    name: Face
-    within: region "Parts" >> radiogroup "Select"
-    states: ["session*", new.question, new.answered]
-    # The compare view replaces the parts panel with the second build.
-    except: ["session.compare*"]
-    before: [{ click: parts.pick-part }]
-    expect:
-      # Each filter says what a click picks.
-      - attribute: { name: title, value: "Click a face on the model" }
-      - attribute: { name: aria-checked, value: "true" }
-      - attribute: { of: testid "viewer", name: data-pick, value: face }
-  - id: parts.pick-edge
-    screen: canvas selection
-    role: radio
-    name: Edge
-    within: region "Parts" >> radiogroup "Select"
-    states: ["session*", new.question, new.answered]
-    # The compare view replaces the parts panel with the second build.
-    except: ["session.compare*"]
-    expect:
-      # Each filter says what a click picks.
-      - attribute: { name: title, value: "Click an edge" }
-      - attribute: { name: aria-checked, value: "true" }
-      - attribute: { of: testid "viewer", name: data-pick, value: edge }
-  - id: parts.pick-part
-    screen: canvas selection
-    role: radio
-    name: Part
-    within: region "Parts" >> radiogroup "Select"
-    states: ["session*", new.question, new.answered]
-    # The compare view replaces the parts panel with the second build.
-    except: ["session.compare*"]
-    expect:
-      # Each filter says what a click picks.
-      - attribute: { name: title, value: "Click a whole part" }
-      - attribute: { name: aria-checked, value: "true" }
-      - attribute: { of: testid "viewer", name: data-pick, value: part }
-  - id: parts.pick-component
-    screen: canvas selection
-    role: radio
-    name: Component
-    within: region "Parts" >> radiogroup "Select"
-    states: ["session*", new.question, new.answered]
-    # The compare view replaces the parts panel with the second build.
-    except: ["session.compare*"]
-    expect:
-      # Each filter says what a click picks.
-      - attribute: { name: title, value: "Click a board component" }
-      - attribute: { name: aria-checked, value: "true" }
-      - attribute: { of: testid "viewer", name: data-pick, value: component }
-  - id: parts.box-select
-    screen: canvas selection
+  # A build card's check counts (and a proposal's): each opens the canvas's Constraints panel
+  # on its group, showing the canvas first if it is closed. The first count is "pass": All pins.
+  - id: chat.open-checks
+    screen: chat
     role: button
-    name: Box select
-    within: region "Parts"
-    states: ["session*", new.question, new.answered]
-    except: [session.box, "session.compare*"]
+    name: "/^Open constraints: \\d+ (pass|fail|untested|not applicable)$/"
+    within: region "Chat"
+    nth: 0
+    states: ["session*", new.question, new.answered, "demo*"]
+    test_in: new.question
+    before: [{ click: canvas.close }]
     expect:
-      - attribute: { name: aria-pressed, value: "true" }
-      - attribute: { of: testid "viewer", name: data-box, value: "true" }
-      # Box select says how to use it and how to stop.
-      - visible: region "Parts" >> text "Drag on the model · Esc to stop"
-  - id: parts.box-select-off
-    screen: canvas selection
-    role: button
-    name: Box select
-    within: region "Parts"
-    states: [session.box]
-    expect:
-      - attribute: { name: aria-pressed, value: "false" }
-      - attribute: { of: testid "viewer", name: data-box, value: "false" }
-  - id: parts.select-by-id
-    screen: canvas selection
-    role: textbox
-    name: Select by ID
-    within: region "Parts"
-    states: ["session*", new.question, new.answered]
-    # The compare view replaces the parts panel with the second build.
-    except: ["session.compare*"]
-    action: [{ fill: self, text: "{faces.0.id}" }, { press: Enter }]
-    expect:
-      - attribute: { of: testid "viewer", name: data-selected, value: "{faces.0.id}" }
-      - visible: region "Chat" >> testid "selection-chip" >> text "{faces.0.feature}"
-  - id: parts.select-by-id-not-found
-    screen: canvas selection
-    role: textbox
-    name: Select by ID
-    within: region "Parts"
-    states: ["session*", new.question, new.answered]
-    # The compare view replaces the parts panel with the second build.
-    except: ["session.compare*"]
-    action: [{ fill: self, text: no-such-id }, { press: Enter }]
-    expect:
-      - attribute: { name: aria-invalid, value: "true" }
-      - visible: region "Parts" >> text "No part, face, edge or component with that ID."
-  - id: parts.find
-    screen: canvas selection
-    role: textbox
-    name: Find in model
-    within: region "Parts"
-    states: ["session*", new.question, new.answered]
-    except: ["session.compare*"]
-    action: [{ fill: self, text: low draft }, { press: Enter }]
-    expect:
-      - attribute: { of: testid "find-result", name: data-status, value: found }
-      - visible: testid "find-understood"
-      - attribute: { of: testid "viewer", name: data-selected, value: "/./" }
-  - id: parts.find-unclear
-    screen: canvas selection
-    role: textbox
-    name: Find in model
-    within: region "Parts"
-    states: ["session*", new.question, new.answered]
-    except: ["session.compare*"]
-    action: [{ fill: self, text: purple widgets }, { press: Enter }]
-    expect:
-      - attribute: { of: testid "find-result", name: data-status, value: unclear }
-      - visible: testid "find-question"
-  - id: parts.find-send
-    screen: canvas selection
-    role: button
-    name: Send to chat
-    within: region "Parts"
-    states: ["session.found"]
-    expect:
-      - visible: region "Chat" >> testid "selection-chip"
+      - visible: region "Canvas" >> region "Constraints"
+      - attribute: { of: region "Constraints" >> radio "All", name: aria-checked, value: "true" }
   - id: parts.select
     screen: canvas selection
     each: parts
@@ -3767,8 +3080,6 @@ entries:
     name: "Select {it}"
     within: region "Parts" >> list "Part list"
     states: ["session*", new.question, new.answered]
-    # The compare view replaces the parts panel with the second build.
-    except: ["session.compare*"]
     expect:
       - attribute: { name: aria-pressed, value: "true" }
       - attribute: { of: testid "viewer", name: data-selected, value: "{it}" }
@@ -3780,8 +3091,6 @@ entries:
     name: "Transparent: {it}"
     within: region "Parts" >> list "Part list"
     states: ["session*", new.question, new.answered]
-    # The compare view replaces the parts panel with the second build.
-    except: ["session.compare*"]
     expect:
       - attribute: { name: aria-pressed, value: "true" }
       - attribute: { of: testid "viewer", name: data-transparent, value: "{it}" }
@@ -3792,8 +3101,6 @@ entries:
     name: "Isolate: {it}"
     within: region "Parts" >> list "Part list"
     states: ["session*", new.question, new.answered]
-    # The compare view replaces the parts panel with the second build.
-    except: ["session.compare*"]
     expect:
       - attribute: { name: aria-pressed, value: "true" }
       - attribute: { of: 'region "Parts" >> button "Hide: {it}"', name: aria-pressed, value: "false" }
@@ -3804,8 +3111,6 @@ entries:
     name: "Hide: {it}"
     within: region "Parts" >> list "Part list"
     states: ["session*", new.question, new.answered]
-    # The compare view replaces the parts panel with the second build.
-    except: ["session.compare*"]
     expect:
       - attribute: { name: aria-pressed, value: "true" }
       - attribute: { of: testid "viewer", name: data-hidden, value: "{it}" }
@@ -3818,7 +3123,6 @@ entries:
     name: "Select {board_part}"
     within: region "Parts" >> list "Part list"
     states: ["session*"]
-    except: ["session.compare*"]
     expect:
       - attribute: { name: aria-pressed, value: "true" }
       - attribute: { of: testid "viewer", name: data-selected, value: "{board_part}" }
@@ -3829,7 +3133,6 @@ entries:
     name: "Transparent: {board_part}"
     within: region "Parts" >> list "Part list"
     states: ["session*"]
-    except: ["session.compare*"]
     expect:
       - attribute: { name: aria-pressed, value: "true" }
       - attribute: { of: testid "viewer", name: data-transparent, value: "{board_part}" }
@@ -3839,7 +3142,6 @@ entries:
     name: "Isolate: {board_part}"
     within: region "Parts" >> list "Part list"
     states: ["session*"]
-    except: ["session.compare*"]
     expect:
       - attribute: { name: aria-pressed, value: "true" }
       - attribute: { of: 'region "Parts" >> button "Hide: {board_part}"', name: aria-pressed, value: "false" }
@@ -3850,7 +3152,6 @@ entries:
     name: "Hide: {board_part}"
     within: region "Parts" >> list "Part list"
     states: ["session*"]
-    except: ["session.compare*"]
     expect:
       - attribute: { name: aria-pressed, value: "true" }
       - attribute: { of: testid "viewer", name: data-hidden, value: "{board_part}" }
@@ -3861,7 +3162,6 @@ entries:
     name: "/^Components \\d+$/"
     within: region "Parts" >> list "Part list"
     states: ["session*"]
-    except: ["session.compare*"]
     expect:
       - attribute: { name: aria-expanded, value: "true" }
       - visible: region "Parts" >> list "Components"
@@ -3926,8 +3226,6 @@ entries:
     name: "Select feature: {it.tag}"
     within: region "Parts" >> list "Part list"
     states: ["session*", new.question, new.answered]
-    # The compare view replaces the parts panel with the second build.
-    except: ["session.compare*"]
     expect:
       - attribute: { of: testid "viewer", name: data-selected, value: "{it.face_ids}" }
       - attribute: { name: aria-current, value: "true" }
@@ -3939,8 +3237,6 @@ entries:
     name: "Lines of {it.tag}"
     within: region "Parts" >> list "Part list"
     states: ["session*", new.question, new.answered]
-    # The compare view replaces the parts panel with the second build.
-    except: ["session.compare*"]
     expect:
       - visible: region "Code" >> testid "code-feature"
       - attribute: { of: region "Code" >> testid "code-source", name: data-lines, value: "{it.lines_attr}" }
@@ -3959,12 +3255,10 @@ entries:
     role: pointer
     key: shift-click adds to the selection
     states: [session]
-    before:
-      - { fill: parts.select-by-id, text: "{edges.0.id}" }
-      - { press: Enter }
+    before: [{ click: "parts.select[0]" }]
     action: [{ click_on: testid "viewer", modifiers: [Shift], position: [378, 380] }]
     expect:
-      - attribute: { of: testid "viewer", name: data-selected, value: "/^{edges.0.id},[^,]+$/" }
+      - attribute: { of: testid "viewer", name: data-selected, value: "/^{parts.0},[^,]+$/" }
   - id: canvas.shift-click-remove
     screen: canvas selection
     role: pointer
@@ -3982,32 +3276,10 @@ entries:
     role: pointer
     key: Cmd-click (Ctrl-click) adds to the selection
     states: [session]
-    before:
-      - { fill: parts.select-by-id, text: "{edges.0.id}" }
-      - { press: Enter }
+    before: [{ click: "parts.select[0]" }]
     action: [{ click_on: testid "viewer", modifiers: [ControlOrMeta], position: [378, 380] }]
     expect:
-      - attribute: { of: testid "viewer", name: data-selected, value: "/^{edges.0.id},[^,]+$/" }
-  - id: canvas.box-drag
-    screen: canvas selection
-    role: pointer
-    key: in box select, dragging a box selects what is inside it
-    states: [session.box]
-    action: [{ drag_on: testid "viewer", from: [0.97, 0.85], to: [0.3, 0.2] }]
-    expect:
-      - attribute: { of: testid "viewer", name: data-selected, value: "/,/" }
-      - visible: region "Chat" >> testid "selection-chip" >> list "Selected items"
-  - id: canvas.box-drag-add
-    screen: canvas selection
-    role: pointer
-    key: in box select, a box drawn with Shift held adds to the selection
-    states: [session.box]
-    before:
-      - { fill: parts.select-by-id, text: "{edges.0.id}" }
-      - { press: Enter }
-    action: [{ drag_on: testid "viewer", from: [0.97, 0.85], to: [0.3, 0.2], modifiers: [Shift] }]
-    expect:
-      - attribute: { of: testid "viewer", name: data-selected, value: "/^{edges.0.id},.+/" }
+      - attribute: { of: testid "viewer", name: data-selected, value: "/^{parts.0},[^,]+$/" }
   - id: canvas.click-empty
     screen: canvas selection
     role: pointer
@@ -4038,7 +3310,7 @@ entries:
     role: button
     name: Clear selection
     within: region "Chat"
-    states: ["session.selected*", "session.sketch*", "session.modeling*"]
+    states: ["session.selected*"]
     expect:
       - attribute: { of: testid "viewer", name: data-selected, value: "" }
       - hidden: region "Chat" >> testid "selection-chip"

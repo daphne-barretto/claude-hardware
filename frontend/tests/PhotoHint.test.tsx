@@ -7,7 +7,7 @@ afterEach(cleanup);
 
 describe("photo to part", () => {
   it("finds the staged photos by their picked type or their name", () => {
-    rememberFiles([new File(["x"], "IMG_0042", { type: "image/jpeg" })], "image");
+    rememberFiles([new File(["x"], "IMG_0042", { type: "image/jpeg" })]);
     expect(stagedPhotos(["board.kicad_pcb", "mug.JPG", "IMG_0042", "scan.heic"])).toEqual({
       photos: ["mug.JPG", "IMG_0042", "scan.heic"],
       unreadable: ["scan.heic"],

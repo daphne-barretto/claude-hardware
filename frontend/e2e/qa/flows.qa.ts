@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
-import { BOX, boardlessSession, boardDemo, openBoardDemo, exampleSession, expect, getSession, openPage, openSession, send, settle, test } from "./live";
-import { clickModel, MOVE } from "./states";
+import { BOX, boardlessSession, boardDemo, openBoardDemo, expect, getSession, openPage, openSession, settle, test } from "./live";
+import { clickModel } from "./states";
 import { statSync } from "node:fs";
 
 // End-to-end flows across the features that were built separately, on the real backend with a
@@ -53,31 +53,6 @@ test("a board-less design asks for no board", async ({ page, monitor }) => {
 });
 
 for (const kind of ["board", "boardless"] as const) {
-  test(`${kind}: a hole added with the modeling tools rebuilds, and Undo and Redo restore each design`, async ({ page, monitor }) => {
-    const sid = kind === "board" ? await openBoardDemo(page) : await boardlessSession(page);
-    await openSession(page, sid);
-    const before = (await builds(page, sid)).length;
-    await clickModel(page);
-    await canvas(page).getByRole("toolbar", { name: "Modeling tools" }).getByRole("button", { name: "Hole", exact: true }).click();
-    const panel = page.getByRole("region", { name: "Modeling" });
-    await expect(panel.getByRole("button", { name: "Add hole" })).toBeEnabled({ timeout: 15_000 });
-    await panel.getByRole("button", { name: "Add hole" }).click();
-    await expect(panel.getByTestId("edit-notice")).toBeVisible({ timeout: 60_000 });
-    await expect.poll(async () => (await builds(page, sid)).length, { timeout: 60_000 }).toBe(before + 1);
-    const made = (await builds(page, sid)).at(-1)!;
-    expect(made.status).toBe("ready");
-    const undo = canvas(page).getByRole("toolbar", { name: "Modeling tools" }).getByRole("button", { name: "Undo", exact: true });
-    await expect(undo).toBeEnabled({ timeout: 30_000 });
-    await undo.click();
-    await expect.poll(async () => (await getSession(page, sid)).latest_build_id, { timeout: 60_000 }).not.toBe(made.id);
-    // Undo restores a build that works, never a failed one.
-    const restored = (await builds(page, sid)).at(-1)!;
-    expect(restored.status).toBe("ready");
-    expect(monitor.problems().filter((p) => !/\/board$/.test(p))).toEqual([]);
-  });
-}
-
-for (const kind of ["board", "boardless"] as const) {
   test(`${kind}: Export downloads the chosen files`, async ({ page, monitor }) => {
     const sid = kind === "board" ? await openBoardDemo(page) : await boardlessSession(page);
     await openSession(page, sid);
@@ -95,21 +70,6 @@ for (const kind of ["board", "boardless"] as const) {
     expect(monitor.problems().filter((p) => !/\/board$/.test(p))).toEqual([]);
   });
 }
-
-test("after a run, History shows the older build and Restore brings it back as a new build", async ({ page, monitor }) => {
-  const sid = await exampleSession(page);
-  await send(page, sid, MOVE);
-  await openSession(page, sid);
-  const count = (await builds(page, sid)).length;
-  await canvas(page).getByRole("button", { name: "History", exact: true }).click();
-  const history = page.getByRole("region", { name: "History" });
-  const restore = history.getByRole("button", { name: /^Restore / }).first();
-  await expect(restore).toBeVisible();
-  await restore.click();
-  await expect.poll(async () => (await builds(page, sid)).length, { timeout: 60_000 }).toBe(count + 1);
-  expect((await builds(page, sid)).at(-1)!.status).toBe("ready");
-  expect(monitor.problems()).toEqual([]);
-});
 
 test("a comment sent to Claude reaches the run with the comment", async ({ page, monitor }) => {
   const sid = await openBoardDemo(page);
@@ -139,9 +99,9 @@ test("phone: a session's canvas tools are reachable and the chat comes back", as
   expect(monitor.problems()).toEqual([]);
 });
 
-test("phone: Show canvas can be tapped beside the standards picker, and a modeling tool opens", async ({ page, monitor }) => {
+test("phone: Show canvas can be tapped beside the standards picker, and the canvas opens", async ({ page, monitor }) => {
   // QA brief 18: at 390 px the chat header's standards picker (220 px, not shrinking) covered
-  // Show canvas, so the canvas, and every modeling tool on it, couldn't be opened.
+  // Show canvas, so the canvas couldn't be opened.
   await page.setViewportSize({ width: 390, height: 844 });
   const sid = await openBoardDemo(page);
   await openPage(page, `/session/${sid}`);
@@ -160,7 +120,5 @@ test("phone: Show canvas can be tapped beside the standards picker, and a modeli
   await show.click();
   await expect(page.getByTestId("viewer")).toBeVisible();
   await expect(page.getByTestId("viewer")).toHaveAttribute("data-state", "ready", { timeout: 90_000 });
-  await canvas(page).getByRole("toolbar", { name: "Modeling tools" }).getByRole("button", { name: "Hole", exact: true }).click();
-  await expect(page.getByRole("region", { name: "Modeling" })).toBeVisible();
   expect(monitor.problems()).toEqual([]);
 });

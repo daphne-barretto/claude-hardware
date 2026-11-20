@@ -76,7 +76,6 @@ test.describe("on the mock API", () => {
 
   test("pin a comment, send it to Claude, accept and undo its change, and resolve it", async ({ page }) => {
     const { api, viewer, canvas, chat } = await openMock(page);
-    await chat.getByRole("radio", { name: "Manual" }).click();
     const replies = await chat.getByTestId("assistant-message").count();
     const posts = messagePosts(page);
 

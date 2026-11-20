@@ -44,10 +44,3 @@ export function boardPartOf(p: Picked): string | null {
 export function viewPartsOf(picks: Picked[]): string[] {
   return [...new Set(picks.map((p) => boardPartOf(p) ?? p.part))];
 }
-
-/** A board part typed by name (any case), for select by ID. */
-export function resolveBoardPart(names: string[], query: string): Picked[] {
-  const q = query.trim().toLowerCase();
-  const name = q ? names.find((n) => n.toLowerCase() === q) : undefined;
-  return name ? [boardPick(name)] : [];
-}

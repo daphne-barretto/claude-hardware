@@ -1,10 +1,9 @@
 import { expect, test, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { sketchTargets } from "./sketchFaces";
 
 // Every tool panel over the 3D view is placed by the canvas layout model (chromeLayout.ts): the
-// map legend, the sketch and parameters panels and the dimensions stay inside the canvas, clear
+// parameters panel and the dimensions stay inside the canvas, clear
 // of the toolbars, with every control reachable (nothing over it); check pins stay under open
 // dialogs and panels; long titles keep a title to read them by; the standards picker never
 // covers the chat header's buttons. On the mock API, at a laptop with the sidebar open (the
@@ -95,39 +94,6 @@ for (const size of SIZES) {
     const panel = canvas.getByRole("region", { name: "Parameters" });
     await expect(panel.getByRole("textbox").first()).toBeVisible();
     expect(await unreachable(panel)).toEqual([]);
-    expect(await overlap(panel, canvas.getByRole("toolbar", { name: "Modeling tools" })), "the panel over the modeling toolbar").toBe(false);
-  });
-
-  test(`${size.width}×${size.height}: the sketch panel is inside the canvas, every control reachable`, async ({ page, request }) => {
-    const { viewer, canvas } = await open(page, await mockSession(request), size);
-    const { flat } = sketchTargets();
-    const parts = canvas.getByRole("region", { name: "Parts" });
-    await parts.getByRole("textbox", { name: "Select by ID" }).fill(flat.id);
-    await parts.getByRole("textbox", { name: "Select by ID" }).press("Enter");
-    await expect(viewer).toHaveAttribute("data-selected", flat.id);
-    await canvas.getByRole("button", { name: "Sketch" }).click();
-    const panel = canvas.getByRole("region", { name: "Sketch" });
-    await expect(panel.getByTestId("sketch-face")).toHaveAttribute("data-planar", "true");
-    expect(await unreachable(panel)).toEqual([]);
-    expect(await overlap(panel, canvas.getByRole("toolbar", { name: "Modeling tools" })), "the panel over the modeling toolbar").toBe(false);
-  });
-
-  test(`${size.width}×${size.height}: the map legend is inside the canvas and names the standard, not its ID`, async ({ page, request }) => {
-    const { canvas } = await open(page, await mockSession(request), size);
-    await canvas.getByRole("button", { name: "Analysis maps" }).click();
-    await canvas.getByRole("menu", { name: "Analysis maps" }).getByRole("menuitemradio").nth(1).click();
-    const legend = canvas.getByRole("region", { name: / legend$/ });
-    await expect(legend).toBeVisible();
-    expect(await unreachable(legend)).toEqual([]);
-    // Its header and range are in full view, not cut at the canvas edge.
-    const cut = await legend.evaluate((el) => {
-      const host = el.closest("[data-testid=hardware-canvas]")!.getBoundingClientRect();
-      return Array.from(el.querySelectorAll<HTMLElement>("p span, [data-testid^=legend-]"))
-        .filter((s) => s.getBoundingClientRect().right > host.right + 0.5)
-        .map((s) => s.textContent);
-    });
-    expect(cut).toEqual([]);
-    await expect(legend).not.toContainText(/\bmin_[a-z]+\b/);
   });
 
   test(`${size.width}×${size.height}: the dimensions stay out of the top and bottom bars, and the pins out of their way`, async ({ page, request }) => {

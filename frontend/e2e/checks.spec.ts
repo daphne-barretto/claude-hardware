@@ -183,7 +183,6 @@ async function pinOverlaps(page: Page) {
       ...canvas.querySelectorAll<HTMLElement>(
         'section[aria-label="Parts"], [data-testid="view-cube"], [role="toolbar"], [role="radiogroup"][aria-label="Units"], [role="menu"]',
       ),
-      canvas.querySelector<HTMLElement>('button[aria-label="Revision"]')!,
     ];
     const name = (el: HTMLElement) => el.getAttribute("aria-label") ?? el.dataset.testid ?? el.tagName;
     const out: string[] = [];
@@ -240,8 +239,4 @@ test("no pin draws over the parts panel, the view cube or the toolbar, and every
     await expectPinsClear(page);
   }
 
-  // An open menu is a panel too.
-  await canvas.getByRole("button", { name: "Revision" }).click();
-  await expect(canvas.getByRole("menu", { name: "Revisions" })).toBeVisible();
-  await expect.poll(() => pinOverlaps(page)).toEqual([]);
 });

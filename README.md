@@ -54,24 +54,6 @@ Rate limits, upload sizes, and the per-run caps have their own variables, listed
 
 **The disk.** On Render's free plan the filesystem is wiped by every deploy and every spin-down, so `DATA_DIR` starts empty and old chats are gone. Mount a persistent disk at `/app/data` (a paid plan) to keep them; no code change is needed. Builds need an instance of at least 2 GB: the free plan's 512 MB runs one build at a time and may run out of memory.
 
-## Feature flags
-
-Some finished features are hidden by default. Each is turned on by setting its variable to `1` at build time (`frontend/src/lib/flags.ts`). The browser tests turn them all on.
-
-| Flag | Shows |
-| --- | --- |
-| `NEXT_PUBLIC_FEATURE_MANUAL_MODE` | The Manual/Auto toggle (Manual applies nothing until you accept it). Off, every message goes in Auto mode |
-| `NEXT_PUBLIC_FEATURE_SKETCH` | Sketch on a face, in the canvas toolbar |
-| `NEXT_PUBLIC_FEATURE_HISTORY` | The History panel of versions, to show or restore. Undo and redo stay either way |
-| `NEXT_PUBLIC_FEATURE_ADD_FOLDER` | Add folder in the composer's + menu |
-| `NEXT_PUBLIC_FEATURE_MODELING_TOOLS` | The modeling toolbar (move, push/pull, hole, boss, rib, fillet, chamfer, shell, mirror, and pattern). Off, hand edits go through Dimensions and Parameters |
-| `NEXT_PUBLIC_FEATURE_SELECT_FILTERS` | The parts panel's Select filters (face, edge, part, and component), box select, and Select by ID. Off, a click on the model selects a face |
-| `NEXT_PUBLIC_FEATURE_FIND` | Find in model, the parts panel's search. Claude can still find parts from the chat |
-| `NEXT_PUBLIC_FEATURE_LOAD_REVISION` | Load next revision in the chat header. The "b-parasite v2.0 arrives" demo still shows the result |
-| `NEXT_PUBLIC_FEATURE_EXPLODE_TOOL` | The canvas toolbar's Explode button and amount slider. The Assembled, Exploded, and Print layout switch stays |
-| `NEXT_PUBLIC_FEATURE_BOARD_FILES` | Start from a board file on a new session. Off, a design starts from a prompt, a STEP file, or a photo |
-| `NEXT_PUBLIC_FEATURE_MEASURE_TOOL` | The Measure tool: click two points for the distance between them |
-
 **Files you can add.** For now an upload is a STEP file (`.step`, `.stp`) to import or an image for reference. The file pickers offer only those, other files are left out with a note under the message box, and the session API refuses anything else with 415.
 
 ## Docs

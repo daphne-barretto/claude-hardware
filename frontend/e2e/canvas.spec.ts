@@ -151,23 +151,6 @@ test("mm/in switches the displayed size", async ({ page, request }) => {
   await expect(size).toHaveText(/ mm$/);
 });
 
-test("the revision menu lists the builds and shows the selected one", async ({ page, request }) => {
-  const { canvas, viewer } = await openCanvas(page, request);
-  const revision = canvas.getByRole("button", { name: "Revision" });
-  await expect(revision).toHaveText(REVISION);
-  await revision.click();
-  const menu = canvas.getByRole("menu", { name: "Revisions" });
-  // The latest build first; e2e/history.spec.ts covers the build on the older revision.
-  await expect(menu.getByRole("menuitemradio")).toHaveCount(2);
-  const item = menu.getByRole("menuitemradio").first();
-  await expect(item).toContainText(REVISION);
-  await expect(item).toContainText("Build 2"); // by its place in the session, not its ID
-  await expect(item).toHaveAttribute("aria-checked", "true");
-  await item.click();
-  await expect(menu).toBeHidden();
-  await expect(viewer).toHaveAttribute("data-build", BUILD.id);
-});
-
 /** A downloaded export file is what its format says (the backend tests re-import each with a CAD or mesh reader). */
 function expectValid(name: string, body: Buffer) {
   const text = body.toString("latin1");
@@ -191,42 +174,36 @@ function expectValid(name: string, body: Buffer) {
   } else throw new Error(`unexpected export file ${name}`);
 }
 
-test("export menu: every format downloads and is valid", async ({ page, request }) => {
+test("export menu: STEP, source code and the build note download and are valid", async ({ page, request }) => {
   test.setTimeout(90_000);
   const { canvas } = await openCanvas(page, request);
   await canvas.getByRole("button", { name: "Export", exact: true }).click();
   const panel = canvas.getByRole("region", { name: "Export" });
-  const boxes = panel.getByRole("checkbox");
-  // One checkbox per format, plus "Include build note", which says what the note will report.
+  await expect(panel.getByRole("checkbox", { name: "STEP" })).toBeChecked();
+  await expect(panel.getByRole("checkbox", { name: "Source code" })).not.toBeChecked();
   const note = panel.getByRole("checkbox", { name: "Include build note" });
   await expect(note).toBeChecked();
   await expect(panel.getByTestId("export-note-summary")).toContainText(`${CHECKS.summary.untested} not tested`);
-  const formats = (await boxes.count()) - 1;
-  expect(formats).toBeGreaterThan(1);
+  await expect(panel.getByRole("checkbox")).toHaveCount(3);
 
   // Nothing checked: Download is disabled and says why.
-  for (const box of await boxes.all()) await box.uncheck();
+  for (const box of await panel.getByRole("checkbox").all()) await box.uncheck();
   const download = panel.getByRole("button", { name: /^Download/ });
   await expect(download).toBeDisabled();
   await expect(download).toHaveAttribute("title", /format/);
 
-  for (const box of await boxes.all()) await box.check();
+  for (const box of await panel.getByRole("checkbox").all()) await box.check();
   const downloads: { name: string; body: Buffer }[] = [];
   page.on("download", async (d) => {
     const file = await d.path();
     downloads.push({ name: d.suggestedFilename(), body: readFileSync(file) });
   });
-  const label = (await download.textContent())!;
-  const expected = Number(label.match(/\d+/)![0]);
-  expect(expected).toBeGreaterThan(formats);
+  // STEP, the source's code and parameters, and the build note.
+  await expect(download).toHaveText("Download 4 files");
   await download.click();
-  const links = panel.getByRole("list", { name: "Exported files" }).getByRole("link");
-  await expect(links).toHaveCount(expected, { timeout: 60_000 });
-  await expect.poll(() => downloads.length, { timeout: 30_000 }).toBe(expected);
-  const names = await links.allTextContents();
-  expect(downloads.map((d) => d.name).sort()).toEqual([...names].sort());
+  await expect(panel.getByRole("list", { name: "Exported files" }).getByRole("link")).toHaveCount(4, { timeout: 60_000 });
+  await expect.poll(() => downloads.length, { timeout: 30_000 }).toBe(4);
   for (const d of downloads) expectValid(d.name, d.body);
-  expect(new Set(downloads.map((d) => d.name.split(".").pop())).size).toBe(expected);
 });
 
 test("export menu downloads only the checked formats, and Cancel closes it", async ({ page, request }) => {

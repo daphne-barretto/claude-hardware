@@ -12,7 +12,6 @@ export type PartIndex = { part: string; faces: MeshFace[]; edges: MeshEdge[] };
 
 /** What a click picks: the selection filter. */
 export type PickKind = "face" | "edge" | "part" | "component";
-export const PICK_KINDS: PickKind[] = ["face", "edge", "part", "component"];
 
 /**
  * One picked item: a face or edge by its ID, a whole part by its name, or a board component
@@ -81,18 +80,6 @@ const same = (a: Picked, b: Picked) => a.kind === b.kind && a.id === b.id;
 export function togglePick(picks: Picked[], pick: Picked): Picked[] {
   const has = picks.some((p) => same(p, pick));
   return has ? picks.filter((p) => !same(p, pick)) : [...picks, pick];
-}
-
-/** Adds picks that are not picked yet (a box drawn with Shift or Cmd held). */
-export function addPicks(picks: Picked[], more: Picked[]): Picked[] {
-  const out = [...picks];
-  for (const p of more) if (!out.some((q) => same(q, p))) out.push(p);
-  return out;
-}
-
-/** Normalised screen rectangle from two corners: [left, top, right, bottom]. */
-export function boxFrom(a: { x: number; y: number }, b: { x: number; y: number }): [number, number, number, number] {
-  return [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y)];
 }
 
 /**

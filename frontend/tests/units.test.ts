@@ -3,7 +3,8 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { CheckReport } from "@/components/canvas/api";
 import { evidence } from "@/components/canvas/checks";
-import { lengthsInText } from "@/components/canvas/units";
+import { formatMapValue } from "@/components/canvas/HardwareCanvas";
+import { lengthsInText, MM_PER_INCH } from "@/components/canvas/units";
 
 // The mm/in toggle converts check values, limits and the lengths in their text.
 const CHECKS = JSON.parse(readFileSync(path.join(__dirname, "../../fixtures/checks.json"), "utf8")) as CheckReport;
@@ -27,5 +28,13 @@ describe("lengthsInText", () => {
     const summaries = CHECKS.results.map((r) => r.summary ?? "");
     expect(summaries.some((s) => /\d\s?mm\b/.test(s))).toBe(true);
     for (const s of summaries) expect(lengthsInText(s, "in")).not.toMatch(/\d\s?mm\b/);
+  });
+});
+
+describe("formatMapValue", () => {
+  it("formats lengths in the display unit and angles in degrees", () => {
+    expect(formatMapValue(MM_PER_INCH, "mm", "in")).toBe("1.000 in");
+    expect(formatMapValue(2, "mm", "mm")).toBe("2.0 mm");
+    expect(formatMapValue(1.5, "deg", "in")).toBe("1.5°");
   });
 });

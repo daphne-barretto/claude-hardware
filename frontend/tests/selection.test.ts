@@ -1,12 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  addPicks,
-  boxFrom,
   componentFaces,
   componentOf,
   highlightPicks,
   pickAs,
-  PICK_KINDS,
   hideParts,
   indexFromGltf,
   isIsolated,
@@ -91,10 +88,6 @@ const refs: string[] = [...new Set<string>(board.openings.map((o: { component: s
 const meshRefs = [...new Set(allFaces.flatMap((f) => componentOf(f.feature) ?? []))];
 
 describe("selection filters and multi-select", () => {
-  it("has a filter for faces, edges, parts and board components", () => {
-    expect(PICK_KINDS).toEqual(["face", "edge", "part", "component"]);
-  });
-
   it("finds the board's components in the mesh by their opening features", () => {
     expect(meshRefs.length).toBeGreaterThan(0);
     for (const ref of meshRefs) expect(refs).toContain(ref);
@@ -126,12 +119,10 @@ describe("selection filters and multi-select", () => {
     }
   });
 
-  it("Shift/Cmd toggling and box adding keep one of each item", () => {
-    const [a, b, c] = allFaces.map((f): Picked => ({ kind: "face", id: f.id, part: f.part }));
+  it("Shift/Cmd toggling keeps one of each item", () => {
+    const [a, b] = allFaces.map((f): Picked => ({ kind: "face", id: f.id, part: f.part }));
     expect(togglePick([a], b)).toEqual([a, b]);
     expect(togglePick([a, b], a)).toEqual([b]);
-    expect(addPicks([a, b], [b, c])).toEqual([a, b, c]);
-    expect(boxFrom({ x: 30, y: 5 }, { x: 10, y: 40 })).toEqual([10, 5, 30, 40]);
   });
 
   it("sends every selected item's ID, and the chip lists every one of them", () => {

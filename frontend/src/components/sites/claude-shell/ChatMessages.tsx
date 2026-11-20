@@ -6,6 +6,8 @@ import { Box, Check, CircleAlert, GitPullRequestArrow, ListChecks, Loader2, Plus
 import { createSession, type Constraint, type QuestionOption, type RiskFlag } from "@/lib/session-api";
 import type { Build } from "@/components/canvas/api";
 import { buildTitle, summaryLine } from "@/components/canvas/history";
+import { CheckCounts } from "@/components/canvas/CheckCounts";
+import type { CheckCountStatus } from "@/components/canvas/openChecks";
 import { isPassing, riskSubject, type Block, type ChatMessage } from "./chat";
 import { ImportNote } from "./ImportNote";
 import { RiskReviewNote } from "./RiskReviewNote";
@@ -34,6 +36,11 @@ type Props = {
   onShowRisk?: (flag: RiskFlag) => void;
   /** A build card was clicked: show that build on the canvas. */
   onShowBuild?: (buildId: string) => void;
+  /**
+   * A check count was clicked ("3 untested"): open the canvas's Constraints panel on that group,
+   * for that build. Without it (no canvas), the counts are plain text.
+   */
+  onOpenChecks?: (buildId: string, status: CheckCountStatus) => void;
   /** Highlight (or, with `select`, select) faces Claude found; without it (no canvas) they are only listed. */
   onFound?: (block: FoundBlock, select: boolean) => void;
   wide?: boolean;
@@ -57,6 +64,8 @@ type Props = {
 const ReadOnly = createContext<string | undefined>(undefined);
 /** The session's builds, for the build cards' names. */
 const Builds = createContext<readonly Build[]>([]);
+/** Opens the Constraints panel from a check count, if there is a canvas. */
+const OpenChecks = createContext<Props["onOpenChecks"]>(undefined);
 
 type FoundBlock = Extract<Block, { kind: "found" }>;
 type RiskProps = Pick<Props, "busy" | "onReviewRisk" | "reviewingRisk" | "riskError" | "onShowRisk" | "onFound">;
@@ -72,6 +81,7 @@ export function ChatMessages({
   riskError,
   onShowRisk,
   onShowBuild,
+  onOpenChecks,
   onFound,
   wide,
   onOpenSession,
@@ -86,6 +96,7 @@ export function ChatMessages({
   return (
     <ReadOnly.Provider value={readOnly}>
     <Builds.Provider value={builds}>
+    <OpenChecks.Provider value={onOpenChecks}>
     <ol className={`mx-auto flex flex-col gap-4 py-6 ${wide ? "max-w-[720px]" : ""}`}>
       {/* A run for comments sent to Claude replies in the comment threads, not here. */}
       {messages.filter((m) => !m.thread).map((m) =>
@@ -143,6 +154,7 @@ export function ChatMessages({
         </li>
       )}
     </ol>
+    </OpenChecks.Provider>
     </Builds.Provider>
     </ReadOnly.Provider>
   );
@@ -292,35 +304,46 @@ function BuildCard({ build, onShowBuild }: { build: Extract<Block, { kind: "buil
   const builds = useContext(Builds);
   const name = buildTitle(build, builds);
   const checks = summaryLine(build.checks);
+  const openChecks = useContext(OpenChecks);
+  // The card shows its build; each count opens the Constraints panel on its group.
   return (
-    <button
-      type="button"
-      data-testid="build-ready"
-      data-build={build.id}
-      aria-label={`${name} · ${checks}`}
-      title="Show this build on the canvas"
-      onClick={() => onShowBuild?.(build.id)}
-      className="flex w-full items-center gap-2 rounded-lg border border-[var(--cs-border)] px-3 py-2 text-left text-[13px] hover:bg-[var(--cs-hover)]"
-    >
-      <Box aria-hidden className="size-3.5 shrink-0 text-[var(--cs-muted)]" />
-      <span>{name}</span>
-      <span className="ml-auto text-[var(--cs-muted)]">{checks}</span>
-    </button>
+    <div className="flex w-full items-center gap-2 rounded-lg border border-[var(--cs-border)] text-[13px]">
+      <button
+        type="button"
+        data-testid="build-ready"
+        data-build={build.id}
+        aria-label={`${name} · ${checks}`}
+        title="Show this build on the canvas"
+        onClick={() => onShowBuild?.(build.id)}
+        className="flex min-w-0 flex-1 items-center gap-2 self-stretch rounded-l-lg py-2 pl-3 text-left hover:bg-[var(--cs-hover)]"
+      >
+        <Box aria-hidden className="size-3.5 shrink-0 text-[var(--cs-muted)]" />
+        <span>{name}</span>
+      </button>
+      <CheckCounts
+        summary={build.checks}
+        onOpen={openChecks && ((status) => openChecks(build.id, status))}
+        className="py-2 pr-3 text-right text-[var(--cs-muted)]"
+      />
+    </div>
   );
 }
 
 /** A run's proposal: each change with the checks that prove it (reviewed on the canvas). */
 function ChangesView({ block }: { block: Extract<Block, { kind: "changes" }> }) {
-  const { changes, checks } = block.changeSet;
+  const { changes, checks, build } = block.changeSet;
+  const openChecks = useContext(OpenChecks);
   const label = `${changes.length} proposed ${changes.length === 1 ? "change" : "changes"}`;
   return (
     <section aria-label="Proposed changes" data-testid="proposed-changes" className="rounded-lg border border-[var(--cs-border)] text-[13px]">
       <p className="flex items-center gap-2 border-b border-[var(--cs-border)] px-3 py-2">
         <GitPullRequestArrow aria-hidden className="size-3.5 shrink-0 text-[var(--cs-muted)]" />
         <span className="font-[500]">{label}</span>
-        <span className="ml-auto text-[var(--cs-muted)]">
-          {checks.pass} pass · {checks.fail} fail · {checks.untested} untested
-        </span>
+        <CheckCounts
+          summary={checks}
+          onOpen={openChecks && ((status) => openChecks(build, status))}
+          className="ml-auto text-[var(--cs-muted)]"
+        />
       </p>
       <ol aria-label="Proposed changes" className="flex flex-col">
         {changes.map((c) => {

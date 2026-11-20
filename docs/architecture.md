@@ -78,8 +78,8 @@ The first message of `/new` is passed in client state (`AppShell`'s `newCanvas`)
 | Area | Key files |
 |---|---|
 | Shell: sidebar (New, Search, Recents), phone drawer, account row | `components/sites/claude-shell/AppShell.tsx`, `Sidebar.tsx`, `RecentRow.tsx`, `SearchDialog.tsx` |
-| Workspace: chat column + canvas slot, header (title, Load next revision, constraint set, canvas toggle) | `HardwareWorkspace.tsx`, `CanvasSlot.tsx` |
-| Composer: text, files, dictation, model/effort, Manual/Auto | `Composer.tsx`, `ModelPicker.tsx`, `useDictation.ts`, `files.ts`, `PhotoHint.tsx` |
+| Workspace: chat column + canvas slot, header (title, constraint set, canvas toggle) | `HardwareWorkspace.tsx`, `CanvasSlot.tsx` |
+| Composer: text, files, dictation, model/effort | `Composer.tsx`, `ModelPicker.tsx`, `useDictation.ts`, `files.ts`, `PhotoHint.tsx` |
 | Chat state built from events | `chat.ts` (reducer), `useChatSession.ts` (requests, uploads, retries) |
 | Message rendering | `ChatMessages.tsx`, `NoticeCard.tsx`, `RunNotice.tsx`, `ConflictCard.tsx`, `FoundCard.tsx`, `QueuedMessages.tsx` |
 | Read-only states | `SharedNotice.tsx`, `SharePage.tsx`, `SessionUnavailable.tsx` |
@@ -92,14 +92,14 @@ The first message of `/new` is passed in client state (`AppShell`'s `newCanvas`)
 | Area | Key files |
 |---|---|
 | Canvas component (chrome, panels, tools, menus) | `components/canvas/HardwareCanvas.tsx` |
-| three.js viewer, free of React: glTF loading, picking, highlights, section, x-ray, explode, maps | `components/canvas/viewer.ts` |
+| three.js viewer, free of React: glTF loading, picking, highlights, section, layouts | `components/canvas/viewer.ts` |
 | Chrome layout model (regions as CSS variables, stacking order) | `components/canvas/chromeLayout.ts` |
 | View cube, orbit, axis triad | `ViewCube.tsx`, `orientation.ts` |
 | Check pins and cards, the Constraints panel, change pins | `CheckOverlay.tsx`, `ConstraintsPanel.tsx`, `constraintGroups.ts`, `constraintsContext.ts`, `CheckRow.tsx`, `checks.ts`, `pinVisibility.ts`, `ChangeOverlay.tsx`, `changes.ts` |
-| Parameters, dimensions on the model, sketch, modeling tools | `ParametersPanel.tsx`, `Dimensions.tsx`, `useParameterEdits.ts`, `SketchPanel.tsx`, `sketch.ts`, `ModelingToolbar.tsx`, `ModelingPanel.tsx`, `modeling.ts` |
-| Undo/redo and history | `designHistory.ts`, `useDesignHistory.ts`, `HistoryNotices.tsx`, `history.ts` |
+| Parameters, dimensions on the model | `ParametersPanel.tsx`, `Dimensions.tsx`, `useParameterEdits.ts` |
+| Undo/redo | `designHistory.ts`, `useDesignHistory.ts`, `HistoryNotices.tsx`, `history.ts` |
 | Comments | `comments/CommentsLayer.tsx`, `comments/useComments.ts` |
-| Inspection, selection, find, units, export | `inspect.ts`, `selection.ts`, `find.ts`, `units.ts`, `exportFormats.ts`, `featureTree.ts`, `explode.ts`, `colormap.ts` |
+| Inspection, selection, find, units, export | `inspect.ts`, `selection.ts`, `find.ts`, `units.ts`, `exportFormats.ts`, `featureTree.ts`, `explode.ts` |
 | API calls for builds | `components/canvas/api.ts`, `frontend/src/lib/session-api.ts` |
 
 The viewer loads each build's glTF (`GET .../builds/{id}/mesh`). Every triangle carries a stable face ID (`_FACE_ID`), so picks, check pins, comments, highlights, and analysis-map colours all address faces by ID, and those IDs survive rebuilds where the faces match.
@@ -487,7 +487,7 @@ Every session is written to an append-only JSON Lines log (`app/telemetry/`, sch
 | Errors | `error` (by source), `abandoned` |
 | Canvas | `canvas`: the canvas state after each step |
 
-The backend records what it sees; the frontend reports what only it sees (accept and reject, map and camera views, compare, history, and model and mode choices) with `POST .../telemetry`. The composer notes that sessions are recorded.
+The backend records what it sees; the frontend reports what only it sees (accept and reject, views such as the camera and the section cut, and model and effort choices) with `POST .../telemetry`. The composer notes that sessions are recorded.
 
 - `TELEMETRY_DIR` sets the directory (default `~/.local/state/claude-hardware/telemetry`, outside the repo); `off` turns recording off. Each session is a directory with `events.jsonl` and `artifacts/`. `TELEMETRY_RETENTION_DAYS` (90) deletes older logs.
 - Every event is redacted before it is written: secret-named environment values, anything shaped like a key or bearer token, and fields such as `api_key` or `authorization`. Nothing personal beyond what the user types.

@@ -74,7 +74,6 @@ for (const demo of DEMOS) {
     await expect(viewer).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
     await expect(viewer).toHaveAttribute("data-fits", "true");
     await expect(canvas.getByTestId("model-parts")).toHaveText(demo.parts.join(", "));
-    await expect(canvas.getByRole("toolbar", { name: "Modeling tools" })).toBeVisible();
 
     // Every located check result is a place of its constraint in the Constraints panel, with the fixture's status.
     await expect(canvas.getByTestId("check-pins")).toBeAttached({ timeout: 30_000 });
@@ -120,23 +119,15 @@ test("each demo's copy has its board and builds, and only those on an older boar
   expect(withNext.length).toBeGreaterThan(0);
 });
 
-test("a demo link opens the viewer's own copy, and Reset demo starts it over", async ({ page, request }) => {
+test("a demo link opens the viewer's own copy, and Reset demo starts it over", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (err) => errors.push(err.message));
-  // The demo whose copy has a next revision to load (found through the API).
-  let demo = DEMOS[0];
-  for (const d of DEMOS) {
-    if ((await openDemo(request, d.session.id)).next_revision) {
-      demo = d;
-      break;
-    }
-  }
+  const demo = DEMOS[0];
   await page.goto(`/demo/${demo.session.id}`);
   await expect(page).toHaveURL(/\/session\/[^/]+$/, { timeout: 30_000 });
   const first = decodeURIComponent(new URL(page.url()).pathname.split("/").pop()!);
   const chat = page.getByRole("region", { name: "Chat" });
   await expect(chat.getByText(opening(demo)).first()).toBeVisible({ timeout: 30_000 });
-  await expect(chat.getByRole("button", { name: "Load next revision" })).toBeVisible();
 
   // Reloading the demo link lands on the same copy.
   await page.goto(`/demo/${demo.session.id}`);

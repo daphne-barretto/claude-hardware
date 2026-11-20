@@ -3,9 +3,8 @@ import path from "node:path";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { openExample } from "./fixtures/sessions";
 
-// Canvas keyboard shortcuts against the mock session API. The measure, section, and comment
+// Canvas keyboard shortcuts against the mock session API. The section and comment
 // shortcuts are in the keymap but have no action yet; wiring one means adding its test here.
-// Undo and redo are the modeling tools' (modeling.spec.ts).
 test.skip(!!process.env.E2E_BASE_URL, "the mock API runs only with the local dev servers");
 
 const SESSION = JSON.parse(readFileSync(path.join(__dirname, "../../fixtures/session.json"), "utf8")) as {
@@ -69,8 +68,6 @@ test("? opens the sheet listing every wired shortcut; Esc closes it", async ({ p
     /^Right view\s*3$/,
     /^Isometric view\s*0$/,
     /^Zoom to fit\s*F$/,
-    /^Select\s*S$/,
-    /^Measure\s*M$/,
     /^Section\s*X$/,
     /^Comment\s*C$/,
     /^Hide selection\s*H$/,
@@ -170,11 +167,10 @@ test("H hides the selected parts, I isolates them and Alt+H shows all", async ({
   await expect(viewer).toHaveAttribute("data-hidden", "");
   for (const p of parts) await expect(hide(p)).toHaveAttribute("aria-pressed", "false");
 
-  // A face selected: I isolates the part the face is on.
+  // Another part selected: I isolates it.
   const target = MESH.find((m) => m.part !== first && m.faces.length) ?? MESH.find((m) => m.faces.length)!;
-  await panel.getByRole("textbox", { name: "Select by ID" }).fill(target.faces[0].id);
-  await page.keyboard.press("Enter");
-  await expect(viewer).toHaveAttribute("data-selected", target.faces[0].id);
+  await panel.getByRole("button", { name: `Select ${target.part}` }).click();
+  await expect(viewer).toHaveAttribute("data-selected", target.part);
   await shortcut("i");
   // Isolating hides the board revision's parts too.
   const boardParts = ((await viewer.getAttribute("data-board-parts")) ?? "").split(",").filter(Boolean);
@@ -187,13 +183,4 @@ test("H hides the selected parts, I isolates them and Alt+H shows all", async ({
   await expect(viewer).toHaveAttribute("data-hidden", "");
   await expect(isolateBtn(target.part)).toHaveAttribute("aria-pressed", "false");
   for (const p of parts) await expect(hide(p)).toHaveAttribute("aria-pressed", "false");
-});
-
-test("S switches to the select tool", async ({ page, request }) => {
-  const { canvas } = await openCanvas(page, request);
-  const pick = canvas.getByRole("region", { name: "Parts" }).getByRole("radiogroup", { name: "Select" });
-  await canvas.getByRole("button", { name: "Home view" }).focus();
-  await page.keyboard.press("s");
-  await expect(pick.getByRole("radio", { name: "Face" })).toBeFocused();
-  await expect(pick.getByRole("radio", { name: "Face" })).toHaveAttribute("aria-checked", "true");
 });

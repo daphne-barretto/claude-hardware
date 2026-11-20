@@ -6,7 +6,6 @@ import {
   boardPartNames,
   boardPick,
   isBoardPick,
-  resolveBoardPart,
   viewPartsOf,
 } from "@/components/canvas/boardParts";
 import { componentBody, type Board, type BoardComponent } from "@/components/canvas/inspect";
@@ -94,11 +93,5 @@ describe("board parts", () => {
   it("hides a picked component as its own part, and anything else by its part", () => {
     const opening = { kind: "component" as const, id: refs[0], part: "some-part" };
     expect(viewPartsOf([boardPick(refs[0]), opening, boardPick(BOARD_PART)])).toEqual([refs[0], "some-part", BOARD_PART]);
-  });
-
-  it("resolves a typed reference designator, ignoring case", () => {
-    const names = boardPartNames(board);
-    expect(resolveBoardPart(names, ` ${refs[0].toLowerCase()} `)).toEqual([boardPick(refs[0])]);
-    expect(resolveBoardPart(names, "no such part")).toEqual([]);
   });
 });

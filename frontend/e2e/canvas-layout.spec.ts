@@ -3,7 +3,7 @@ import path from "node:path";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { openConstraints, pickCheck } from "./fixtures/constraints";
 
-// The canvas chrome (top bar, parts panel, view cube, modeling toolbar, tool panels, bottom bar,
+// The canvas chrome (top bar, parts panel, view cube, tool panels, bottom bar,
 // view label, the Constraints panel) at laptop sizes with the sidebar open, on the mock's build and on
 // demos (with and without a board), with the section tool on: the canvas never scrolls and
 // nothing overlaps. Also the section without a board, check pins on the model and the pin
@@ -57,16 +57,12 @@ async function open(page: Page, id: string, size = SIZES[0]) {
 
 // The chrome's pieces, and where each one is visible (cut to the boxes that clip it).
 const CHROME: Record<string, string> = {
-  revision: 'button[aria-label="Revision"]',
-  compare: 'button[aria-label^="Compare with"]',
   changes: 'button[aria-label="Proposed changes"]',
   units: '[role=radiogroup][aria-label="Units"]',
   controls: '[role=toolbar][aria-label="Canvas controls"]',
   parts: 'section[aria-label="Parts"]',
   cube: "[data-testid=view-cube]",
-  modeling: '[role=toolbar][aria-label="Modeling tools"]',
   section: 'section[aria-label="Section"]',
-  measure: 'section[aria-label="Measure"]',
   layout: '[role=radiogroup][aria-label="Layout"]',
   inspection: '[role=toolbar][aria-label="Inspection tools"]',
   comments: '[role=toolbar][aria-label="Comment tools"]',
@@ -139,12 +135,11 @@ async function expectClean(page: Page, must: string[]) {
 }
 
 for (const size of SIZES) {
-  test(`${size.width}×${size.height}: the mock build's chrome never overlaps or scrolls with section and measure on`, async ({ page, request }) => {
+  test(`${size.width}×${size.height}: the mock build's chrome never overlaps or scrolls with section on`, async ({ page, request }) => {
     const { tools } = await open(page, await mockSession(request), size);
     await tools.getByRole("button", { name: "Section cut" }).click();
     await expect(page.getByTestId("section-clearance")).toBeVisible();
-    await tools.getByRole("button", { name: "Measure" }).click();
-    await expectClean(page, ["parts", "cube", "modeling", "section", "measure", "layout", "inspection", "comments", "viewLabel", "modelParts", "controls"]);
+    await expectClean(page, ["parts", "cube", "section", "layout", "inspection", "comments", "viewLabel", "modelParts", "controls"]);
     // The zoom value is in full view.
     const zoom = (await page.getByTestId("zoom-level").boundingBox())!;
     const host = (await page.getByTestId("hardware-canvas").boundingBox())!;
@@ -155,13 +150,13 @@ for (const size of SIZES) {
     let { tools } = await open(page, WITH_BOARD.id, size);
     await tools.getByRole("button", { name: "Section cut" }).click();
     await expect(page.getByTestId("section-clearance")).toBeVisible();
-    await expectClean(page, ["parts", "modeling", "section", "layout", "inspection"]);
+    await expectClean(page, ["parts", "section", "layout", "inspection"]);
     // The Constraints panel, a row expanded, opens inside the canvas, and nothing covers it.
     const canvas = page.getByRole("region", { name: "Canvas" });
     await openConstraints(canvas);
     await canvas.getByTestId("constraint-item").first().click();
     await expectOnTop(page, canvas.getByTestId("constraints-panel"));
-    await expectClean(page, ["parts", "modeling", "section", "layout", "inspection"]);
+    await expectClean(page, ["parts", "section", "layout", "inspection"]);
 
     ({ tools } = await open(page, NO_BOARD.id, size));
     await tools.getByRole("button", { name: "Section cut" }).click();
@@ -169,7 +164,7 @@ for (const size of SIZES) {
     // Its Constraints panel lists the untested checks.
     const panel = await openConstraints(page.getByRole("region", { name: "Canvas" }));
     await expect(panel.locator('[data-testid=constraint-item][data-status="untested"]').first()).toBeVisible();
-    await expectClean(page, ["parts", "modeling", "section", "layout", "inspection"]);
+    await expectClean(page, ["parts", "section", "layout", "inspection"]);
     await expectOnTop(page, panel);
   });
 }
@@ -302,10 +297,4 @@ test("every check pin sits on the model, in every layout", async ({ page }) => {
     );
     expect(off.map((p) => p.id), `pins off the model in layout ${i}`).toEqual([]);
   }
-});
-
-test("an opened demo has the modeling tools, as any session of one's own", async ({ page }) => {
-  const { canvas } = await open(page, WITH_BOARD.id);
-  await expect(canvas.getByRole("toolbar", { name: "Modeling tools" })).toBeVisible();
-  await expect(canvas.getByTestId("modeling-read-only")).toHaveCount(0);
 });

@@ -8,17 +8,11 @@ export type FormatOption = { format: FileFormat; label: string; purpose: string;
 /** The export menu's formats, in menu order. `files` is how many files the format downloads. */
 export const FORMAT_OPTIONS: FormatOption[] = [
   { format: "step", label: "STEP", purpose: "Any CAD tool", files: 1 },
-  { format: "stl", label: "STL", purpose: "3D printing", files: 1 },
-  { format: "3mf", label: "3MF", purpose: "3D printing with units", files: 1 },
-  { format: "obj", label: "OBJ", purpose: "Rendering", files: 1 },
-  { format: "glb", label: "GLB", purpose: "Web and AR", files: 1 },
-  { format: "dxf", label: "DXF", purpose: "Flat profiles", files: 1 },
-  { format: "pdf", label: "PDF drawing", purpose: "Key dimensions", files: 1 },
   { format: "source", label: "Source code", purpose: "The code and its parameters", files: 2 },
 ];
 
-/** Checked when the menu opens: what the demo exports for the molder and a test print. */
-export const DEFAULT_FORMATS: FileFormat[] = ["step", "stl"];
+/** Checked when the menu opens. */
+export const DEFAULT_FORMATS: FileFormat[] = ["step"];
 
 /** The formats to request, in contract order, with the build note last if included. */
 export function requestedFormats(selected: readonly FileFormat[], includeNote: boolean): ExportFormat[] {

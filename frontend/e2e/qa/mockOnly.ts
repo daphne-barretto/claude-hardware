@@ -18,20 +18,7 @@ export const MOCK_ONLY: { entries: RegExp; states?: RegExp; why: string }[] = [
     states: /^new\.(working|queued)/,
     why: "stopping or queueing behind a run needs the mock's slow recorded run; the scripted run ends before Stop lands",
   },
-  {
-    entries: /^workspace\.load-revision$/,
-    why: "its expected change set is the recorded run's; the scripted revision run on the fixture design leaves none",
-  },
   { entries: /^failed-build\./, states: /^session\.failed/, why: "the failed build is the mock's recorded \"Break the build\" run" },
-  {
-    entries: /^canvas\.compare$/,
-    why: "its expected feature changes are the fixture diff (fixtures/diff.json); the scripted session's two builds have the same design",
-  },
-  {
-    entries: /^canvas\.(ask-fix|fix-sent)$/,
-    states: /^session\.map/,
-    why: "the flagged spots are the fixture map's; the real backend's map of the same build flags others",
-  },
   {
     entries: /^constraint\.(edit|value|save|cancel|place)$/,
     states: /^new\.(editing|answered)$/,
