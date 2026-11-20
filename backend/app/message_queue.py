@@ -9,8 +9,10 @@ The user can keep sending while Claude works, as in Claude Code. `POST /messages
   (`PATCH`/`DELETE .../queue/{item}`).
 - A run that stops on Claude's question pauses the queue: the next message is never taken as
   the answer. Answering resumes the run, and the queue goes on when it ends. "Send anyway"
-  (`POST .../queue/{item}/send`) leaves the question unanswered instead: the paused run ends
-  with a note saying so, and the message is sent as a normal one.
+  (`POST .../queue/{item}/send`) leaves the question unanswered instead
+  (`app.session_api.leave_question_open`): the paused run ends with a note saying so, and the
+  message is sent as a normal one, with a note to Claude about the question it left open. A
+  message posted directly (`POST .../messages`) while the question is open does the same.
 - `POST .../stop` (`app.session_api.stop_run`) stops the run (going, or waiting for an
   answer): it ends with the "stopped" error and Retry, the session is idle again, and the
   queue goes on.
@@ -32,9 +34,7 @@ from app.contracts.session import (
     ErrorEvent,
     Message,
     MessageCreate,
-    MessageEndEvent,
     MessageQueue,
-    ProgressEvent,
     QueuedMessage,
     QueuedMessageUpdate,
     QueueEvent,
@@ -42,17 +42,19 @@ from app.contracts.session import (
 from app.session_api import (
     CONFLICT,
     NOT_FOUND,
+    QUESTION_LEFT_OPEN,
     RUN_LISTENERS,
     SESSION,
     SESSIONS,
     SessionState,
+    leave_question_open,
     now,
     send_message,
 )
 
 router = APIRouter()
 
-SENT_ANYWAY = "The question was left unanswered: your next message was sent instead."
+SENT_ANYWAY = QUESTION_LEFT_OPEN
 # How soon the queue tries again when a review or an import holds the session.
 RETRY_SECONDS = 0.5
 
@@ -138,30 +140,6 @@ def pump(state: SessionState) -> None:
 
 
 RUN_LISTENERS.append(pump)
-
-
-async def _stop(state: SessionState, note: str) -> None:
-    """Cancel the session's run; its reply ends with `note` and the session is idle again."""
-    run = state.run
-    if (run is None or run.done()) and state.answer_restarts and state.question is not None:
-        # A question kept across a restart has no run to cancel: its reply ends on the note.
-        mid = state.question.message_id
-        state.emit(0, ProgressEvent(type="progress", message_id=mid, text=note))
-        state.emit(0, MessageEndEvent(type="message_end", message_id=mid))
-        state.answer_restarts = False
-        state.session.status = "idle"
-        state.question = None
-        state.save()
-        return
-    if run is None or run.done():
-        raise HTTPException(409, "Claude isn't working: there is nothing to stop")
-    state.stopping = note
-    run.cancel()
-    await asyncio.wait({run})
-    if state.session.status != "idle":  # stopped before its reply started
-        state.session.status = "idle"
-        state.question = None
-        state.save()
 
 
 # --- Routes -----------------------------------------------------------------------------------
@@ -250,12 +228,11 @@ async def send_queued(session_id: str, item_id: str) -> Message:
         raise HTTPException(409, "Claude is working: it is sent when the run ends")
     state.queue_hold = True
     try:
-        if state.session.status == "waiting_for_answer":
-            await _stop(state, SENT_ANYWAY)
+        note = await leave_question_open(state, SENT_ANYWAY)
         item = _item(state, item_id)  # still queued: nobody removed it meanwhile
         state.queue.remove(item)
         try:
-            message = send_message(state, item.message)
+            message = send_message(state, item.message, note)
         except HTTPException:
             state.queue.insert(0, item)
             raise

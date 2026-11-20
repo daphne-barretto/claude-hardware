@@ -850,8 +850,20 @@ def list_messages(session_id: str) -> list[Message]:
 )
 async def post_message(session_id: str, body: MessageCreate) -> Message:
     """Send a message. The reply streams on `/events`; the response is the stored user message.
-    While a reply streams it gets 409: queue it with `POST .../queue` instead."""
-    return await _send(_state(session_id), body)
+    While a reply streams it gets 409: queue it with `POST .../queue` instead. While a question
+    is open, a message that isn't its answer leaves it unanswered and is sent, as the real API
+    does."""
+    state = _state(session_id)
+    if body.answer is None and state.question is not None and state.session.status != "running":
+        if not body.text.strip() and not body.comments:
+            raise HTTPException(409, "a message needs text, comments or an answer")
+        state.queue_hold = True
+        try:
+            await _stop(state, SENT_ANYWAY)
+            return await _send(state, body)
+        finally:
+            state.queue_hold = False
+    return await _send(state, body)
 
 
 async def _send(state: SessionState, body: MessageCreate) -> Message:

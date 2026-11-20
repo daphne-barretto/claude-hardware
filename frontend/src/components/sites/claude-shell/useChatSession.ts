@@ -35,7 +35,6 @@ import {
   answerQuestion,
   applyEvent,
   fromStored,
-  openQuestion,
   retryableStop,
   withAnswers,
   withRisks,
@@ -399,9 +398,13 @@ export function useChatSession(existing?: string, onCreated?: (id: string) => vo
 
   // Comments sent to Claude from the canvas: one run answers each in its thread, so the chat
   // shows no message for them (`thread` in ./chat).
+  // While Claude works they wait in the queue, like a message.
   const sendComments = useCallback(
-    (ids: string[], choices: Choices) => post({ text: "", ...choices, comments: ids }),
-    [post],
+    (ids: string[], choices: Choices) => {
+      const body: MessageCreate = { text: "", ...choices, comments: ids };
+      return working.current ? enqueue(async () => body) : post(body);
+    },
+    [post, enqueue],
   );
   // An answer to a question Claude asked in a comment's run, given in the thread.
   const answerInThread = useCallback(
@@ -450,17 +453,10 @@ export function useChatSession(existing?: string, onCreated?: (id: string) => vo
   // Claude is working on a reply: Send queues the message (not while the session loads).
   const queues = busy && !loading;
   working.current = queues;
-  // The session API takes only the answer while Claude's question is open (docs/architecture.md).
+  // Nothing waits on Claude's open question: a message sent meanwhile goes to Claude, which is
+  // told the question was left open (docs/architecture.md). Only a session that is gone blocks.
   const gone = messages.some((m) => m.blocks?.some((b) => b.kind === "session_gone"));
-  const asked = openQuestion(messages);
-  const inThread = asked && messages[messages.length - 1]?.thread;
-  const blocked = gone
-    ? SESSION_GONE_REASON
-    : asked
-      ? inThread
-        ? "Answer Claude's question in the comment thread"
-        : "Answer Claude's question first"
-      : undefined;
+  const blocked = gone ? SESSION_GONE_REASON : undefined;
   return {
     messages,
     busy,

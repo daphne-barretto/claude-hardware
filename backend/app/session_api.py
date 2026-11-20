@@ -203,6 +203,7 @@ from app.contracts.session import (
     NoticeEvent,
     Parameter,
     ParameterUpdate,
+    ProgressEvent,
     QueuedMessage,
     RevisionLoad,
     RunRetry,
@@ -270,7 +271,7 @@ from app.revisions import revision_message, revision_prompt
 from app.runtime import data_dir
 from app.security import budget, quota
 from app.security import limits as rate_limits
-from app.security.scrub import scrub_user_text
+from app.security.scrub import scrub_user_text, untrusted
 from app.session_store import SessionStore, session_store
 from app.share_routes import SHARE_VIEW
 from app.sketches import SketchError, face_plane, new_sketch, sketch_params, with_sketches
@@ -325,6 +326,15 @@ ANSWERED_NOTE = (
     "run on the same request. The user answered: {answer}. The design, its builds and the fix "
     "rounds so far are kept in the workspace: read the spec to see where things stand, carry on "
     "from there with that answer, and don't ask the same question again.)"
+)
+# A question left unanswered because the user sent something else: its reply ends on this note.
+QUESTION_LEFT_OPEN = "The question was left unanswered: your next message was sent instead."
+# What the next run is told about it, so Claude decides what the new message means for it.
+OPEN_QUESTION_NOTE = (
+    '(Earlier you asked the user: "{question}"{where} They didn\'t pick an option: they '
+    "sent this message instead, and the question was left open. Decide whether this message "
+    "answers your question, replaces it, or is about something else, and go on from there. "
+    "Ask again only if you still need the answer.)"
 )
 RETRY_NOTE = (
     "(Your previous reply to this request stopped before you finished: {why} The user pressed "
@@ -2264,16 +2274,104 @@ async def list_messages(session_id: str) -> list[Message]:
 async def post_message(session_id: str, body: MessageCreate) -> Message:
     """Send a message, or answer the open question. The reply streams on `/events`; the
     response is the stored user message. While Claude is working a message gets 409: queue it
-    with `POST .../queue` instead. Secrets and email addresses in the text are replaced with
-    markers first (`app.security.scrub`); a message that starts Claude counts against the rate
-    limits and the daily budget (`app.security`)."""
+    with `POST .../queue` instead. While Claude's question is open, a message that isn't its
+    answer is sent all the same: the question is left unanswered (`leave_question_open`) and
+    Claude is told about it with the message. Secrets and email addresses in the text are
+    replaced with markers first (`app.security.scrub`); a message that starts Claude counts
+    against the rate limits and the daily budget (`app.security`)."""
     rate_limits.take(rate_limits.MESSAGES)
-    return send_message(SESSIONS.get(session_id), body)
+    state = SESSIONS.get(session_id)
+    if body.answer is not None or state.session.status != "waiting_for_answer":
+        return send_message(state, body)
+    _sendable(state, body)  # refused before the question is touched
+    state.queue_hold = True  # the queue waits: this message goes first
+    try:
+        note = await leave_question_open(state, QUESTION_LEFT_OPEN)
+        return send_message(state, body, note)
+    finally:
+        state.queue_hold = False
 
 
-def send_message(state: SessionState, body: MessageCreate) -> Message:
+def _sendable(state: SessionState, body: MessageCreate) -> None:
+    """The checks a message that starts Claude passes, whatever the session is doing."""
+    if state.reviewing.locked():
+        raise HTTPException(409, "the accepted changes are still rebuilding")
+    if state.importing.locked():
+        raise HTTPException(409, "the imported file is still being read")
+    if not body.text.strip() and not body.comments:
+        raise HTTPException(409, "a message needs text, comments or an answer")
+    for cid in body.comments:
+        if state.comment(cid).resolved:
+            raise HTTPException(409, f"comment {cid} is resolved")
+    rate_limits.check(rate_limits.RUNS)
+    budget.check()
+
+
+def open_question_note(state: SessionState) -> str | None:
+    """What the next run is told about Claude's open question: what it asked, and in which
+    comment thread when its run answered comments."""
+    q = state.question
+    if q is None:
+        return None
+    threads = [
+        c for c in state.comments if c.request is not None and c.request.message_id == q.message_id
+    ]
+    where = "."
+    if threads:
+        named = "\n".join(f"- comment {c.id}: {c.text[:200]}" for c in threads)
+        where = " in the comment thread it was about:\n" + untrusted("comment threads", named)
+        where += "\n"
+    return OPEN_QUESTION_NOTE.format(question=q.text, where=where)
+
+
+async def end_paused_run(state: SessionState, note: str) -> None:
+    """Cancel the session's run (going, or paused on its question); its reply ends with
+    `note` and the session is idle again."""
+    run = state.run
+    if (run is None or run.done()) and state.answer_restarts and state.question is not None:
+        # A question kept across a restart has no run to cancel: its reply ends on the note.
+        mid = state.question.message_id
+        state.emit(0, ProgressEvent(type="progress", message_id=mid, text=note))
+        state.emit(0, MessageEndEvent(type="message_end", message_id=mid))
+        state.answer_restarts = False
+        state.session.status = "idle"
+        state.question = None
+        state.save()
+        return
+    if run is None or run.done():
+        raise HTTPException(409, "Claude isn't working: there is nothing to stop")
+    state.stopping = note
+    run.cancel()
+    await asyncio.wait({run})
+    if state.session.status != "idle":  # stopped before its reply started
+        state.session.status = "idle"
+        state.question = None
+        state.save()
+
+
+async def leave_question_open(state: SessionState, note: str) -> str | None:
+    """Close Claude's open question unanswered, because the user sent something else: its
+    reply ends with `note` (a hand edit's decision keeps the edit as it is). Returns what the
+    next run is told about the question; None when no question was open."""
+    q = state.question
+    if state.session.status != "waiting_for_answer" or q is None:
+        return None
+    told = open_question_note(state)
+    decision = state.edit_decision
+    if decision is not None and decision.question_id == q.question_id:
+        _close_edit_decision(state, note)
+        state.question = None
+        state.session.status = "idle"
+        state.save()
+    else:
+        await end_paused_run(state, note)
+    return told
+
+
+def send_message(state: SessionState, body: MessageCreate, note: str | None = None) -> Message:
     """Store the message and start its run (or resume the paused run with the answer): the
-    checks and start of `POST .../messages`, also used to send a queued message."""
+    checks and start of `POST .../messages`, also used to send a queued message. `note` goes
+    to Claude after the message (a question it left open)."""
     status = state.session.status
     if body.answer is not None:
         q = state.question
@@ -2351,6 +2449,8 @@ def send_message(state: SessionState, body: MessageCreate) -> Message:
         state.standards_note = None
     if removed:
         prompt += "\n\n" + REMOVED_NOTE
+    if note:
+        prompt += "\n\n" + note
     notes = import_notes(state.import_list(), state.session.latest_build_id)
     if notes:
         prompt += "\n\n" + notes

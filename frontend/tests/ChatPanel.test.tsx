@@ -158,13 +158,12 @@ describe("chat panel", () => {
     expect(option).toHaveProperty("disabled", false);
     expect(within(chat).getByTestId("assistant-message").getAttribute("aria-busy")).toBeNull();
 
-    // While the question is open, the composer can't send text and says why (the API answers 409).
+    // The open question doesn't hold the composer: text typed meanwhile can be sent.
     const send = () => within(chat).getByRole("button", { name: "Send" });
     fireEvent.change(within(chat).getByRole("textbox", { name: "Message" }), { target: { value: "Something else" } });
-    expect(send()).toHaveProperty("disabled", true);
-    expect(send().getAttribute("title")).toBe("Answer Claude's question first");
-    fireEvent.keyDown(within(chat).getByRole("textbox", { name: "Message" }), { key: "Enter" });
-    expect(messagesPosted()).toHaveLength(1);
+    expect(send()).toHaveProperty("disabled", false);
+    expect(send().getAttribute("title")).not.toBe("Answer Claude's question first");
+    fireEvent.change(within(chat).getByRole("textbox", { name: "Message" }), { target: { value: "" } });
 
     fireEvent.click(option);
     await waitFor(() => expect(messagesPosted()).toHaveLength(2));
@@ -181,6 +180,31 @@ describe("chat panel", () => {
     fireEvent.change(within(chat).getByRole("textbox", { name: "Message" }), { target: { value: "Next" } });
     fireEvent.change(within(chat).getByRole("textbox", { name: "Message" }), { target: { value: "Next" } });
     expect(send()).toHaveProperty("disabled", false);
+  });
+
+  it("sends a message while Claude's question is open, and the question shows it was left open", async () => {
+    const chat = renderWorkspace();
+    await sendText(chat, "Check the enclosure");
+    const source = FakeEventSource.last!;
+    const id = "live-1";
+    act(() => {
+      source.emit({ type: "message_start", message_id: id, role: "assistant" });
+      source.emit({ ...question, message_id: id });
+    });
+    const textbox = within(chat).getByRole("textbox", { name: "Message" });
+    fireEvent.change(textbox, { target: { value: "Something else" } });
+    fireEvent.keyDown(textbox, { key: "Enter" });
+    await waitFor(() => expect(messagesPosted()).toHaveLength(2));
+    expect(messagesPosted()[1].body).toMatchObject({ text: "Something else" });
+    expect(messagesPosted()[1].body).not.toHaveProperty("answer");
+    // The server closed the question as it took the message: the paused reply ends with a note.
+    const option = () => within(chat).getByRole("button", { name: new RegExp(question.options[0].label) });
+    act(() => {
+      source.emit({ type: "progress", message_id: id, text: "The question was left unanswered: your next message was sent instead." });
+      source.emit({ type: "message_end", message_id: id });
+    });
+    expect(option()).toHaveProperty("disabled", true);
+    expect(within(chat).getByText(/left unanswered: your next message was sent instead/)).toBeTruthy();
   });
 
   it("sends the canvas selection with the next message and shows it as a chip", async () => {

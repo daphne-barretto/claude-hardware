@@ -166,7 +166,8 @@ function updateAssistant(
   const answeredAt = messages.findIndex((m, i) => i > index && m.role === "user");
   if (id != null && continues && answeredAt >= 0 && messages[index].blocks?.some((b) => b.kind === "question")) {
     const parts = messages.filter((m) => (m.streamId ?? m.id) === id).length;
-    const before = messages.map((m, i) => (i === index ? { ...m, streaming: false } : m));
+    // Its question, if the user didn't answer it, was left open: Claude went on past it.
+    const before = messages.map((m, i) => (i === index ? { ...m, streaming: false, blocks: passQuestions(m.blocks ?? []) } : m));
     const part = update({ id: `${id}~${parts}`, streamId: id, role: "assistant", text: "", blocks: [], streaming: true });
     return [...before.slice(0, answeredAt + 1), part, ...before.slice(answeredAt + 1)];
   }

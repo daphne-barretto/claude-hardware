@@ -20,7 +20,7 @@ import {
   undoReview,
   visiblePins,
   type Comment,
-  type ThreadQuestion, isAnswerFirst } from "./comments";
+  type ThreadQuestion } from "./comments";
 import { useComments, type CommentTool } from "./useComments";
 import { shownError } from "@/lib/errors";
 import { useAnchoredCard } from "../fitPanel";
@@ -52,9 +52,10 @@ type Props = {
   onSend?: (ids: string[]) => void | Promise<void>;
   /** Answers a question Claude asked in a comment's run. */
   onAnswer?: (questionId: string, optionId: string) => void | Promise<void>;
-  /** Claude is busy: sends and reviews wait. */
+  /** Claude is busy: reviews wait, and sends go to the queue. */
   busy: boolean;
-  /** Why sends can't happen now although Claude isn't busy (a question is open). */
+  /** Why nothing can be sent at all (a read-only share link, a session that is gone). Claude's
+   * open question never blocks a send: Claude is told it was left open. */
   blocked?: string;
   onFocus: (point: Point3) => void;
   /** Where the comment tools go (the canvas's bottom bar); none: centred above it. */
@@ -73,8 +74,11 @@ export function CommentsLayer(props: Props) {
   const open = comments.find((c) => c.id === tool.openId) ?? null;
   const pins = ready ? visiblePins(comments) : [];
   const notes = comments.filter((c) => !c.resolved && threadState(c) === "note");
-  const sendWhy = !props.onSend ? "Not connected to Claude" : busy ? "Claude is working: send when the run has finished" : blocked;
-  const waiting = !busy && isAnswerFirst(blocked);
+  const sendWhy = !props.onSend ? "Not connected to Claude" : blocked;
+  // Sent while Claude works: it waits in the queue and goes when the run ends.
+  const sendNote = busy ? "Claude is working: it is sent when the run ends" : undefined;
+  // A thread waits on the user while its run's question is open.
+  const asks = (c: Comment) => !!c.request && c.request.message_id in questions;
 
   // Escape cancels a draft, then closes the thread.
   useEffect(() => {
@@ -110,7 +114,7 @@ export function CommentsLayer(props: Props) {
         {pins.map((c) => {
           const q = at(c.location.point);
           if (!q) return null;
-          const state = threadState(c, waiting);
+          const state = threadState(c, asks(c));
           return (
             <button
               key={c.id}
@@ -151,6 +155,7 @@ export function CommentsLayer(props: Props) {
           style={draftAt ? place(draftAt) : { left: 12, top: 56 }}
           anchor={draftAt}
           sendWhy={sendWhy}
+          sendNote={sendNote}
           onCancel={() => tool.place(null)}
           onSave={async (text, toClaude) => {
             const d = tool.draft!;
@@ -174,6 +179,7 @@ export function CommentsLayer(props: Props) {
           question={open.request ? questions[open.request.message_id] : undefined}
           busy={busy}
           sendWhy={sendWhy}
+          sendNote={sendNote}
           onClose={() => tool.open(null)}
           onPut={put}
           onSend={() => send([open.id])}
@@ -231,7 +237,7 @@ export function CommentsLayer(props: Props) {
               <button
                 type="button"
                 disabled={!!sendWhy}
-                title={sendWhy ?? "One run answers each note in its own thread"}
+                title={sendWhy ?? sendNote ?? "One run answers each note in its own thread"}
                 onClick={() => send(notes.map((c) => c.id))}
                 className={btn}
               >
@@ -245,7 +251,7 @@ export function CommentsLayer(props: Props) {
           ) : (
             <ul aria-label="Comment threads" className="cs-scroll flex max-h-72 flex-col overflow-y-auto">
               {comments.map((c) => {
-                const state = threadState(c, waiting);
+                const state = threadState(c, asks(c));
                 return (
                   <li key={c.id} data-comment={c.id} data-state={state}>
                     <button
@@ -278,6 +284,7 @@ function DraftCard({
   style,
   anchor,
   sendWhy,
+  sendNote,
   onCancel,
   onSave,
 }: {
@@ -285,6 +292,7 @@ function DraftCard({
   /** The pin's point on screen: the card stays beside it, inside the canvas. */
   anchor: ScreenPoint | null;
   sendWhy: string | undefined;
+  sendNote: string | undefined;
   onCancel: () => void;
   onSave: (text: string, toClaude: boolean) => Promise<void>;
 }) {
@@ -336,7 +344,7 @@ function DraftCard({
         <button
           type="button"
           disabled={!text.trim() || saving || !!sendWhy}
-          title={sendWhy ?? (text.trim() ? "Claude answers in this thread" : "Type a comment first")}
+          title={sendWhy ?? (text.trim() ? (sendNote ?? "Claude answers in this thread") : "Type a comment first")}
           onClick={() => save(true)}
           className={primary}
         >
@@ -357,6 +365,7 @@ function Thread({
   question,
   busy,
   sendWhy,
+  sendNote,
   onClose,
   onPut,
   onSend,
@@ -372,6 +381,7 @@ function Thread({
   question: ThreadQuestion | undefined;
   busy: boolean;
   sendWhy: string | undefined;
+  sendNote: string | undefined;
   onClose: () => void;
   onPut: (c: Comment) => void;
   onSend: () => Promise<void>;
@@ -384,7 +394,7 @@ function Thread({
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [answered, setAnswered] = useState<string | null>(null);
-  const state = threadState(comment, isAnswerFirst(sendWhy));
+  const state = threadState(comment, !!question);
   // Waiting on Claude's question counts as in progress: the thread can't be resolved yet.
   const working = state === "working" || state === "waiting";
   const undo = undoReview(changes);
@@ -445,9 +455,7 @@ function Thread({
         {working && (
           <li data-testid="comment-working" className="border-t border-[var(--cs-border)] pt-2 text-[12px] text-[var(--cs-muted)] first:border-t-0">
             {state === "waiting"
-              ? sendWhy?.includes("comment thread")
-                ? "Claude asked you a question here. Answer it and Claude carries on."
-                : "Claude asked you a question in the chat. Answer it there and Claude carries on."
+              ? "Claude asked you a question here. Answer it and Claude carries on, or send something else."
               : "Claude is working on this…"}
           </li>
         )}
@@ -560,11 +568,12 @@ function Thread({
             Undo
           </button>
         )}
-        {!comment.resolved && !working && (
+        {/* Claude's open question here doesn't hold the thread: whatever is sent goes to Claude. */}
+        {!comment.resolved && (!working || state === "waiting") && (
           <button
             type="button"
             disabled={!!sendWhy || !!pending}
-            title={sendWhy ?? "Claude answers in this thread"}
+            title={sendWhy ?? sendNote ?? "Claude answers in this thread"}
             onClick={() => postReply(true)}
             className={`${btn} border border-[var(--cs-border)]`}
           >

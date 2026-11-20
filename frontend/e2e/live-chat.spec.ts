@@ -75,19 +75,11 @@ test("send, stream and answer a live run, then ask about a selected face", async
   const status = async () => (await (await page.request.get(`/api/sessions/${session.id}`)).json()).status;
   expect(await status()).toBe("waiting_for_answer");
 
-  // While the question is open the composer can't send text, and says why: the real API
-  // takes only the answer then (409), so nothing is posted.
+  // The open question doesn't hold the composer: a message typed meanwhile can be sent (the API
+  // takes it and tells Claude the question was left open, `test_open_questions.py`).
   const send = chat.getByRole("button", { name: "Send" });
-  let posts = 0;
-  page.on("request", (r) => {
-    if (r.method() === "POST" && /\/messages$/.test(r.url())) posts++;
-  });
   await chat.getByRole("textbox", { name: "Message" }).fill("Something else first");
-  await expect(send).toBeDisabled();
-  await expect(send).toHaveAttribute("title", "Answer Claude's question first");
-  await chat.getByRole("textbox", { name: "Message" }).press("Enter");
-  await expect(chat.getByText("Could not reach Claude")).toHaveCount(0);
-  expect(posts).toBe(0);
+  await expect(send).toBeEnabled();
   await chat.getByRole("textbox", { name: "Message" }).fill("");
 
   // Answer with an option button: the paused run resumes and ends.

@@ -84,3 +84,53 @@ describe("useChatSession while waiting for a reply", () => {
     expect(errors(hook)).toHaveLength(0);
   });
 });
+
+describe("useChatSession while Claude's question is open", () => {
+  const question = (mid: string): SessionEvent => ({
+    type: "question",
+    message_id: mid,
+    question_id: `${mid}-q`,
+    text: "Which way?",
+    options: [
+      { id: "a", label: "A" },
+      { id: "b", label: "B" },
+    ],
+  });
+
+  // Regression: a question in one comment thread blocked every send, the chat's and every thread's.
+  it("blocks nothing: a question in a comment thread", async () => {
+    const hook = await sendMessage();
+    act(() => {
+      api.onEvent?.({ type: "message_start", message_id: "m-1", role: "assistant" });
+      api.onEvent?.({ type: "message_end", message_id: "m-1" });
+      api.onEvent?.({
+        type: "comment",
+        comment: {
+          id: "c-1",
+          build_id: "b-1",
+          face_id: "f-1",
+          point: [0, 0, 0],
+          text: "Which way should it open?",
+          author: "Demo user",
+          created_at: "2026-01-01T00:00:00Z",
+          replies: [],
+          request: { message_id: "m-2", status: "running" },
+          resolved: false,
+        },
+      } as SessionEvent);
+      api.onEvent?.(question("m-2"));
+    });
+    expect(hook.result.current.blocked).toBeUndefined();
+    expect(hook.result.current.busy).toBe(false);
+  });
+
+  it("blocks nothing: a question in the chat", async () => {
+    const hook = await sendMessage();
+    act(() => {
+      api.onEvent?.({ type: "message_start", message_id: "m-1", role: "assistant" });
+      api.onEvent?.(question("m-1"));
+    });
+    expect(hook.result.current.blocked).toBeUndefined();
+    expect(hook.result.current.busy).toBe(false);
+  });
+});

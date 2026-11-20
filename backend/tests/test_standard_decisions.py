@@ -89,7 +89,7 @@ def edit_below_the_standard(client) -> tuple[str, float, float, dict]:
     return sid, original, value, question
 
 
-def test_a_hand_edit_that_breaks_a_standard_asks_the_user(client, walls) -> None:
+def test_a_hand_edit_that_breaks_a_standard_asks_the_user(client, claude, walls) -> None:
     sid, original, value, question = edit_below_the_standard(client)
     validate_event(question)
     assert {o["id"] for o in question["options"]} == {"keep", "adjust", "revert"}
@@ -105,9 +105,16 @@ def test_a_hand_edit_that_breaks_a_standard_asks_the_user(client, walls) -> None
     # Never reverted on its own: the value stands, locked, until the user decides.
     ws = SESSIONS.get(sid).ws
     assert ws.design.params["wall"] == value and "wall" in ws.design.locked
-    # Other messages wait for the decision.
-    r = client.post(f"/api/sessions/{sid}/messages", json={"text": "Carry on."})
-    assert r.status_code == 409
+    # A message meanwhile doesn't wait for the decision: it goes to Claude, the question is
+    # left unanswered, and the edit stands as it is.
+    claude.scripts.append([("text", "Carrying on.")])
+    after = last_id(client, sid)
+    send(client, sid, text="Carry on.")
+    found = wait_until(client, sid, "idle", after)
+    assert "Carrying on." in "".join(d["delta"] for _, t, d in found if t == "text")
+    assert "left open" in claude.prompts[-1]
+    assert ws.design.params["wall"] == value and "wall" in ws.design.locked
+    assert SESSIONS.get(sid).edit_decision is None
 
 
 def test_reverting_the_edit_puts_the_value_back_and_rebuilds(client, walls) -> None:

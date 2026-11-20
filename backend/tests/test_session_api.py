@@ -448,7 +448,7 @@ def test_the_openapi_schema_is_published_at_docs(client) -> None:
 # --- Messages and runs --------------------------------------------------------------------------
 
 
-def test_a_message_while_running_or_waiting_is_refused(client, claude) -> None:
+def test_an_answer_to_no_open_question_is_refused(client, claude) -> None:
     sid, _ = start(client)
     claude.scripts.append(
         [
@@ -465,8 +465,8 @@ def test_a_message_while_running_or_waiting_is_refused(client, claude) -> None:
     send(client, sid, text="go")
     found = wait_until(client, sid, "waiting_for_answer")
     (question,) = [d for _, t, d in found if t == "question"]
-    r = client.post(f"/api/sessions/{sid}/messages", json={"text": "again"})
-    assert r.status_code == 409 and "answer" in r.json()["detail"]
+    # A message that isn't the answer goes to Claude (`test_open_questions.py`); a wrong
+    # answer is refused.
     for answer in ({"question_id": "q-9", "option_id": "a"},
                    {"question_id": question["question_id"], "option_id": "c"}):  # fmt: skip
         r = client.post(f"/api/sessions/{sid}/messages", json={"answer": answer})

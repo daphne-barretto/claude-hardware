@@ -67,9 +67,6 @@ export function threadState(comment: Comment, waiting = false): ThreadState {
   return comment.request.status;
 }
 
-/** Whether a reason sends are blocked means Claude's question is open (`useChatSession`). */
-export const isAnswerFirst = (why: string | undefined) => !!why?.startsWith("Answer Claude's question");
-
 export const THREAD_LABEL: Record<ThreadState, string> = {
   note: "Note",
   working: "Claude is working",

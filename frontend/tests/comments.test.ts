@@ -8,7 +8,6 @@ import {
   pinnedTo,
   threadState,
   THREAD_LABEL,
-  isAnswerFirst,
   timeAgo,
   undoReview,
   visiblePins,
@@ -101,10 +100,6 @@ describe("comments", () => {
     const running = comment({ request: { message_id: "m", status: "running" } });
     expect(threadState(running, true)).toBe("waiting");
     expect(THREAD_LABEL.waiting).toBe("Waiting for your answer");
-    expect(isAnswerFirst("Answer Claude's question first")).toBe(true);
-    expect(isAnswerFirst("Answer Claude's question in the comment thread")).toBe(true);
-    expect(isAnswerFirst("Claude is working: send when the run has finished")).toBe(false);
-    expect(isAnswerFirst(undefined)).toBe(false);
   });
 
   it("replaces a comment in place and appends a new one", () => {
