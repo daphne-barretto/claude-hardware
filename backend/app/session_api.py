@@ -2650,7 +2650,7 @@ def send_message(state: SessionState, body: MessageCreate, note: str | None = No
         note = "\n\n".join(n for n in (note, open_question_note(state, left["question"])) if n)
     if note:
         prompt += "\n\n" + note
-    told = convs.context_for(state, conversation)
+    told = convs.context_for(state, conversation, message.id)
     if told:
         prompt += "\n\n" + told
     state.run_conversation = conversation
@@ -2683,7 +2683,7 @@ def _answer_parked(
         for p in (
             last.get("prompt", ""),
             PARKED_ANSWER_NOTE.format(question=q.text, answer=label),
-            convs.context_for(state, conversation),
+            convs.context_for(state, conversation, message.id),
         )
         if p
     )

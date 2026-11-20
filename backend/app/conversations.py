@@ -30,6 +30,9 @@ TITLE_LENGTH = 48
 # How much of the timeline a run is told: the latest entries, each cut short.
 TIMELINE_ENTRIES = 12
 ENTRY_LENGTH = 300
+# How much of the main chat a run is told: the latest messages, each cut short.
+HISTORY_MESSAGES = 40
+HISTORY_LENGTH = 1500
 
 
 def conversation_of(body: MessageCreate) -> str:
@@ -190,10 +193,61 @@ def thread_summaries(state: SessionState, but: str | None = None) -> str:
     )
 
 
-def context_for(state: SessionState, conversation: str) -> str:
-    """What a run in `conversation` is told about the others."""
+def chat_history(state: SessionState, but: str | None = None) -> str:
+    """The main chat so far, as a run there is told it: each run starts a fresh conversation
+    with Claude, so without this an answer or follow-up reaches it with nothing before it.
+    Messages sent from comment threads (and their replies) are left out; `but` is the message
+    the run is for."""
+    questions = {e.message_id: e for _, e in state.events if e.type == "question"}
+    by_question = {q.question_id: q for q in questions.values()}
+    lines: list[str] = []
+    in_thread = False
+    for m in state.messages:
+        if m.id == but:
+            continue
+        if m.role == "user":
+            in_thread = bool(m.comments)
+            if in_thread:
+                continue
+            if m.answer is not None:
+                q = by_question.get(m.answer.question_id)
+                label = next(
+                    (o.label for o in (q.options if q else []) if o.id == m.answer.option_id),
+                    m.answer.option_id,
+                )
+                lines.append(f"User answered: {label}")
+            elif m.text.strip():
+                lines.append(f"User: {_cut_long(m.text)}")
+            continue
+        if in_thread:
+            continue
+        if m.text.strip():
+            lines.append(f"Claude: {_cut_long(m.text)}")
+        q = questions.get(m.id)
+        if q is not None:
+            options = "; ".join(o.label for o in q.options)
+            lines.append(f"Claude asked: {_cut_long(q.text)} (options: {options})")
+    lines = lines[-HISTORY_MESSAGES:]
+    if not lines:
+        return ""
+    return (
+        "The chat so far in this session (oldest first; the design already holds what these "
+        "changed). Read the new message in light of it:\n"
+        + untrusted("chat history", "\n".join(lines))
+    )
+
+
+def _cut_long(text: str) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= HISTORY_LENGTH else text[: HISTORY_LENGTH - 1] + "…"
+
+
+def context_for(state: SessionState, conversation: str, message_id: str | None = None) -> str:
+    """What a run in `conversation` is told: for the main chat, the chat so far (but the
+    message `message_id` the run is for) and the threads; for a thread, the others."""
     if conversation == MAIN:
-        return thread_summaries(state)
+        parts = [chat_history(state, but=message_id), thread_summaries(state)]
+        return "\n\n".join(p for p in parts if p)
     parts = [
         "This run is the conversation in the comment thread above; the main chat and other "
         "threads are separate conversations about the same design.",
@@ -205,6 +259,7 @@ def context_for(state: SessionState, conversation: str) -> str:
 
 __all__ = [
     "MAIN",
+    "chat_history",
     "MAIN_TITLE",
     "can_send",
     "context_for",
