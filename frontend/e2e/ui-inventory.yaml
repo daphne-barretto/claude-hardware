@@ -1790,6 +1790,14 @@ entries:
     states: [session.export, session.exported]
     expect:
       - attribute: { of: region "Export", name: data-formats, value: "build_note" }
+  - id: canvas.export-format-pdf
+    screen: session canvas
+    role: checkbox
+    name: PDF drawing
+    within: region "Export"
+    states: [session.export, session.exported]
+    expect:
+      - attribute: { of: region "Export", name: data-formats, value: "step,pdf,build_note" }
   - id: canvas.export-format-source
     screen: session canvas
     role: checkbox

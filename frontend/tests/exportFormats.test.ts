@@ -18,8 +18,8 @@ describe("export formats", () => {
     expect([...EXPORT_FORMATS]).toEqual(schema.enum);
   });
 
-  it("offer STEP and the source code, STEP checked by default", () => {
-    expect(FORMAT_OPTIONS.map((o) => o.format)).toEqual(["step", "source"]);
+  it("offer STEP, the PDF drawing and the source code, STEP checked by default", () => {
+    expect(FORMAT_OPTIONS.map((o) => o.format)).toEqual(["step", "pdf", "source"]);
     expect(DEFAULT_FORMATS).toEqual(["step"]);
   });
 

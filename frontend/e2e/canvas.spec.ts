@@ -174,17 +174,18 @@ function expectValid(name: string, body: Buffer) {
   } else throw new Error(`unexpected export file ${name}`);
 }
 
-test("export menu: STEP, source code and the build note download and are valid", async ({ page, request }) => {
+test("export menu: STEP, the PDF drawing, source code and the build note download and are valid", async ({ page, request }) => {
   test.setTimeout(90_000);
   const { canvas } = await openCanvas(page, request);
   await canvas.getByRole("button", { name: "Export", exact: true }).click();
   const panel = canvas.getByRole("region", { name: "Export" });
   await expect(panel.getByRole("checkbox", { name: "STEP" })).toBeChecked();
+  await expect(panel.getByRole("checkbox", { name: "PDF drawing" })).not.toBeChecked();
   await expect(panel.getByRole("checkbox", { name: "Source code" })).not.toBeChecked();
   const note = panel.getByRole("checkbox", { name: "Include build note" });
   await expect(note).toBeChecked();
   await expect(panel.getByTestId("export-note-summary")).toContainText(`${CHECKS.summary.untested} not tested`);
-  await expect(panel.getByRole("checkbox")).toHaveCount(3);
+  await expect(panel.getByRole("checkbox")).toHaveCount(4);
 
   // Nothing checked: Download is disabled and says why.
   for (const box of await panel.getByRole("checkbox").all()) await box.uncheck();
@@ -198,11 +199,11 @@ test("export menu: STEP, source code and the build note download and are valid",
     const file = await d.path();
     downloads.push({ name: d.suggestedFilename(), body: readFileSync(file) });
   });
-  // STEP, the source's code and parameters, and the build note.
-  await expect(download).toHaveText("Download 4 files");
+  // STEP, the PDF drawing, the source's code and parameters, and the build note.
+  await expect(download).toHaveText("Download 5 files");
   await download.click();
-  await expect(panel.getByRole("list", { name: "Exported files" }).getByRole("link")).toHaveCount(4, { timeout: 60_000 });
-  await expect.poll(() => downloads.length, { timeout: 30_000 }).toBe(4);
+  await expect(panel.getByRole("list", { name: "Exported files" }).getByRole("link")).toHaveCount(5, { timeout: 60_000 });
+  await expect.poll(() => downloads.length, { timeout: 30_000 }).toBe(5);
   for (const d of downloads) expectValid(d.name, d.body);
 });
 

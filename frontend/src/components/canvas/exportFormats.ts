@@ -8,6 +8,7 @@ export type FormatOption = { format: FileFormat; label: string; purpose: string;
 /** The export menu's formats, in menu order. `files` is how many files the format downloads. */
 export const FORMAT_OPTIONS: FormatOption[] = [
   { format: "step", label: "STEP", purpose: "Any CAD tool", files: 1 },
+  { format: "pdf", label: "PDF drawing", purpose: "Key dimensions", files: 1 },
   { format: "source", label: "Source code", purpose: "The code and its parameters", files: 2 },
 ];
 
