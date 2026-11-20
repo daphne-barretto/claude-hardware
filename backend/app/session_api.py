@@ -243,6 +243,7 @@ from app.edit_decisions import (
 from app.edit_decisions import accepted as accepted_failures
 from app.edit_decisions import ask as ask_about_edit
 from app.examples import Example, example_for_board, examples, find_example
+from app.export_names import rename_exports
 from app.exports import (
     ExportPartsError,
     export_parts,
@@ -3549,6 +3550,8 @@ async def create_export(session_id: str, body: ExportCreate) -> Export:
             {"format": f.format, "name": f.name, "media_type": f.media_type} for f in exported
         ]
     add_safety_notes(state, out, written)
+    number = list(state.builds).index(build.id) + 1 if build.id in state.builds else 1
+    rename_exports(out, written, state.session.title, number)
     base = f"{API}/sessions/{session_id}/exports/{eid}/files/"
     files = [ExportFile(**f, url=base + f["name"]) for f in written]
     export = Export(id=eid, build_id=build.id, created_at=now(), files=files)

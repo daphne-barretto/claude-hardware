@@ -797,8 +797,13 @@ def test_every_export_format_is_served_with_its_media_type(client) -> None:
     export = Export.model_validate(r.json())
     assert {f.format for f in export.files} == set(FORMATS)
     got: dict[str, bytes] = {}
+    from app.export_names import export_name
+
+    title = client.get(f"/api/sessions/{sid}").json()["title"]
+    builds = [b["id"] for b in client.get(f"/api/sessions/{sid}/builds").json()]
+    number = builds.index(build) + 1
     for f in export.files:
-        assert f.name in FILE_NAMES[f.format]
+        assert f.name in {export_name(n, title, number) for n in FILE_NAMES[f.format]}
         expected = "application/json" if f.name.endswith(".json") else FORMATS[f.format].media_type
         assert f.media_type == expected, f.name
         res = client.get(f.url)
@@ -806,11 +811,13 @@ def test_every_export_format_is_served_with_its_media_type(client) -> None:
         assert res.headers["content-type"].split(";")[0] == expected, f.name
         assert f'filename="{f.name}"' in res.headers["content-disposition"]
         got[f.name] = res.content
-    assert sorted(got) == sorted(n for names in FILE_NAMES.values() for n in names)
+    assert sorted(got) == sorted(
+        export_name(n, title, number) for names in FILE_NAMES.values() for n in names
+    )
 
     def one(fmt: str) -> bytes:
         (name,) = FILE_NAMES[fmt]
-        return got[name]
+        return got[export_name(name, title, number)]
 
     assert one("step").startswith(b"ISO-10303-21")
     stl = one("stl")
@@ -823,7 +830,7 @@ def test_every_export_format_is_served_with_its_media_type(client) -> None:
     dxf = ezdxf.read(io.StringIO(one("dxf").decode()))
     assert len(dxf.modelspace()) > 0
     assert len(pypdf.PdfReader(io.BytesIO(one("pdf"))).pages) >= 1
-    code, params = (got[n] for n in FILE_NAMES["source"])
+    code, params = (got[export_name(n, title, number)] for n in FILE_NAMES["source"])
     compile(code, FILE_NAMES["source"][0], "exec")
     assert isinstance(json.loads(params), dict)
     assert build in one("build_note").decode()
