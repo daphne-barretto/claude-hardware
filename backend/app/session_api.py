@@ -119,6 +119,7 @@ from fastapi import APIRouter, Header, HTTPException, Query
 from fastapi.responses import Response, StreamingResponse
 
 from app import comments as pins
+from app import conversations as convs
 from app import demos
 from app import standards_sets as std_sets
 from app.agent import limits
@@ -187,6 +188,8 @@ from app.contracts.session import (
     Constraint,
     ConstraintsEvent,
     ConstraintUpdate,
+    Conversation,
+    ConversationsEvent,
     Edit,
     ErrorBody,
     ErrorEvent,
@@ -214,6 +217,7 @@ from app.contracts.session import (
     Sketch,
     SketchCreate,
     SourceUpdate,
+    ThreadReportEvent,
     TitleEvent,
     UserMessageEvent,
     sse_frame,
@@ -746,6 +750,13 @@ class SessionState:
         self.edits: dict[str, Edit] = {}
         # The design timeline (`app.design_history`): undo and redo over every change.
         self.history = History()
+        # Conversations (`app.conversations`): the one the run going (or paused on its
+        # question) belongs to, the questions parked while other conversations ran (by
+        # conversation: the question and the run that asked), and what each run did.
+        self.run_conversation: str | None = None
+        self.parked: dict[str, dict[str, Any]] = {}
+        self.reports: list[dict[str, Any]] = []
+        self.conversations_sent: list[dict[str, Any]] | None = None
 
     def claude_title(self, title: str) -> str:
         """Claude names the part (`finish` `title`, already cleaned): the session takes the
@@ -1030,6 +1041,18 @@ class SessionState:
         elif event.type == "title":
             s.title = event.title
             s.title_locked = event.title_locked
+        elif event.type == "thread_report":
+            # The entry is a message of the main chat: stored as it was sent.
+            if not any(m.id == event.message_id for m in self.messages):
+                self.messages.append(
+                    Message(
+                        id=event.message_id,
+                        role="assistant",
+                        text=event.summary,
+                        created_at=now(),
+                        comments=[event.comment_id],
+                    )
+                )
         elif event.type == "comment":
             i = next((i for i, c in enumerate(self.comments) if c.id == event.comment.id), None)
             if i is None:
@@ -1213,6 +1236,12 @@ class SessionState:
             },
             "question": self.question.model_dump(mode="json") if self.question else None,
             "queue": [q.model_dump(mode="json") for q in self.queue],
+            "run_conversation": self.run_conversation,
+            "parked": {
+                k: {"question": p["question"].model_dump(mode="json"), "run": p["run"]}
+                for k, p in self.parked.items()
+            },
+            "reports": self.reports,
             "next_message": self.next_message,
             "last_run": self.last_run,
             "parameters": [p.model_dump(mode="json") for p in self.parameters],
@@ -1282,6 +1311,12 @@ class SessionState:
         state.next_message = data["next_message"]
         state.queue = [QueuedMessage.model_validate(q) for q in data.get("queue", [])]
         state.last_run = data.get("last_run")
+        state.run_conversation = data.get("run_conversation")
+        state.parked = {
+            k: {"question": validate_event(p["question"]), "run": p["run"]}
+            for k, p in (data.get("parked") or {}).items()
+        }
+        state.reports = data.get("reports") or []
         state.parameters = [Parameter.model_validate(p) for p in data["parameters"]]
         state.edits = {t: Edit.model_validate(e) for t, e in data.get("edits", {}).items()}
         state.sketches = {t: Sketch.model_validate(k) for t, k in data.get("sketches", {}).items()}
@@ -1872,6 +1907,7 @@ def _queued(sink: EventSink, place: int) -> None:
 async def _run(
     state: SessionState, body: MessageCreate, prompt: str, files: list[AttachedFile] = ()
 ) -> None:
+    conversation = state.run_conversation or convs.MAIN
     if state.initial is not None:
         await state.initial
     ws = state.ws
@@ -1931,7 +1967,9 @@ async def _run(
             state.keep_proposal(result.proposal)
         state.risks = result.risks
     except asyncio.CancelledError:
-        if state.stopping is not None and state.stopping != STOPPED:
+        if state.stopping == PARKED:
+            pass  # its question stays open in its conversation (`park_question`)
+        elif state.stopping is not None and state.stopping != STOPPED:
             # A queued message was sent anyway (`app.message_queue`): the reply ends on a note.
             ws.sink.progress(state.stopping, None, None)
         elif not (state.preempted or state.stopping):  # the server is shutting down
@@ -1952,14 +1990,22 @@ async def _run(
             budget.record(result.cost_usd, result.input_tokens, result.output_tokens)
         if earlier is not None and state.proposal is None and ws.design.snapshot() == design:
             state.proposal = earlier
+        titles: list[str] = []
+        said = "".join(e.delta for e in ws.sink.of_type("text")).strip().split("\n")
+        summary = (ws.finished or {}).get("summary") or said[-1]
         if before is not None:  # the run's applied changes are one step of the timeline
             ran = state.proposal if state.proposal is not earlier else None
             titles = [title(u, delta(u)) for u in ran.units] if ran is not None else []
-            said = "".join(e.delta for e in ws.sink.of_type("text")).strip().split("\n")
-            label = run_label(titles, (ws.finished or {}).get("summary") or said[-1])
+            label = run_label(titles, summary)
             state.record(before, "run", label, actor="claude", message_id=mid)
-        _answer_comments(state, mid, error)
+        parked = state.stopping == PARKED
+        if not parked:  # a parked run's thread still waits on its question
+            _answer_comments(state, mid, error)
         ws.sink.end()
+        if not parked:
+            changed = design is not None and ws.design.snapshot() != design
+            _report(state, conversation, mid, body, summary, titles, changed, error)
+        state.run_conversation = None
         if state.session.status != "idle":
             state.session.status = "idle"
             state.question = None
@@ -2006,6 +2052,84 @@ def _answer_comments(state: SessionState, mid: str, error: str | None) -> None:
         )
     ws.comments, ws.comment_links, ws.replied = [], {}, set()
     ws.on_reply, ws.on_end = None, None
+
+
+def _report(
+    state: SessionState,
+    conversation: str,
+    mid: str,
+    body: MessageCreate,
+    summary: str,
+    titles: list[str],
+    changed: bool,
+    error: str | None,
+) -> None:
+    """A run ended: what it did goes in its conversation's history, and a thread's run reports
+    back to the main chat (`ThreadReportEvent`): what changed, the checks and the build."""
+    state.reports.append(
+        {
+            "conversation": conversation,
+            "run_id": mid,
+            "request": body.text.strip()[:500],
+            "summary": (error or summary or "").strip()[:500],
+            "changed": changed,
+        }
+    )
+    del state.reports[: -convs.TIMELINE_ENTRIES * 4]  # bounded: only the latest are told
+    if conversation == convs.MAIN or not any(c.id == conversation for c in state.comments):
+        return
+    build_id = state.session.latest_build_id if changed else None
+    build = state.builds.get(build_id) if build_id else None
+    ids = list(state.builds)
+    state.emit(
+        0,
+        ThreadReportEvent(
+            type="thread_report",
+            message_id=state.message_id(),
+            comment_id=conversation,
+            thread_title=convs.title_of(state, conversation),
+            run_id=mid,
+            outcome="failed" if error else "changed" if changed else "answered",
+            summary=(error or summary or "Replied in the thread.").strip()[:500],
+            changes=titles[:8],
+            build_id=build.id if build is not None else None,
+            build_number=ids.index(build.id) + 1 if build is not None else None,
+            checks=build.checks if build is not None else None,
+        ),
+    )
+
+
+def conversations_changed(state: SessionState) -> None:
+    """Stream the conversations when where any of them stands changed (a `RUN_LISTENERS`
+    listener, and the message queue's)."""
+    now_ = [c.model_dump(mode="json") for c in convs.conversations(state)]
+    if now_ == state.conversations_sent:
+        return
+    if state.conversations_sent is None and len(now_) == 1:
+        return  # the main chat alone: where it stands is the session's status and question
+    state.conversations_sent = now_
+    state.emit(
+        0,
+        ConversationsEvent(
+            type="conversations", conversations=[Conversation.model_validate(c) for c in now_]
+        ),
+    )
+
+
+RUN_LISTENERS.append(conversations_changed)
+
+
+@router.get(
+    SESSION + "/conversations",
+    response_model=list[Conversation],
+    responses=NOT_FOUND,
+    tags=["messages"],
+)
+async def list_conversations(session_id: str) -> list[Conversation]:
+    """The main chat and each comment thread sent to Claude, each its own conversation about
+    the design: where it stands (working, queued behind another, waiting for an answer) and
+    its open question. Changes stream as `conversations` events."""
+    return convs.conversations(SESSIONS.get(session_id))
 
 
 # --- Standards ------------------------------------------------------------------------------
@@ -2284,15 +2408,74 @@ async def post_message(session_id: str, body: MessageCreate) -> Message:
     against the rate limits and the daily budget (`app.security`)."""
     rate_limits.take(rate_limits.MESSAGES)
     state = SESSIONS.get(session_id)
-    if body.answer is not None or state.session.status != "waiting_for_answer":
+    return await send_now(state, body)
+
+
+async def send_now(state: SessionState, body: MessageCreate) -> Message:
+    """`POST .../messages` once the session is found: a question open in another conversation
+    is parked first (`park_question`); one open in this message's conversation is left
+    unanswered (`leave_question_open`), and Claude is told about it."""
+    if state.session.status != "waiting_for_answer" or state.question is None:
         return send_message(state, body)
-    _sendable(state, body)  # refused before the question is touched
+    live = convs.live_conversation(state)
+    if body.answer is not None:
+        if body.answer.question_id == state.question.question_id or not _parked_entry(
+            state, body.answer.question_id
+        ):
+            return send_message(state, body)
+    else:
+        _sendable(state, body)  # refused before the question is touched
     state.queue_hold = True  # the queue waits: this message goes first
     try:
+        if body.answer is not None or convs.conversation_of(body) != live:
+            await park_question(state)
+            return send_message(state, body)
         note = await leave_question_open(state, QUESTION_LEFT_OPEN)
         return send_message(state, body, note)
     finally:
         state.queue_hold = False
+
+
+PARKED = "parked"  # `state.stopping` of a run parked on its question (`park_question`)
+# What a run started by the answer to a parked question is told, after the request it asked on.
+PARKED_ANSWER_NOTE = (
+    "(You asked the user: {question} While the question waited, other conversations' runs "
+    "went on with the same design, so this is a new run on the same request. The user "
+    "answered: {answer}. Read the spec to see where the design stands now, carry on from there "
+    "with that answer, and don't ask the same question again.)"
+)
+
+
+def _parked_entry(state: SessionState, question_id: str) -> tuple[str, dict[str, Any]] | None:
+    return next(
+        ((k, p) for k, p in state.parked.items() if p["question"].question_id == question_id),
+        None,
+    )
+
+
+async def park_question(state: SessionState) -> None:
+    """Another conversation's run is to start while Claude's question waits: the run that asked
+    ends, and the question stays open in its own conversation; its answer starts a new run on
+    the same request (`_answer_parked`). A hand edit's decision isn't a run: it is closed."""
+    q = state.question
+    if state.session.status != "waiting_for_answer" or q is None:
+        return
+    decision = state.edit_decision
+    if decision is not None and decision.question_id == q.question_id:
+        await leave_question_open(state, QUESTION_LEFT_OPEN)
+        return
+    conversation = convs.live_conversation(state) or convs.MAIN
+    state.parked[conversation] = {"question": q, "run": dict(state.last_run or {})}
+    if (state.run is None or state.run.done()) and state.answer_restarts:
+        # Kept across a restart: there is no run to end, only its reply.
+        state.emit(0, MessageEndEvent(type="message_end", message_id=q.message_id))
+        state.answer_restarts = False
+        state.session.status = "idle"
+        state.question = None
+        state.run_conversation = None
+        state.save()
+        return
+    await end_paused_run(state, PARKED)
 
 
 def _sendable(state: SessionState, body: MessageCreate) -> None:
@@ -2310,10 +2493,10 @@ def _sendable(state: SessionState, body: MessageCreate) -> None:
     budget.check()
 
 
-def open_question_note(state: SessionState) -> str | None:
-    """What the next run is told about Claude's open question: what it asked, and in which
-    comment thread when its run answered comments."""
-    q = state.question
+def open_question_note(state: SessionState, q: Any = None) -> str | None:
+    """What the next run is told about Claude's open question (`q`, else the session's): what
+    it asked, and in which comment thread when its run answered comments."""
+    q = q or state.question
     if q is None:
         return None
     threads = [
@@ -2376,7 +2559,14 @@ def send_message(state: SessionState, body: MessageCreate, note: str | None = No
     checks and start of `POST .../messages`, also used to send a queued message. `note` goes
     to Claude after the message (a question it left open)."""
     status = state.session.status
-    if body.answer is not None:
+    parked = _parked_entry(state, body.answer.question_id) if body.answer is not None else None
+    if parked is not None:  # a question parked in its conversation (`park_question`)
+        assert body.answer is not None
+        if body.answer.option_id not in {o.id for o in parked[1]["question"].options}:
+            raise HTTPException(409, f"no option {body.answer.option_id}")
+        if status != "idle":
+            raise HTTPException(409, "the session is still running")
+    elif body.answer is not None:
         q = state.question
         if status != "waiting_for_answer" or q is None or q.question_id != body.answer.question_id:
             raise HTTPException(409, f"no open question {body.answer.question_id}")
@@ -2422,6 +2612,8 @@ def send_message(state: SessionState, body: MessageCreate, note: str | None = No
         named = title_for(body.text) if state.session.title == DEFAULT_TITLE else None
         if named:  # named from its first request, in the user's words
             state.session.title = named
+    if parked is not None:
+        return _answer_parked(state, parked[0], body, message)
     decision = state.edit_decision
     if body.answer is not None and decision and decision.question_id == body.answer.question_id:
         return _decide_edit(state, decision, body, message)
@@ -2452,13 +2644,54 @@ def send_message(state: SessionState, body: MessageCreate, note: str | None = No
         state.standards_note = None
     if removed:
         prompt += "\n\n" + REMOVED_NOTE
+    conversation = convs.conversation_of(body)
+    if conversation in state.parked:  # its parked question is left unanswered
+        left = state.parked.pop(conversation)
+        note = "\n\n".join(n for n in (note, open_question_note(state, left["question"])) if n)
     if note:
         prompt += "\n\n" + note
+    told = convs.context_for(state, conversation)
+    if told:
+        prompt += "\n\n" + told
+    state.run_conversation = conversation
     notes = import_notes(state.import_list(), state.session.latest_build_id)
     if notes:
         prompt += "\n\n" + notes
     rate_limits.record(rate_limits.RUNS)
     state.run = SESSIONS.spawn(_run(state, body, prompt, files))
+    run_changed(state)  # the conversations show the run
+    return message
+
+
+def _answer_parked(
+    state: SessionState, conversation: str, body: MessageCreate, message: Message
+) -> Message:
+    """The answer to a question parked in its conversation: the run that asked has ended, so a
+    new run on the same request carries on with the answer, from the design as it is now."""
+    entry = state.parked[conversation]
+    q, last = entry["question"], entry["run"]
+    assert body.answer is not None
+    label = next(o.label for o in q.options if o.id == body.answer.option_id)
+    rate_limits.check(rate_limits.RUNS)
+    budget.check()
+    del state.parked[conversation]
+    state.session.status = "running"
+    state.save()
+    asked = MessageCreate.model_validate(last["message"]) if last.get("message") else body
+    prompt = "\n\n".join(
+        p
+        for p in (
+            last.get("prompt", ""),
+            PARKED_ANSWER_NOTE.format(question=q.text, answer=label),
+            convs.context_for(state, conversation),
+        )
+        if p
+    )
+    files = attached_files(state, asked)
+    state.run_conversation = conversation
+    rate_limits.record(rate_limits.RUNS)
+    state.run = SESSIONS.spawn(_run(state, asked, prompt, files))
+    run_changed(state)
     return message
 
 

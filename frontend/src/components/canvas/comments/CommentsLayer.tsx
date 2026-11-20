@@ -21,6 +21,13 @@ import {
   visiblePins,
   type Comment,
   type ThreadQuestion } from "./comments";
+import { OPEN_THREAD, type Conversation } from "@/lib/session-api";
+
+/** A conversation's open question, as the thread shows it. */
+const threadQuestion = (c: Conversation | undefined): ThreadQuestion | undefined =>
+  c?.question
+    ? { messageId: c.question.message_id, questionId: c.question.question_id, text: c.question.text, options: c.question.options }
+    : undefined;
 import { useComments, type CommentTool } from "./useComments";
 import { shownError } from "@/lib/errors";
 import { useAnchoredCard } from "../fitPanel";
@@ -70,7 +77,7 @@ type Props = {
 export function CommentsLayer(props: Props) {
   const slotted = (node: React.ReactNode) => (props.toolbarSlot ? createPortal(node, props.toolbarSlot) : node);
   const { sessionId, build, ready, tool, toScreen, width, height, busy, blocked } = props;
-  const { comments, questions, put } = useComments(sessionId, build?.id);
+  const { comments, questions, conversations, put } = useComments(sessionId, build?.id);
   const open = comments.find((c) => c.id === tool.openId) ?? null;
   const pins = ready ? visiblePins(comments) : [];
   const notes = comments.filter((c) => !c.resolved && threadState(c) === "note");
@@ -79,6 +86,21 @@ export function CommentsLayer(props: Props) {
   const sendNote = busy ? "Claude is working: it is sent when the run ends" : undefined;
   // A thread waits on the user while its run's question is open.
   const asks = (c: Comment) => !!c.request && c.request.message_id in questions;
+  const stateOf = (c: Comment) => threadState(c, asks(c), conversations[c.id]);
+
+  // "Open thread" from the main chat (a thread's report or question).
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      const c = comments.find((x) => x.id === id);
+      if (!c) return;
+      tool.setListOpen(false);
+      tool.open(id);
+      if (c.location && !c.resolved) props.onFocus(c.location.point);
+    };
+    window.addEventListener(OPEN_THREAD, onOpen);
+    return () => window.removeEventListener(OPEN_THREAD, onOpen);
+  }, [comments, tool, props]);
 
   // Escape cancels a draft, then closes the thread.
   useEffect(() => {
@@ -114,7 +136,7 @@ export function CommentsLayer(props: Props) {
         {pins.map((c) => {
           const q = at(c.location.point);
           if (!q) return null;
-          const state = threadState(c, asks(c));
+          const state = stateOf(c);
           return (
             <button
               key={c.id}
@@ -131,7 +153,7 @@ export function CommentsLayer(props: Props) {
               onClick={() => tool.open(tool.openId === c.id ? null : c.id)}
               style={{ left: q.x, top: q.y - PIN_LIFT, zIndex: 3 }}
               className={`pointer-events-auto absolute grid size-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full rounded-bl-none border-2 border-[#1f1f1f] text-[11px] font-bold text-[#1f1f1f] shadow aria-pressed:ring-2 aria-pressed:ring-white ${
-                state === "working" ? "animate-pulse bg-[#d9b25f]" : state === "waiting" ? "bg-[#d9b25f]" : "bg-[#8fd1c5]"
+                state === "working" ? "animate-pulse bg-[#d9b25f]" : state === "waiting" || state === "queued" ? "bg-[#d9b25f]" : "bg-[#8fd1c5]"
               }`}
             >
               {c.author.charAt(0).toUpperCase()}
@@ -176,7 +198,8 @@ export function CommentsLayer(props: Props) {
           anchor={openAt}
           sessionId={sessionId}
           changes={changesFor(props.changeSet, open.id)}
-          question={open.request ? questions[open.request.message_id] : undefined}
+          question={threadQuestion(conversations[open.id]) ?? (open.request ? questions[open.request.message_id] : undefined)}
+          conversation={conversations[open.id]}
           busy={busy}
           sendWhy={sendWhy}
           sendNote={sendNote}
@@ -251,7 +274,7 @@ export function CommentsLayer(props: Props) {
           ) : (
             <ul aria-label="Comment threads" className="cs-scroll flex max-h-72 flex-col overflow-y-auto">
               {comments.map((c) => {
-                const state = threadState(c, asks(c));
+                const state = stateOf(c);
                 return (
                   <li key={c.id} data-comment={c.id} data-state={state}>
                     <button
@@ -265,7 +288,10 @@ export function CommentsLayer(props: Props) {
                     >
                       <span className="truncate">{c.text}</span>
                       <span className="text-[11px] text-[var(--cs-muted)]">
-                        {THREAD_LABEL[state]} · {pinnedTo(c).replace(/^Pinned to /, "")}
+                        {state === "queued" && conversations[c.id]?.queued_behind_title
+                          ? `Queued behind “${conversations[c.id]?.queued_behind_title}”`
+                          : THREAD_LABEL[state]}{" "}
+                        · {pinnedTo(c).replace(/^Pinned to /, "")}
                         {!c.location && !c.resolved ? " · not on this build" : ""}
                       </span>
                     </button>
@@ -363,6 +389,7 @@ function Thread({
   sessionId,
   changes,
   question,
+  conversation,
   busy,
   sendWhy,
   sendNote,
@@ -379,6 +406,8 @@ function Thread({
   sessionId: string;
   changes: Change[];
   question: ThreadQuestion | undefined;
+  /** The thread's conversation with Claude, as the server says it stands. */
+  conversation: Conversation | undefined;
   busy: boolean;
   sendWhy: string | undefined;
   sendNote: string | undefined;
@@ -394,9 +423,9 @@ function Thread({
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [answered, setAnswered] = useState<string | null>(null);
-  const state = threadState(comment, !!question);
-  // Waiting on Claude's question counts as in progress: the thread can't be resolved yet.
-  const working = state === "working" || state === "waiting";
+  const state = threadState(comment, !!question, conversation);
+  // Waiting on Claude's question, or its turn, counts as in progress: it can't be resolved yet.
+  const working = state === "working" || state === "waiting" || state === "queued";
   const undo = undoReview(changes);
   const reviewWhy = busy ? "Claude is working: review when the run has finished" : pending ? "Applying" : undefined;
 
@@ -456,7 +485,9 @@ function Thread({
           <li data-testid="comment-working" className="border-t border-[var(--cs-border)] pt-2 text-[12px] text-[var(--cs-muted)] first:border-t-0">
             {state === "waiting"
               ? "Claude asked you a question here. Answer it and Claude carries on, or send something else."
-              : "Claude is working on this…"}
+              : state === "queued"
+                ? `Queued behind “${conversation?.queued_behind_title ?? "another request"}”: runs take turns on the design.`
+                : "Claude is working on this…"}
           </li>
         )}
       </ol>

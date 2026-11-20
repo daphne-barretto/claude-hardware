@@ -1661,6 +1661,90 @@
         ],
         "title": "Component"
       },
+      "ConflictConstraint": {
+        "additionalProperties": false,
+        "description": "One side of a conflict: a locked parameter, a team standard or a board part.",
+        "properties": {
+          "kind": {
+            "enum": [
+              "locked",
+              "standard",
+              "board"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "id": {
+            "description": "Parameter path, standard ID or component reference",
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "description": "What to call it, e.g. the standard's title",
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "relation": {
+            "description": "How `value` binds: a lock or a part's height is `=`, a `min` standard `>=`, a `max` standard `<=`",
+            "enum": [
+              "=",
+              ">=",
+              "<="
+            ],
+            "title": "Relation",
+            "type": "string"
+          },
+          "value": {
+            "description": "The locked value, the standard's value, or the height",
+            "title": "Value",
+            "type": "number"
+          },
+          "unit": {
+            "default": "mm",
+            "enum": [
+              "mm",
+              "deg"
+            ],
+            "title": "Unit",
+            "type": "string"
+          },
+          "best": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Best achievable value when only this constraint gives way; null when no value of it resolves the conflict (a board part can't change)",
+            "title": "Best"
+          },
+          "locations": {
+            "description": "Where on the model it acts",
+            "items": {
+              "$ref": "#/components/schemas/Location"
+            },
+            "minItems": 1,
+            "title": "Locations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "label",
+          "relation",
+          "value",
+          "best",
+          "locations"
+        ],
+        "title": "ConflictConstraint",
+        "type": "object"
+      },
       "Constraint": {
         "additionalProperties": false,
         "description": "One constraint of the design's spec, shown as a chip above the chat input.\n\nEvery constraint is a team standard (`standards.yaml`) with the value the design must\nmeet, so its check enforces it. The value is the standard's own (`source: standard`), one\nthe user gave in a message (`user`, with their words in `quote`) or a chip edit (`edit`).",
@@ -1791,6 +1875,49 @@
         "title": "Constraint",
         "type": "object"
       },
+      "ConstraintConflict": {
+        "additionalProperties": false,
+        "description": "Locked values, standards and the board that can't all be met (conflict detection).",
+        "properties": {
+          "id": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "title": "Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "over_by": {
+            "description": "How far apart the constraints are, in mm",
+            "minimum": 0,
+            "title": "Over By",
+            "type": "number"
+          },
+          "constraints": {
+            "items": {
+              "$ref": "#/components/schemas/ConflictConstraint"
+            },
+            "minItems": 2,
+            "title": "Constraints",
+            "type": "array"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location",
+            "description": "Where the conflict is worst"
+          }
+        },
+        "required": [
+          "id",
+          "message",
+          "over_by",
+          "constraints",
+          "location"
+        ],
+        "title": "ConstraintConflict",
+        "type": "object"
+      },
       "ConstraintUpdate": {
         "properties": {
           "value": {
@@ -1812,6 +1939,103 @@
           "value"
         ],
         "title": "ConstraintUpdate"
+      },
+      "Conversation": {
+        "additionalProperties": false,
+        "description": "One conversation with Claude about the session's design: the main chat, or a comment\nthread sent to Claude. Each has its own history and its own question; all of them edit the\none design, so their runs take turns (`GET .../conversations`).",
+        "properties": {
+          "id": {
+            "description": "`main` for the main chat, else the comment's ID",
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "main",
+              "thread"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "title": {
+            "description": "The main chat's name, or the start of the comment's text",
+            "title": "Title",
+            "type": "string"
+          },
+          "status": {
+            "description": "`working`: its run is going; `queued`: its next run waits for another conversation's run (`queued_behind`); `waiting_for_answer`: Claude's question in it is open (`question`), which waits on this conversation only",
+            "enum": [
+              "idle",
+              "working",
+              "queued",
+              "waiting_for_answer"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "queued_behind": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The conversation whose run it waits for, when `queued`",
+            "title": "Queued Behind"
+          },
+          "queued_behind_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Queued Behind Title"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuestionEvent"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Claude's open question in this conversation: answer it with `POST .../messages` (`answer`) from the thread or the main chat"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "What its latest run did",
+            "title": "Summary"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "status"
+        ],
+        "title": "Conversation",
+        "type": "object"
       },
       "DesignHistory": {
         "properties": {
@@ -4964,6 +5188,106 @@
         "title": "ProposedChange",
         "type": "object"
       },
+      "QuestionEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "question",
+            "title": "Type",
+            "type": "string"
+          },
+          "message_id": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "title": "Message Id",
+            "type": "string"
+          },
+          "question_id": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "title": "Question Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionOption"
+            },
+            "minItems": 2,
+            "title": "Options",
+            "type": "array"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Location"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The spot on the model the question is about, to pin it at"
+          },
+          "conflict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConstraintConflict"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Set when Claude asks because the constraints can't all be met"
+          }
+        },
+        "required": [
+          "type",
+          "message_id",
+          "question_id",
+          "text",
+          "options"
+        ],
+        "title": "QuestionEvent",
+        "type": "object"
+      },
+      "QuestionOption": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "QuestionOption",
+        "type": "object"
+      },
       "QueuedMessage": {
         "additionalProperties": false,
         "description": "A message sent while Claude was working: it waits in the session's queue and is sent,\nas a normal message, once the runs before it have ended (`GET .../queue`).",
@@ -6726,133 +7050,6 @@
         "title": "CommentEvent",
         "type": "object"
       },
-      "ConflictConstraint": {
-        "additionalProperties": false,
-        "description": "One side of a conflict: a locked parameter, a team standard or a board part.",
-        "properties": {
-          "kind": {
-            "enum": [
-              "locked",
-              "standard",
-              "board"
-            ],
-            "title": "Kind",
-            "type": "string"
-          },
-          "id": {
-            "description": "Parameter path, standard ID or component reference",
-            "maxLength": 200,
-            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
-            "title": "Id",
-            "type": "string"
-          },
-          "label": {
-            "description": "What to call it, e.g. the standard's title",
-            "minLength": 1,
-            "title": "Label",
-            "type": "string"
-          },
-          "relation": {
-            "description": "How `value` binds: a lock or a part's height is `=`, a `min` standard `>=`, a `max` standard `<=`",
-            "enum": [
-              "=",
-              ">=",
-              "<="
-            ],
-            "title": "Relation",
-            "type": "string"
-          },
-          "value": {
-            "description": "The locked value, the standard's value, or the height",
-            "title": "Value",
-            "type": "number"
-          },
-          "unit": {
-            "default": "mm",
-            "enum": [
-              "mm",
-              "deg"
-            ],
-            "title": "Unit",
-            "type": "string"
-          },
-          "best": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Best achievable value when only this constraint gives way; null when no value of it resolves the conflict (a board part can't change)",
-            "title": "Best"
-          },
-          "locations": {
-            "description": "Where on the model it acts",
-            "items": {
-              "$ref": "#/components/schemas/Location"
-            },
-            "minItems": 1,
-            "title": "Locations",
-            "type": "array"
-          }
-        },
-        "required": [
-          "kind",
-          "id",
-          "label",
-          "relation",
-          "value",
-          "best",
-          "locations"
-        ],
-        "title": "ConflictConstraint",
-        "type": "object"
-      },
-      "ConstraintConflict": {
-        "additionalProperties": false,
-        "description": "Locked values, standards and the board that can't all be met (conflict detection).",
-        "properties": {
-          "id": {
-            "maxLength": 200,
-            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
-            "title": "Id",
-            "type": "string"
-          },
-          "message": {
-            "title": "Message",
-            "type": "string"
-          },
-          "over_by": {
-            "description": "How far apart the constraints are, in mm",
-            "minimum": 0,
-            "title": "Over By",
-            "type": "number"
-          },
-          "constraints": {
-            "items": {
-              "$ref": "#/components/schemas/ConflictConstraint"
-            },
-            "minItems": 2,
-            "title": "Constraints",
-            "type": "array"
-          },
-          "location": {
-            "$ref": "#/components/schemas/Location",
-            "description": "Where the conflict is worst"
-          }
-        },
-        "required": [
-          "id",
-          "message",
-          "over_by",
-          "constraints",
-          "location"
-        ],
-        "title": "ConstraintConflict",
-        "type": "object"
-      },
       "ConstraintsEvent": {
         "additionalProperties": false,
         "description": "The design's spec changed: every constraint, as the chips show them.",
@@ -6889,6 +7086,30 @@
           "constraints"
         ],
         "title": "ConstraintsEvent",
+        "type": "object"
+      },
+      "ConversationsEvent": {
+        "additionalProperties": false,
+        "description": "A conversation's status changed (a run started, queued, asked, ended): every\nconversation as it is now, so the main chat and the threads show the same.",
+        "properties": {
+          "type": {
+            "const": "conversations",
+            "title": "Type",
+            "type": "string"
+          },
+          "conversations": {
+            "items": {
+              "$ref": "#/components/schemas/Conversation"
+            },
+            "title": "Conversations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "type",
+          "conversations"
+        ],
+        "title": "ConversationsEvent",
         "type": "object"
       },
       "ErrorEvent": {
@@ -7299,106 +7520,6 @@
         "title": "ProgressEvent",
         "type": "object"
       },
-      "QuestionEvent": {
-        "additionalProperties": false,
-        "properties": {
-          "type": {
-            "const": "question",
-            "title": "Type",
-            "type": "string"
-          },
-          "message_id": {
-            "maxLength": 200,
-            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
-            "title": "Message Id",
-            "type": "string"
-          },
-          "question_id": {
-            "maxLength": 200,
-            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
-            "title": "Question Id",
-            "type": "string"
-          },
-          "text": {
-            "title": "Text",
-            "type": "string"
-          },
-          "options": {
-            "items": {
-              "$ref": "#/components/schemas/QuestionOption"
-            },
-            "minItems": 2,
-            "title": "Options",
-            "type": "array"
-          },
-          "location": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Location"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The spot on the model the question is about, to pin it at"
-          },
-          "conflict": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ConstraintConflict"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Set when Claude asks because the constraints can't all be met"
-          }
-        },
-        "required": [
-          "type",
-          "message_id",
-          "question_id",
-          "text",
-          "options"
-        ],
-        "title": "QuestionEvent",
-        "type": "object"
-      },
-      "QuestionOption": {
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "maxLength": 200,
-            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
-            "title": "Id",
-            "type": "string"
-          },
-          "label": {
-            "title": "Label",
-            "type": "string"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Description"
-          }
-        },
-        "required": [
-          "id",
-          "label"
-        ],
-        "title": "QuestionOption",
-        "type": "object"
-      },
       "QueueEvent": {
         "additionalProperties": false,
         "description": "The session's message queue changed (a message queued, edited, moved, removed or sent,\nor a question pausing it): the whole queue as it is now, so every tab shows the same.",
@@ -7512,6 +7633,115 @@
         "title": "TextEvent",
         "type": "object"
       },
+      "ThreadReportEvent": {
+        "additionalProperties": false,
+        "description": "A comment thread's run reports back to the main chat: what it changed, the checks and\nthe build, with a link to the thread. `message_id` is the entry's own message in the main\nchat (`GET .../messages`).",
+        "properties": {
+          "type": {
+            "const": "thread_report",
+            "title": "Type",
+            "type": "string"
+          },
+          "message_id": {
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "title": "Message Id",
+            "type": "string"
+          },
+          "comment_id": {
+            "description": "The thread: open it from the entry",
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "title": "Comment Id",
+            "type": "string"
+          },
+          "thread_title": {
+            "title": "Thread Title",
+            "type": "string"
+          },
+          "run_id": {
+            "description": "The thread's run that reports (its assistant message)",
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+            "title": "Run Id",
+            "type": "string"
+          },
+          "outcome": {
+            "description": "`changed`: the run changed the design; `answered`: it replied without a change; `failed`: it stopped with an error",
+            "enum": [
+              "changed",
+              "answered",
+              "failed"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "changes": {
+            "description": "The changes it made, by title",
+            "items": {
+              "type": "string"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "build_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The build it ended on",
+            "title": "Build Id"
+          },
+          "build_number": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The build's place in the session's builds (1: first)",
+            "title": "Build Number"
+          },
+          "checks": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "That build's check results"
+          }
+        },
+        "required": [
+          "type",
+          "message_id",
+          "comment_id",
+          "thread_title",
+          "run_id",
+          "outcome",
+          "summary"
+        ],
+        "title": "ThreadReportEvent",
+        "type": "object"
+      },
       "TitleEvent": {
         "additionalProperties": false,
         "description": "The session was renamed: by Claude, naming the part it designs (`message_id` of its run),\nor by the user (`message_id` null). The header and Recents show the new name.",
@@ -7588,6 +7818,7 @@
             "changes_ready": "#/components/schemas/ChangesReadyEvent",
             "comment": "#/components/schemas/CommentEvent",
             "constraints": "#/components/schemas/ConstraintsEvent",
+            "conversations": "#/components/schemas/ConversationsEvent",
             "error": "#/components/schemas/ErrorEvent",
             "found": "#/components/schemas/FoundEvent",
             "message_end": "#/components/schemas/MessageEndEvent",
@@ -7599,6 +7830,7 @@
             "queue": "#/components/schemas/QueueEvent",
             "risks_ready": "#/components/schemas/RisksReadyEvent",
             "text": "#/components/schemas/TextEvent",
+            "thread_report": "#/components/schemas/ThreadReportEvent",
             "title": "#/components/schemas/TitleEvent",
             "user_message": "#/components/schemas/UserMessageEvent"
           },
@@ -7655,6 +7887,12 @@
           },
           {
             "$ref": "#/components/schemas/UserMessageEvent"
+          },
+          {
+            "$ref": "#/components/schemas/ConversationsEvent"
+          },
+          {
+            "$ref": "#/components/schemas/ThreadReportEvent"
           }
         ]
       }
@@ -8355,6 +8593,63 @@
         }
       }
     },
+    "/api/sessions/{session_id}/conversations": {
+      "get": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "List Conversations",
+        "description": "The main chat and each comment thread sent to Claude, each its own conversation. The\nmock plays one run at a time, so it reports where that run stands.",
+        "operationId": "list_conversations_api_sessions__session_id__conversations_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Conversation"
+                  },
+                  "title": "Response List Conversations Api Sessions  Session Id  Conversations Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/sessions/{session_id}/messages": {
       "get": {
         "tags": [
@@ -8415,7 +8710,7 @@
           "messages"
         ],
         "summary": "Post Message",
-        "description": "Send a message. The reply streams on `/events`; the response is the stored user message.\nWhile a reply streams it gets 409: queue it with `POST .../queue` instead.",
+        "description": "Send a message. The reply streams on `/events`; the response is the stored user message.\nWhile a reply streams it gets 409: queue it with `POST .../queue` instead. While a question\nis open, a message that isn't its answer leaves it unanswered and is sent, as the real API\ndoes.",
         "operationId": "post_message_api_sessions__session_id__messages_post",
         "parameters": [
           {

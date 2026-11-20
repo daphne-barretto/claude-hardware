@@ -146,6 +146,11 @@ export type Message = {
   selection?: Selection | null;
   answer?: Answer | null;
   attachments?: Attachment[];
+  /** Comments sent to Claude with it ("Send to Claude"): the run answers in their threads. */
+  comments?: string[];
+  /** The model and effort a user message was sent with. */
+  model?: string | null;
+  effort?: Effort | null;
 };
 
 export type Build = {
@@ -299,7 +304,45 @@ export type SessionEvent =
   /** The session was renamed: by Claude after the part it designs, or by the user (no message_id). */
   | { type: "title"; message_id?: string | null; title: string; title_locked?: boolean }
   /** The user sent a message (from any tab): the message as stored, so every tab shows it. */
-  | { type: "user_message"; message_id: string; message: Message };
+  | { type: "user_message"; message_id: string; message: Message }
+  /** Where each conversation (the main chat, each comment thread sent to Claude) stands. */
+  | { type: "conversations"; message_id?: null; conversations: Conversation[] }
+  /** A comment thread's run reports back to the main chat (`message_id`: the entry's own). */
+  | ThreadReportEvent;
+
+/** A question event, as a conversation holds it while it is open. */
+export type QuestionEvent = Extract<SessionEvent, { type: "question" }>;
+
+/**
+ * One conversation with Claude about the design (`GET .../conversations`): the main chat
+ * (`id` "main") or a comment thread sent to Claude (`id`: the comment's). Runs take turns on
+ * the one design: `queued` waits behind `queued_behind`; `question` waits on this one only.
+ */
+export type Conversation = {
+  id: string;
+  kind: "main" | "thread";
+  title: string;
+  status: "idle" | "working" | "queued" | "waiting_for_answer";
+  queued_behind?: string | null;
+  queued_behind_title?: string | null;
+  question?: QuestionEvent | null;
+  summary?: string | null;
+};
+
+/** A thread's run reports to the main chat: what changed, the checks and the build. */
+export type ThreadReportEvent = {
+  type: "thread_report";
+  message_id: string;
+  comment_id: string;
+  thread_title: string;
+  run_id: string;
+  outcome: "changed" | "answered" | "failed";
+  summary: string;
+  changes?: string[];
+  build_id?: string | null;
+  build_number?: number | null;
+  checks?: { pass: number; fail: number; untested: number; not_applicable?: number } | null;
+};
 
 /** Why a run stopped or waits (backend `app.agent.limits`), next to the plain text. */
 export type LimitReason =
@@ -434,6 +477,16 @@ export function recentsOrder(sessions: Session[]): Session[] {
 export function listMessages(sessionId: string): Promise<Message[]> {
   return call<Message[]>(`${sessionRoute(sessionId)}/messages`);
 }
+
+/** The main chat and each comment thread sent to Claude, and where each stands. */
+export async function listConversations(sessionId: string): Promise<Conversation[]> {
+  // A backend without threads (an older server, a share) may answer with something else: no threads.
+  const list = await call<unknown>(`${sessionRoute(sessionId)}/conversations`);
+  return Array.isArray(list) ? (list as Conversation[]) : [];
+}
+
+/** The window event that opens a comment's thread on the canvas (`detail`: the comment ID). */
+export const OPEN_THREAD = "comments:open-thread";
 
 export const sessionHref = (id: string) => `/session/${encodeURIComponent(id)}`;
 

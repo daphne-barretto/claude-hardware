@@ -111,6 +111,18 @@ describe("a session page", () => {
     expect(within(chat).getByRole("heading", { name: SESSIONS[0].title })).toBeTruthy();
   });
 
+  it("reopens on the model and effort its last message was sent with, not the default", async () => {
+    const first = stored[0];
+    stored[0] = { ...first, model: "claude-haiku-5-5", effort: "high" };
+    try {
+      renderSession("older");
+      expect(await screen.findByRole("button", { name: /Haiku 5\.5/ })).toBeTruthy();
+      expect(screen.queryByRole("button", { name: /Opus 5\.5/ })).toBeNull();
+    } finally {
+      stored[0] = first;
+    }
+  });
+
   it("shows a stored answer as answered, with its option as the user's reply", async () => {
     const option = question.options[1];
     stored.push({

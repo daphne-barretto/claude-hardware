@@ -1,4 +1,4 @@
-import type { Comment, CommentReply, SessionEvent } from "@/lib/session-api";
+import type { Comment, CommentReply, Conversation, SessionEvent } from "@/lib/session-api";
 import { sessionRoute } from "@/lib/share";
 import type { Change, ChangeSet, Point3 } from "../changes";
 // `fetch` here says a dropped connection plainly, and `failure` a failed response (QA fix brief 8).
@@ -56,20 +56,25 @@ export function undoReview(changes: Change[]): { accept: string[]; reject: strin
   return applied.length ? { accept: [], reject: applied } : null;
 }
 
-export type ThreadState = "note" | "working" | "waiting" | "answered" | "failed" | "resolved";
+export type ThreadState = "note" | "working" | "queued" | "waiting" | "answered" | "failed" | "resolved";
 
-/** Where a thread stands, for its badge in the comments list. `waiting`: the run answering it is
- * paused on Claude's question to the user, so nothing is being worked on until they answer. */
-export function threadState(comment: Comment, waiting = false): ThreadState {
+/** Where a thread stands, for its badge in the comments list. `waiting`: Claude's question in
+ * it is open (it waits on this thread only). `conversation`: the thread's conversation, as the
+ * server says it stands (`queued`: its run waits for another conversation's to end). */
+export function threadState(comment: Comment, waiting = false, conversation?: Conversation): ThreadState {
   if (comment.resolved) return "resolved";
+  if (conversation?.status === "waiting_for_answer" || (waiting && comment.request?.status === "running")) return "waiting";
+  if (conversation?.status === "queued") return "queued";
+  if (conversation?.status === "working") return "working";
   if (!comment.request) return "note";
-  if (comment.request.status === "running") return waiting ? "waiting" : "working";
+  if (comment.request.status === "running") return "working";
   return comment.request.status;
 }
 
 export const THREAD_LABEL: Record<ThreadState, string> = {
   note: "Note",
   working: "Claude is working",
+  queued: "Queued",
   waiting: "Waiting for your answer",
   answered: "Claude replied",
   failed: "Claude couldn't finish",

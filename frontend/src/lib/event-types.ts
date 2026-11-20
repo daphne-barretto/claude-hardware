@@ -19,4 +19,6 @@ export const EVENT_TYPES: SessionEvent["type"][] = [
   "notice",
   "title",
   "user_message",
+  "conversations",
+  "thread_report",
 ];

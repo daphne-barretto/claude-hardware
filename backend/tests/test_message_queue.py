@@ -163,7 +163,8 @@ def wait_until(client, sid: str, status: str, after: int = 0) -> list[tuple[int,
     while time.monotonic() < deadline:
         session = client.get(f"/api/sessions/{sid}").json()
         new = events(client, sid, after)
-        kinds = [t for _, t, _ in new if t != "queue"]
+        skip = ("queue", "conversations", "thread_report")
+        kinds = [t for _, t, _ in new if t not in skip]
         if session["status"] == status and kinds and kinds[-1] in ("message_end", "question"):
             return new
         time.sleep(0.02)

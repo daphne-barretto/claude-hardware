@@ -1837,6 +1837,127 @@
       "title": "ConstraintsEvent",
       "type": "object"
     },
+    "Conversation": {
+      "additionalProperties": false,
+      "description": "One conversation with Claude about the session's design: the main chat, or a comment\nthread sent to Claude. Each has its own history and its own question; all of them edit the\none design, so their runs take turns (`GET .../conversations`).",
+      "properties": {
+        "id": {
+          "description": "`main` for the main chat, else the comment's ID",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "main",
+            "thread"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "title": {
+          "description": "The main chat's name, or the start of the comment's text",
+          "title": "Title",
+          "type": "string"
+        },
+        "status": {
+          "description": "`working`: its run is going; `queued`: its next run waits for another conversation's run (`queued_behind`); `waiting_for_answer`: Claude's question in it is open (`question`), which waits on this conversation only",
+          "enum": [
+            "idle",
+            "working",
+            "queued",
+            "waiting_for_answer"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "queued_behind": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The conversation whose run it waits for, when `queued`",
+          "title": "Queued Behind"
+        },
+        "queued_behind_title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Queued Behind Title"
+        },
+        "question": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QuestionEvent"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Claude's open question in this conversation: answer it with `POST .../messages` (`answer`) from the thread or the main chat"
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What its latest run did",
+          "title": "Summary"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "title",
+        "status"
+      ],
+      "title": "Conversation",
+      "type": "object"
+    },
+    "ConversationsEvent": {
+      "additionalProperties": false,
+      "description": "A conversation's status changed (a run started, queued, asked, ended): every\nconversation as it is now, so the main chat and the threads show the same.",
+      "properties": {
+        "type": {
+          "const": "conversations",
+          "title": "Type",
+          "type": "string"
+        },
+        "conversations": {
+          "items": {
+            "$ref": "#/$defs/Conversation"
+          },
+          "title": "Conversations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "conversations"
+      ],
+      "title": "ConversationsEvent",
+      "type": "object"
+    },
     "Dimension": {
       "additionalProperties": false,
       "description": "Where a parameter's value is measured on the model of the build it came with.",
@@ -4646,6 +4767,7 @@
               "changes_ready": "#/$defs/ChangesReadyEvent",
               "comment": "#/$defs/CommentEvent",
               "constraints": "#/$defs/ConstraintsEvent",
+              "conversations": "#/$defs/ConversationsEvent",
               "error": "#/$defs/ErrorEvent",
               "found": "#/$defs/FoundEvent",
               "message_end": "#/$defs/MessageEndEvent",
@@ -4657,6 +4779,7 @@
               "queue": "#/$defs/QueueEvent",
               "risks_ready": "#/$defs/RisksReadyEvent",
               "text": "#/$defs/TextEvent",
+              "thread_report": "#/$defs/ThreadReportEvent",
               "title": "#/$defs/TitleEvent",
               "user_message": "#/$defs/UserMessageEvent"
             },
@@ -4713,6 +4836,12 @@
             },
             {
               "$ref": "#/$defs/UserMessageEvent"
+            },
+            {
+              "$ref": "#/$defs/ConversationsEvent"
+            },
+            {
+              "$ref": "#/$defs/ThreadReportEvent"
             }
           ],
           "title": "Event"
@@ -4756,6 +4885,115 @@
         "delta"
       ],
       "title": "TextEvent",
+      "type": "object"
+    },
+    "ThreadReportEvent": {
+      "additionalProperties": false,
+      "description": "A comment thread's run reports back to the main chat: what it changed, the checks and\nthe build, with a link to the thread. `message_id` is the entry's own message in the main\nchat (`GET .../messages`).",
+      "properties": {
+        "type": {
+          "const": "thread_report",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "comment_id": {
+          "description": "The thread: open it from the entry",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Comment Id",
+          "type": "string"
+        },
+        "thread_title": {
+          "title": "Thread Title",
+          "type": "string"
+        },
+        "run_id": {
+          "description": "The thread's run that reports (its assistant message)",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "outcome": {
+          "description": "`changed`: the run changed the design; `answered`: it replied without a change; `failed`: it stopped with an error",
+          "enum": [
+            "changed",
+            "answered",
+            "failed"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "changes": {
+          "description": "The changes it made, by title",
+          "items": {
+            "type": "string"
+          },
+          "title": "Changes",
+          "type": "array"
+        },
+        "build_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The build it ended on",
+          "title": "Build Id"
+        },
+        "build_number": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The build's place in the session's builds (1: first)",
+          "title": "Build Number"
+        },
+        "checks": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CheckSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "That build's check results"
+        }
+      },
+      "required": [
+        "type",
+        "message_id",
+        "comment_id",
+        "thread_title",
+        "run_id",
+        "outcome",
+        "summary"
+      ],
+      "title": "ThreadReportEvent",
       "type": "object"
     },
     "TitleEvent": {

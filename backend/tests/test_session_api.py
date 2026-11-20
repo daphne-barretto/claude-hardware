@@ -119,7 +119,10 @@ def wait_until(client, sid: str, status: str, after: int = 0) -> list[tuple[int,
     while True:
         session = client.get(f"/api/sessions/{sid}").json()
         new = events(client, sid, after)
-        if session["status"] == status and new and new[-1][1] in ("message_end", "question"):
+        # What follows a run's end without being part of it: the conversations and a thread's
+        # report to the main chat (`app.conversations`).
+        kinds = [t for _, t, _ in new if t not in ("conversations", "thread_report")]
+        if session["status"] == status and kinds and kinds[-1] in ("message_end", "question"):
             return new
         if time.monotonic() > deadline:
             break

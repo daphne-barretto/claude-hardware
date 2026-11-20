@@ -7,7 +7,7 @@ import type { ThreadQuestion } from "@/components/canvas/comments/comments";
 // stays enabled, and what it sends goes to Claude (which is told the question was left open).
 const state: { comments: Comment[]; questions: Record<string, ThreadQuestion> } = { comments: [], questions: {} };
 vi.mock("@/components/canvas/comments/useComments", () => ({
-  useComments: () => ({ comments: state.comments, questions: state.questions, put: () => {} }),
+  useComments: () => ({ comments: state.comments, questions: state.questions, conversations: {}, put: () => {} }),
 }));
 
 import { CommentsLayer } from "@/components/canvas/comments/CommentsLayer";

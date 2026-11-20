@@ -7,6 +7,7 @@ import {
   isSessionGone,
   importFile,
   ImportError,
+  listConversations,
   isStepFile,
   postMessage,
   queueMessage,
@@ -24,6 +25,9 @@ import {
   uploadAttachment,
   type Attachment,
   type Constraint,
+  type Conversation,
+  type Effort,
+  type Message as StoredMessage,
   type MessageCreate,
   type MessageQueue,
   type QuestionOption,
@@ -43,7 +47,7 @@ import {
   type Choices,
 } from "./chat";
 import { filesFor, type PickedFile } from "./files";
-import { EMPTY_QUEUE, applyQueueEvent, edited, moved } from "./messageQueue";
+import { EMPTY_QUEUE, applyQueueEvent, chatQueue, edited, moved } from "./messageQueue";
 import { limitMessage, limitNotice, REMOVED_NOTE, wasScrubbed } from "@/lib/limits";
 import { shownError } from "@/lib/errors";
 import { riskReviewErrorText, type RiskReviewError } from "./riskReview";
@@ -124,10 +128,18 @@ export function useChatSession(existing?: string, onCreated?: (id: string) => vo
     queued.current = next;
     setQueue(next);
   }, []);
+  // Where the main chat and each comment thread sent to Claude stand (`conversations` events).
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  // The model and effort of the session's last message, so the picker reopens on them.
+  const [storedChoices, setStoredChoices] = useState<StoredChoices | null>(null);
   // The event stream's connection (`subscribe`): the chat shows "Reconnecting…" or a banner.
   const [connection, setConnection] = useState<StreamStatus | null>(null);
 
   const onEvent = useCallback((event: SessionEvent) => {
+    if (event.type === "conversations") {
+      setConversations(event.conversations);
+      return;
+    }
     if (event.type === "queue") {
       // A message the queue sent becomes the user's message in the chat, before its reply.
       const before = queued.current;
@@ -184,7 +196,12 @@ export function useChatSession(existing?: string, onCreated?: (id: string) => vo
       .then((stored) => {
         if (!live) return;
         setMessages(fromStored(stored));
+        setStoredChoices(lastChoices(stored));
         close = follow(existing);
+        // Changes stream from now on; this is where they stand already.
+        listConversations(existing)
+          .then((c) => live && setConversations(c))
+          .catch(() => {});
       })
       .catch((e) =>
         live &&
@@ -334,7 +351,7 @@ export function useChatSession(existing?: string, onCreated?: (id: string) => vo
   /** "Send anyway": the next queued message goes now, and Claude's open question stays unanswered. */
   const sendAnyway = useCallback(async () => {
     const sid = await session.current;
-    const next = queued.current.items[0];
+    const next = chatQueue(queued.current).items[0];
     if (!sid || !next) return;
     await sendQueued(sid, next.id).catch(failed);
   }, [failed]);
@@ -406,13 +423,15 @@ export function useChatSession(existing?: string, onCreated?: (id: string) => vo
     },
     [post, enqueue],
   );
-  // An answer to a question Claude asked in a comment's run, given in the thread.
+  // An answer to a question Claude asked in a comment's run, given in the thread or from its
+  // pointer in the main chat. While another run works it waits its turn in the queue.
   const answerInThread = useCallback(
     (questionId: string, optionId: string, choices: Choices) => {
       setMessages((m) => answerQuestion(m, questionId, optionId));
-      return post({ text: "", ...choices, answer: { question_id: questionId, option_id: optionId } });
+      const body: MessageCreate = { text: "", ...choices, answer: { question_id: questionId, option_id: optionId } };
+      return working.current ? enqueue(async () => body) : post(body);
     },
-    [post],
+    [post, enqueue],
   );
 
   // Retry the reply that stopped, or stop the one going: the work so far is kept either way.
@@ -458,6 +477,7 @@ export function useChatSession(existing?: string, onCreated?: (id: string) => vo
   const gone = messages.some((m) => m.blocks?.some((b) => b.kind === "session_gone"));
   const blocked = gone ? SESSION_GONE_REASON : undefined;
   return {
+    storedChoices,
     messages,
     busy,
     waiting: pending,
@@ -487,5 +507,16 @@ export function useChatSession(existing?: string, onCreated?: (id: string) => vo
     latestStop: retryableStop(messages),
     connection,
     reconnect,
+    /** The main chat and each comment thread sent to Claude, and where each stands. */
+    conversations,
   };
+}
+
+export type StoredChoices = { model?: string; effort?: Effort };
+
+/** The model and effort the session's last user message was sent with (null: none recorded). */
+export function lastChoices(stored: StoredMessage[]): StoredChoices | null {
+  const last = [...stored].reverse().find((m) => m.role === "user" && (m.model || m.effort));
+  if (!last) return null;
+  return { ...(last.model ? { model: last.model } : {}), ...(last.effort ? { effort: last.effort } : {}) };
 }

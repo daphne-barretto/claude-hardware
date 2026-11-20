@@ -39,6 +39,10 @@ the session's event streams (the browser reconnects); `POST /api/e2e/sessions/{i
 does to one session what a server restart does (its run is cut off, it loads again from the
 store).
 
+Comments sent to Claude get a thread's run (`thread_script`): "<parameter> <number> mm" in a
+comment sets that parameter, a comment starting with "Ask" gets a question in its thread, and
+one starting with `SLOW_RUN` takes its time, so the browser can show threads taking turns.
+
 A session with no board is designed from scratch, as Claude would: "make a box L x W x H mm with
 T mm walls" writes an open box of those sizes, and "an L bracket with two M4 holes" an L
 bracket, each built and checked (`write_design`, `run_checks`) and finished with a summary and the
@@ -195,6 +199,53 @@ def _has(standards: StandardsFile, standard_id: str) -> bool:
     return any(s.id == standard_id for s in standards.standards)
 
 
+# "<parameter> <number> mm" in a comment: what a thread's run sets.
+_SET = re.compile(rf"\b([a-z][a-z_]*)\s+(?:to\s+)?{_NUMBER}\s*mm", re.I)
+THREAD_OPTIONS = [
+    {"id": "go", "label": "Go ahead", "description": "Make the change"},
+    {"id": "leave", "label": "Leave it", "description": "Keep the design as it is"},
+]
+
+
+def _request(text: str) -> str:
+    return text.removeprefix(SLOW_RUN).strip(" :.")
+
+
+def thread_script(ws: Workspace, prompt: str, received: str) -> list[tuple[str, Any]]:
+    """A run for comments sent to Claude, each thread its own conversation: a comment naming
+    "<parameter> <number> mm" sets that parameter of the design; one starting with "Ask" asks
+    first (its answer may come in a later run, after other threads ran); each is answered in
+    its thread."""
+    steps: list[tuple[str, Any]] = [("text", received)]
+    said: list[str] = []
+    for c in ws.comments:
+        text = _request(c.text)
+        if text.lower().startswith("ask"):
+            if "The user answered:" not in prompt:
+                question = f"About “{text}”: should I go ahead?"
+                steps.append(("ask_user", {"question": question, "options": THREAD_OPTIONS}))
+            reply = "Answered: going on as you said."
+            steps.append(("reply_to_comment", {"comment": c.id, "text": reply}))
+            said.append(reply)
+            continue
+        changes = [
+            {"name": m.group(1).lower(), "value": float(m.group(2))}
+            for m in _SET.finditer(text)
+            if isinstance(ws.design.params.get(m.group(1).lower()), int | float)
+        ]
+        if changes:
+            steps += [("set_parameter", {"changes": changes}), ("run_checks", {})]
+        reply = (
+            "Set " + ", ".join(f"{ch['name']} to {ch['value']:g} mm" for ch in changes) + "."
+            if changes
+            else f"Noted: {text}."
+        )
+        names = [ch["name"] for ch in changes]
+        steps.append(("reply_to_comment", {"comment": c.id, "text": reply, "changes": names}))
+        said.append(reply)
+    return [*steps, ("finish", {"outcome": "done", "summary": " ".join(said) or "Replied."})]
+
+
 def script(
     body: MessageCreate, prompt: str, options: Any, ws: Workspace | None = None
 ) -> list[tuple[str, Any]]:
@@ -205,6 +256,8 @@ def script(
         f"mode {'manual' if 'Mode: Manual' in prompt else 'auto'}."
     )
     selected = (body.selection.faces if body.selection else []) or []
+    if body.comments and ws is not None and ws.comments:
+        return thread_script(ws, prompt, received)
     if body.text.startswith(SLOW_RUN):  # a reply in words: nothing to finish
         return [("text", f"{received} Took my time over: {body.text}")]
     if body.text.startswith("Simulate"):
@@ -248,6 +301,18 @@ def script(
         ]
     doc = parse_changes_md((BOARDS_DIR / "CHANGES.md").read_text())
     changes = "".join(f"\n- {row['Component']}: {row['Change']}" for row in doc.rows)
+    if "The user answered:" in prompt:  # its question was parked, and answered later
+        accepted = f"The user answered: {OPTIONS[0]['label']}" in prompt
+        return [
+            ("text", received),
+            ("text", "Done." if accepted else "Kept the current design."),
+            (
+                "finish",
+                {"outcome": "done", "summary": "Checked the new revision."}
+                if accepted
+                else {"outcome": "blocked", "summary": "Kept the current design."},
+            ),
+        ]
     return [
         ("text", received),
         ("read_spec", {}),
@@ -287,7 +352,8 @@ class StandInClaude(ScriptedDriver):
         return super().__call__(prompt, options)
 
     async def _play(self) -> AsyncIterator[Any]:
-        if self.body.text.startswith(SLOW_RUN):
+        slow_thread = any(c.text.startswith(SLOW_RUN) for c in self.ws.comments)
+        if self.body.text.startswith(SLOW_RUN) or (self.body.comments and slow_thread):
             from claude_agent_sdk import AssistantMessage, TextBlock
 
             yield AssistantMessage(content=[TextBlock("Working on it.")], model="scripted")

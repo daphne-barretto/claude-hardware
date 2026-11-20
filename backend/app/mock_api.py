@@ -146,6 +146,7 @@ from app.contracts.session import (
     Constraint,
     ConstraintsEvent,
     ConstraintUpdate,
+    Conversation,
     DesignHistory,
     Edit,
     EditCreate,
@@ -832,6 +833,55 @@ async def rename_session(session_id: str, body: SessionUpdate) -> Session:
         raise HTTPException(422, "a session name needs a letter or a digit")
     await state.emit(TitleEvent(type="title", message_id=None, title=title, title_locked=True))
     return state.session
+
+
+@app.get(
+    SESSION + "/conversations",
+    response_model=list[Conversation],
+    responses=NOT_FOUND,
+    tags=["messages"],
+)
+def list_conversations(session_id: str) -> list[Conversation]:
+    """The main chat and each comment thread sent to Claude, each its own conversation. The
+    mock plays one run at a time, so it reports where that run stands."""
+    from app.conversations import MAIN, MAIN_TITLE, thread_title
+
+    state = _state(session_id)
+    q = state.question
+    asking = q.message_id if q is not None else None
+    in_thread = {
+        c.id: c.request.message_id
+        for c in state.comments
+        if c.request is not None and c.request.status == "running"
+    }
+    main_waits = q is not None and asking not in in_thread.values()
+    main = Conversation(
+        id=MAIN,
+        kind="main",
+        title=MAIN_TITLE,
+        status="waiting_for_answer"
+        if main_waits
+        else "working"
+        if state.session.status == "running" and not in_thread
+        else "idle",
+        question=q if main_waits else None,
+    )
+    threads = [
+        Conversation(
+            id=c.id,
+            kind="thread",
+            title=thread_title(c),
+            status="waiting_for_answer"
+            if c.id in in_thread and in_thread[c.id] == asking
+            else "working"
+            if c.id in in_thread
+            else "idle",
+            question=q if c.id in in_thread and in_thread[c.id] == asking else None,
+        )
+        for c in state.comments
+        if c.request is not None
+    ]
+    return [main, *threads]
 
 
 @app.get(

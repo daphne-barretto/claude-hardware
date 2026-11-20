@@ -91,7 +91,9 @@ def _comment(client, sid: str, build: dict, text: str) -> str:
     return r.json()["id"]
 
 
-def test_a_comment_sent_while_another_threads_question_is_open(client, monkeypatch) -> None:
+def test_a_comment_sent_in_the_thread_that_asked_leaves_its_question_open(
+    client, monkeypatch
+) -> None:
     from app.session_api import CONFIG
 
     fake = ThreadClaude()
@@ -99,19 +101,17 @@ def test_a_comment_sent_while_another_threads_question_is_open(client, monkeypat
     sid, found = start(client)
     build = next(d["build"] for _, t, d in found if t == "build_ready")
     asking = _comment(client, sid, build, "Ask me about the lid")
-    other = _comment(client, sid, build, "Round the corners")
     send(client, sid, comments=[asking])
     running(client, sid)
     fake.release(0)
     asked = wait_until(client, sid, "waiting_for_answer", found[-1][0])
     (question,) = [d for _, t, d in asked if t == "question"]
 
-    # Another thread's "Send to Claude" goes through.
-    r = client.post(f"/api/sessions/{sid}/messages", json={"comments": [other]})
+    # The same thread's "Send again" goes through; Claude is told its question and the thread.
+    r = client.post(f"/api/sessions/{sid}/messages", json={"comments": [asking]})
     assert r.status_code == 202, r.text
     assert len(fake.prompts) == 2
     prompt = fake.prompts[1]
-    # Claude is told its question, and the thread it was asked in.
     assert "Which?" in prompt and "left open" in prompt
     assert asking in prompt and "Ask me about the lid" in prompt
     after = events(client, sid, asked[-1][0])

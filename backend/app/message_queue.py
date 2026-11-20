@@ -30,6 +30,7 @@ import secrets
 
 from fastapi import APIRouter, HTTPException
 
+from app import conversations as convs
 from app.contracts.session import (
     ErrorEvent,
     Message,
@@ -47,8 +48,10 @@ from app.session_api import (
     SESSION,
     SESSIONS,
     SessionState,
+    conversations_changed,
     leave_question_open,
     now,
+    park_question,
     send_message,
 )
 
@@ -59,16 +62,20 @@ SENT_ANYWAY = QUESTION_LEFT_OPEN
 RETRY_SECONDS = 0.5
 
 
+def _paused(state: SessionState) -> bool:
+    """A queued message waits on Claude's question in its conversation."""
+    return any(not convs.can_send(state, q.message) for q in state.queue)
+
+
 def queue_of(state: SessionState) -> MessageQueue:
-    return MessageQueue(
-        items=list(state.queue), paused=state.session.status == "waiting_for_answer"
-    )
+    return MessageQueue(items=list(state.queue), paused=_paused(state))
 
 
 def _notify(
     state: SessionState, sent: QueuedMessage | None = None, message: str | None = None
 ) -> None:
-    state.queue_paused = state.session.status == "waiting_for_answer"
+    state.queue_paused = _paused(state)
+    conversations_changed(state)
     state.emit(
         0,
         QueueEvent(
@@ -95,8 +102,9 @@ def _item(state: SessionState, item_id: str) -> QueuedMessage:
     return found
 
 
-def _check(body: MessageCreate) -> None:
-    if body.answer is not None:
+def _check(body: MessageCreate, state: SessionState | None = None) -> None:
+    # Only the answer to a question parked in its conversation waits its turn like a message.
+    if body.answer is not None and (state is None or not convs.can_send(state, body)):
         raise HTTPException(409, "a queued message can't answer a question: answer it directly")
     if not body.text.strip() and not body.comments:
         raise HTTPException(409, "a message needs text or comments")
@@ -109,21 +117,28 @@ def _blocked(state: SessionState) -> bool:
 
 
 def pump(state: SessionState) -> None:
-    """Send the next queued message if nothing is running and no question waits. A question
-    pauses the queue: the change streams so every tab shows it."""
+    """Send the next queued message that can go, once nothing is running: runs take turns on
+    the one design. A message waits while Claude's question in its own conversation is open
+    (it is never taken as the answer); a question in another conversation is parked
+    (`park_question`) so the message goes. The change streams so every tab shows it."""
     # No store: the server is shutting down (`Sessions.close`), so nothing more starts.
     if state.queue_hold or not state.queue or state.store is None:
         return
     status = state.session.status
-    if status != "idle":
-        # A question paused the queue, or an answer resumed the run: say so once.
-        if state.queue_paused != (status == "waiting_for_answer"):
+    item = next((q for q in state.queue if convs.can_send(state, q.message)), None)
+    if status == "running" or item is None:
+        # A question paused a message, or an answer resumed the run: say so once.
+        if state.queue_paused != _paused(state):
             _notify(state)
+        return
+    if status == "waiting_for_answer":  # another conversation's question: park it, then go
+        state.queue_hold = True
+        SESSIONS.spawn(_park_then_pump(state))
         return
     if _blocked(state):
         asyncio.get_running_loop().call_later(RETRY_SECONDS, pump, state)
         return
-    item = state.queue.pop(0)
+    state.queue.remove(item)
     try:
         message = send_message(state, item.message)
     except HTTPException as error:  # it can't be sent any more (a comment resolved since)
@@ -140,6 +155,14 @@ def pump(state: SessionState) -> None:
 
 
 RUN_LISTENERS.append(pump)
+
+
+async def _park_then_pump(state: SessionState) -> None:
+    try:
+        await park_question(state)
+    finally:
+        state.queue_hold = False
+    pump(state)
 
 
 # --- Routes -----------------------------------------------------------------------------------
@@ -162,7 +185,7 @@ async def queue_message(session_id: str, body: MessageCreate) -> QueuedMessage:
     """Send a message while Claude is working: it waits in the queue and is sent as a normal
     message once the runs before it have ended. On an idle session it is sent at once."""
     state = SESSIONS.get(session_id)
-    _check(body)
+    _check(body, state)
     item = QueuedMessage(id=_new_id(state), created_at=now(), message=body)
     state.queue.append(item)
     state.save()
@@ -228,7 +251,11 @@ async def send_queued(session_id: str, item_id: str) -> Message:
         raise HTTPException(409, "Claude is working: it is sent when the run ends")
     state.queue_hold = True
     try:
-        note = await leave_question_open(state, SENT_ANYWAY)
+        note = None
+        if convs.live_conversation(state) == convs.conversation_of(item.message):
+            note = await leave_question_open(state, SENT_ANYWAY)
+        else:  # the question open is another conversation's: it waits there
+            await park_question(state)
         item = _item(state, item_id)  # still queued: nobody removed it meanwhile
         state.queue.remove(item)
         try:

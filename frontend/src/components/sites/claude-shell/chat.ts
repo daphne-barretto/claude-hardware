@@ -15,6 +15,7 @@ import type {
   RiskFlags,
   Selection,
   SessionEvent,
+  ThreadReportEvent,
 } from "@/lib/session-api";
 
 /** The model, effort and Manual/Auto choices sent with the next message. */
@@ -55,7 +56,9 @@ export type Block =
   /** A notice apart from Claude's text: retrying, waiting in line, a warning, a refusal or a safety notice. */
   | { kind: "notice"; notice: Notice; at: number }
   /** The chat's session is no longer on the server: the chat offers a new one. */
-  | { kind: "session_gone" };
+  | { kind: "session_gone" }
+  /** A comment thread's run reporting back to the main chat (./ThreadReport). */
+  | { kind: "thread_report"; report: ThreadReportEvent };
 
 export type ChatMessage = {
   /** Message ID from the stream; local user messages get a client ID. */
@@ -100,6 +103,8 @@ export function fromStored(stored: Message[]): ChatMessage[] {
           ...(m.attachments?.length ? { files: m.attachments.map((a) => a.name) } : {}),
           selection: m.selection ?? null,
           answer: m.answer ?? null,
+          // Comments sent to Claude: the thread shows them, not the chat.
+          ...(m.comments?.length && !m.text ? { thread: true } : {}),
         },
   );
 }
@@ -113,10 +118,13 @@ export function withAnswers(messages: ChatMessage[]): ChatMessage[] {
   for (const m of messages) {
     if (m.role !== "user" || !m.answer) continue;
     const { question_id, option_id } = m.answer;
-    const question = out
-      .flatMap((x) => x.blocks ?? [])
-      .find((b): b is Extract<Block, { kind: "question" }> => b.kind === "question" && b.questionId === question_id);
+    const asking = out.find((x) => x.blocks?.some((b) => b.kind === "question" && b.questionId === question_id));
+    const question = asking?.blocks?.find(
+      (b): b is Extract<Block, { kind: "question" }> => b.kind === "question" && b.questionId === question_id,
+    );
     if (!question) continue;
+    // The answer to a question in a comment thread belongs to the thread, not the chat.
+    if (asking?.thread && !m.thread) out = out.map((x) => (x.id === m.id ? { ...x, thread: true } : x));
     if (question.answer !== option_id) out = answerQuestion(out, question_id, option_id);
     const label = question.options.find((o) => o.id === option_id)?.label;
     if (!m.text && label) out = out.map((x) => (x.id === m.id ? { ...x, text: label } : x));
@@ -264,10 +272,21 @@ export function applyEvent(messages: ChatMessage[], event: SessionEvent): ChatMe
       // Sent from another tab (or before this one opened): shown as a reload would show it.
       return [...messages, ...fromStored([stored])];
     }
+    case "thread_report": {
+      // Its own entry in the main chat; it never passes a question of the chat's own.
+      const id = event.message_id;
+      const block: Block = { kind: "thread_report", report: event };
+      if (messages.some((m) => m.id === id)) return messages.map((m) => (m.id === id ? { ...m, blocks: [block], streaming: false } : m));
+      return [...messages, { id, role: "assistant", text: "", blocks: [block] }];
+    }
     case "comment": {
       // A comment sent to Claude names its run before the run starts: keep that reply out of the chat.
+      // A reopened session has the run's stored message already: it goes out of the chat too.
       const request = event.comment.request;
-      if (request?.status !== "running" || messages.some((m) => m.id === request.message_id)) return messages;
+      if (!request) return messages;
+      if (messages.some((m) => m.id === request.message_id))
+        return messages.map((m) => (m.id === request.message_id && !m.thread ? { ...m, thread: true } : m));
+      if (request.status !== "running") return messages;
       return [...messages, { id: request.message_id, role: "assistant", text: "", blocks: [], streaming: true, thread: true }];
     }
     default:

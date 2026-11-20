@@ -27,8 +27,16 @@ export function sentMessage(item: QueuedMessage, messageId: string): ChatMessage
     text: item.message.text,
     ...(files.length ? { files } : {}),
     selection: item.message.selection ?? null,
+    // Comments sent to Claude, or the answer to a thread's question: the thread shows them.
+    ...((item.message.comments?.length || item.message.answer) && !item.message.text ? { thread: true } : {}),
   };
 }
+
+/** The queued messages the main chat lists: its own, not those of comment threads. */
+export const chatQueue = (queue: MessageQueue): MessageQueue => ({
+  ...queue,
+  items: queue.items.filter((q) => !q.message.comments?.length && !q.message.answer),
+});
 
 /**
  * Applies a `queue` event: the new queue, and the chat with the message it sent (if any) as the

@@ -16,6 +16,7 @@ import { FileChip, SelectionChip } from "./Composer";
 import { ConflictCard } from "./ConflictCard";
 import { FoundCard } from "./FoundCard";
 import { StopButton } from "./QueuedMessages";
+import { ThreadReport } from "./ThreadsPanel";
 import { NoticeView, StoppedView } from "./RunNotice";
 import { shownError } from "@/lib/errors";
 
@@ -239,6 +240,8 @@ function BlockView({
       return <NoticeView block={block} live={busy} />;
     case "session_gone":
       return <SessionGone onOpenSession={onOpenSession} />;
+    case "thread_report":
+      return <ThreadReport report={block.report} />;
   }
 }
 

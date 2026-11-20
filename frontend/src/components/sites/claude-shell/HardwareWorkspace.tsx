@@ -18,6 +18,8 @@ import { ConnectionBanner, RunControlsProvider } from "./RunNotice";
 import { pickFiles, type FileKind, unsupportedNote } from "./files";
 import { PhotoHint, photoPlaceholder } from "./PhotoHint";
 import { QueuedMessages } from "./QueuedMessages";
+import { chatQueue } from "./messageQueue";
+import { ThreadsPanel } from "./ThreadsPanel";
 import { SessionUnavailable, useSessionMissing } from "./SessionUnavailable";
 import { ShareButton } from "./ShareButton";
 import { ShareMenu } from "./ShareMenu";
@@ -118,6 +120,13 @@ export function HardwareWorkspace({ initialPrompt, initialFiles = [], initialCho
         ? { result: found.block.result, buildId: found.block.buildId, select: false, key: found.key, n: 0 }
         : null;
   const [choices, setChoices] = useState<Choices>(initialChoices);
+  // Reopening a session: the picker shows the model and effort its last message used, unless
+  // the user already picked something here.
+  const choicePicked = useRef(false);
+  const storedChoices = chat.storedChoices;
+  useEffect(() => {
+    if (storedChoices && !choicePicked.current) setChoices((c) => ({ ...c, ...storedChoices }));
+  }, [storedChoices]);
   // Retry and Stop on a stopped, retrying or waiting reply (./RunNotice).
   const runControls = {
     onRetry: () => void chat.retry(choices),
@@ -159,6 +168,7 @@ export function HardwareWorkspace({ initialPrompt, initialFiles = [], initialCho
         if (next[setting] !== choices[setting]) reportAction(sessionId, { kind: "choice", setting, value: next[setting] });
       }
     }
+    choicePicked.current = true;
     setChoices(next);
   };
 
@@ -317,7 +327,7 @@ export function HardwareWorkspace({ initialPrompt, initialFiles = [], initialCho
             {/* Messages sent while Claude works, under the running reply. */}
             {!missing && !chat.loading && (
               <QueuedMessages
-                queue={chat.queue}
+                queue={chatQueue(chat.queue)}
                 wide={!canvasOpen}
                 onEdit={chat.editQueued}
                 onMove={chat.moveQueued}
@@ -328,6 +338,13 @@ export function HardwareWorkspace({ initialPrompt, initialFiles = [], initialCho
           </div>
 
           <div className={`mx-auto w-full px-6 pb-3 ${canvasOpen ? "" : "max-w-[760px]"}`}>
+            {/* The comment threads Claude is busy with: each its own conversation, taking turns. */}
+            <ThreadsPanel
+              conversations={chat.conversations}
+              busy={busy}
+              readOnly={readOnly}
+              onAnswer={(questionId, optionId) => chat.answerInThread(questionId, optionId, choices)}
+            />
             {/* A shared link takes no messages: it says so and offers its own actions instead. */}
             {!readOnly && <PhotoHint files={staged} />}
             {shared ? (

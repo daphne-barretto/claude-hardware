@@ -1392,6 +1392,62 @@ class QueueEvent(Contract):
     )
 
 
+class Conversation(Contract):
+    """One conversation with Claude about the session's design: the main chat, or a comment
+    thread sent to Claude. Each has its own history and its own question; all of them edit the
+    one design, so their runs take turns (`GET .../conversations`)."""
+
+    id: StableId = Field(description="`main` for the main chat, else the comment's ID")
+    kind: Literal["main", "thread"]
+    title: str = Field(description="The main chat's name, or the start of the comment's text")
+    status: Literal["idle", "working", "queued", "waiting_for_answer"] = Field(
+        description="`working`: its run is going; `queued`: its next run waits for another "
+        "conversation's run (`queued_behind`); `waiting_for_answer`: Claude's question in it is "
+        "open (`question`), which waits on this conversation only"
+    )
+    queued_behind: StableId | None = Field(
+        default=None, description="The conversation whose run it waits for, when `queued`"
+    )
+    queued_behind_title: str | None = None
+    question: QuestionEvent | None = Field(
+        default=None,
+        description="Claude's open question in this conversation: answer it with "
+        "`POST .../messages` (`answer`) from the thread or the main chat",
+    )
+    summary: str | None = Field(default=None, description="What its latest run did")
+
+
+class ConversationsEvent(Contract):
+    """A conversation's status changed (a run started, queued, asked, ended): every
+    conversation as it is now, so the main chat and the threads show the same."""
+
+    type: Literal["conversations"]
+    conversations: list[Conversation]
+
+
+class ThreadReportEvent(Contract):
+    """A comment thread's run reports back to the main chat: what it changed, the checks and
+    the build, with a link to the thread. `message_id` is the entry's own message in the main
+    chat (`GET .../messages`)."""
+
+    type: Literal["thread_report"]
+    message_id: StableId
+    comment_id: StableId = Field(description="The thread: open it from the entry")
+    thread_title: str
+    run_id: StableId = Field(description="The thread's run that reports (its assistant message)")
+    outcome: Literal["changed", "answered", "failed"] = Field(
+        description="`changed`: the run changed the design; `answered`: it replied without a "
+        "change; `failed`: it stopped with an error"
+    )
+    summary: str
+    changes: list[str] = Field(default_factory=list, description="The changes it made, by title")
+    build_id: StableId | None = Field(default=None, description="The build it ended on")
+    build_number: int | None = Field(
+        default=None, ge=1, description="The build's place in the session's builds (1: first)"
+    )
+    checks: CheckSummary | None = Field(default=None, description="That build's check results")
+
+
 SessionEvent = Annotated[
     MessageStartEvent
     | TextEvent
@@ -1409,7 +1465,9 @@ SessionEvent = Annotated[
     | QueueEvent
     | NoticeEvent
     | TitleEvent
-    | UserMessageEvent,
+    | UserMessageEvent
+    | ConversationsEvent
+    | ThreadReportEvent,
     Field(discriminator="type"),
 ]
 EVENT_TYPES = (
@@ -1430,6 +1488,8 @@ EVENT_TYPES = (
     "notice",
     "title",
     "user_message",
+    "conversations",
+    "thread_report",
 )
 
 _event_adapter: TypeAdapter[Any] = TypeAdapter(SessionEvent)
