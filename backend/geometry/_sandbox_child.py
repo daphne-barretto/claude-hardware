@@ -239,6 +239,36 @@ def _apply_kernel_limits(workdir: str) -> tuple[bool, str]:
     return True, ""
 
 
+def cpus_for_quota(cpu_max: str, available: list[int]) -> list[int]:
+    """The CPUs a build may use: as many as the container's CPU quota (cgroup v2 `cpu.max`).
+
+    A container capped at one CPU on a 16-CPU host still sees all 16, and OpenCascade starts a
+    thread for each, each reserving its own stack and malloc arena. Under the build's address
+    space cap that can run out before the build starts ("cannot allocate memory for
+    thread-local data"). Pinning the build to its quota keeps the thread count honest.
+    """
+    parts = cpu_max.split()
+    if len(parts) != 2 or parts[0] == "max":
+        return available
+    quota, period = int(parts[0]), int(parts[1])
+    count = max(1, -(-quota // period))  # round up
+    return sorted(available)[:count]
+
+
+def _limit_cpus() -> None:
+    if not hasattr(os, "sched_setaffinity"):
+        return  # macOS
+    try:
+        with open("/sys/fs/cgroup/cpu.max") as f:
+            cpu_max = f.read()
+    except OSError:
+        return
+    available = sorted(os.sched_getaffinity(0))
+    cpus = cpus_for_quota(cpu_max, available)
+    if cpus != available:
+        os.sched_setaffinity(0, cpus)
+
+
 def _set_limits(memory_bytes: int, cpu_seconds: int, file_bytes: int) -> None:
     try:
         with open("/proc/self/status") as f:
@@ -302,6 +332,7 @@ def main() -> None:
     # `sites` (standard library only) is loaded only for a build that records feature lines, and
     # before the kernel limits, which keep the package directory out of reach afterwards.
     sites = importlib.import_module("geometry.sites") if request.get("feature_sites") else None
+    _limit_cpus()
     kernel_limits, reason = _apply_kernel_limits(workdir)
     if not kernel_limits and request["kernel_limits"] != "optional":
         message = f"the build sandbox can't be applied on this host: {reason}"

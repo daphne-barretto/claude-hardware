@@ -180,6 +180,8 @@ def _child_env(workdir: str) -> dict[str, str]:
             "PYTHONDONTWRITEBYTECODE": "1",
             "OMP_NUM_THREADS": "1",
             "OPENBLAS_NUM_THREADS": "1",
+            # Fewer malloc arenas: each thread's 64 MB arena counts against the address space cap.
+            "MALLOC_ARENA_MAX": "2",
         }
     )
     return env
