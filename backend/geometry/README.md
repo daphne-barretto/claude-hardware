@@ -16,7 +16,8 @@ The enclosure generator behind a swappable CAD backend: code and parameters in; 
 | `conflicts.py` | Conflict detection: `detect_conflicts(board, standards, params, locked, result, mesh)` says which locks, standards and board parts clash, where on the model, by how much, and the best achievable value of each. `conflict_locks()` is the test fixture. |
 | `analysis.py` | Analysis maps: per-face wall thickness (ray casting) and draft, thin, thick and low-draft spots flagged against `standards.yaml`, written as analysis-map documents aligned with a contract mesh. |
 | `export.py` | `export_build(board, standards, result, code, params, out_dir, report, mesh)`: STEP, STL, 3MF, GLB, OBJ, DXF flat profiles, a PDF production drawing (a sheet per part), the source code and parameters, and the build note (checks passed, failed and not tested, written from the check report). |
-| `step_import.py` | STEP import, run as a worker process by `app.imports`: reads the file in the build sandbox (`run_build(inputs=...)`), makes each solid a part named from the file's labels, tags whole cylinders as `hole_<n>`/`boss_<n>` and the walls around inner loops of flat faces as `opening_<n>` (or `boss_<n>` when they stand out of the face), every other face with its part's name, then tessellates, checks and analyzes it like a build. |
+| `step_import.py` | STEP import, run as a worker process by `app.imports`: reads the file in the build sandbox (`run_build(inputs=...)`), makes each solid a part named from the file's labels, tags whole cylinders as `hole_<n>`/`boss_<n>` and the walls around inner loops of flat faces as `opening_<n>` (or `boss_<n>` when they stand out of the face), every other face with its part's name, then tessellates, checks and analyzes it like a build. A file this app exported comes back as the build it was, from the design record in it. |
+| `step_manifest.py` | The design record a STEP export carries as a comment (parts' exact solids, materials, kinds, placements, features and tools, face tags and IDs, the board and the fitted object), so exporting and importing a design gives back the same build and the same check results. |
 | `diff.py` | What changed between two builds: `feature_summary(result)` (each feature's centroid, size, volume and long-axis rotation, plain JSON), `diff_parameters` and `diff_features` (added, removed, moved, rotated or resized, with distances). `app/builds.py` stores every build (code, parameters, check results, files, parent) under `DATA_DIR/builds` and diffs any two. |
 
 ## Usage
@@ -145,7 +146,7 @@ The 3D canvas gets every built part as its own mesh node, with its kind, materia
 
 `export_build()` writes each format from the build's exact solids or its tessellation (the same triangles the 3D canvas shows), in the board's coordinates and millimetres:
 
-- **STEP**: every part of the assembly, the board included, as a separate exact body labelled with its part name.
+- **STEP**: every part of the assembly, the board included, as a separate exact body labelled with its part name, plus the design record (`step_manifest.py`) as a STEP comment, which other CAD tools skip and the app's import reads back.
 
 `export_build(..., parts=[...])` exports only those parts of the assembly (any of the build's parts and `board`) instead of the whole assembly; the board is only in the STEP.
 - **STL, 3MF, OBJ**: the tessellation with the vertices faces share merged, so each part is a closed mesh. 3MF and OBJ keep one named object per part; STL holds all parts.

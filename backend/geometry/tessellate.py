@@ -69,8 +69,11 @@ def tessellate(
     source: dict[str, Any] | None = None,
     linear_deflection: float = LINEAR_DEFLECTION,
     angular_deflection: float = ANGULAR_DEFLECTION,
+    face_ids: dict[str, list[str]] | None = None,
 ) -> Tessellation:
-    """Mesh a build, keeping the face and edge IDs of `previous` where the faces match."""
+    """Mesh a build, keeping the face and edge IDs of `previous` where the faces match.
+    `face_ids` gives some parts' face IDs outright, one per face in `occ.faces()` order (a
+    build read back from the STEP file it was exported as: `geometry.step_import`)."""
     old = _previous_faces(previous)
     counters = dict(
         previous.counters
@@ -91,7 +94,15 @@ def tessellate(
             _signature(name, ref.feature, face, anchors.get((name, ref.feature), []))
             for face, ref in zip(faces, refs, strict=True)
         ]
-        ids = _assign_ids(name, signatures, old, counters)
+        given = (face_ids or {}).get(name)
+        if given is not None and len(given) == len(faces) and len(set(given)) == len(given):
+            ids = list(given)
+            for face_id in ids:
+                group, _, number = face_id.rpartition(".")
+                if number.isdigit():
+                    counters[group] = max(counters.get(group, 0), int(number) + 1)
+        else:
+            ids = _assign_ids(name, signatures, old, counters)
         part = PartMesh(name, result.kind(name), result.materials.get(name), result.placement(name))
         for face, ref, sig, face_id in zip(faces, refs, signatures, ids, strict=True):
             part.faces.append(MeshFace(face_id, ref.feature, sig))

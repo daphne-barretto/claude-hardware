@@ -252,9 +252,11 @@ def write_build_exports(
     parts: list[str] | None = None,
     history: Sequence[Revision] | None = None,
     units: str = "mm",
+    face_ids: dict[str, list[str]] | None = None,
 ) -> list[ExportedFile]:
     """Write `formats` of a build's `parts` (default: the whole assembly) to `out` (emptied
     first) with the geometry exporters; the build note is written from its check `report`.
+    `face_ids` are the face IDs of the build's mesh (`mesh_face_ids`), which the files keep.
     Raises `ExportPartsError` for a choice the exporters can't write. Loads the CAD kernel: only
     a geometry worker calls it."""
     from geometry.export import export_build
@@ -275,6 +277,7 @@ def write_build_exports(
             parts=parts,
             history=history,
             units=units,
+            face_ids=face_ids,
         )
     except ValueError as error:
         raise ExportPartsError(str(error)) from error
@@ -291,14 +294,27 @@ def worker_stored_exports(
     parts: list[str] | None = None,
     history: Sequence[Revision] | None = None,
     units: str = "mm",
+    face_ids: dict[str, list[str]] | None = None,
 ) -> list[ExportedFile] | dict:
     """In a geometry worker: rebuild a stored build in the sandbox from its code and parameters
-    and write its exports. Returns the build's error if it no longer builds."""
+    and write its exports, with the face IDs of its stored mesh (`mesh_face_ids`). Returns the
+    build's error if it no longer builds."""
     from app.agent.services import sandbox_build
 
     result, error = sandbox_build(code, params, backend)
     if result is None:
         return error
     return write_build_exports(
-        out, board, result, code, params, report, formats, parts, history, units
+        out, board, result, code, params, report, formats, parts, history, units, face_ids
     )
+
+
+def mesh_face_ids(gltf: str | dict[str, Any]) -> dict[str, list[str]]:
+    """The face IDs of each part of a mesh (glTF, the mesh contract), in face order."""
+    doc = json.loads(gltf) if isinstance(gltf, str) else gltf
+    out = {}
+    for node in doc.get("nodes", []):
+        extras = node.get("extras") or {}
+        if "mesh" in node and extras.get("part"):
+            out[extras["part"]] = [f["id"] for f in extras.get("faces", [])]
+    return out

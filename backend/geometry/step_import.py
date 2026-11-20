@@ -7,10 +7,15 @@ the file's solids as BREP. The worker then does what a build does: tags the face
 (`geometry.tessellate`), runs the check report (`geometry.report`) and the analysis maps
 (`geometry.analysis`), and prints them as one JSON document.
 
-- **Parts.** Every solid body in the file is a part, named after the nearest meaningful label
-  in the file's assembly tree (`case`, `R_0402_1005Metric`); bodies that share a name are
-  numbered (`case_1`, `case_2`). Every part is an `enclosure` part, at the origin, in the file's
-  own coordinates (millimetres).
+- **A file this app exported** carries its design record (`geometry.step_manifest`) and comes
+  back as the build it was: the same parts (the board's bodies left out: the board joins the
+  assembly from the board data), materials, kinds, placements, features, face tags and face IDs,
+  checked against the board it was made for when the session has none. A file whose bodies
+  changed since export is imported like any other file.
+- **Parts.** Every other file's solid bodies are each a part, named after the nearest
+  meaningful label in the file's assembly tree (`case`, `R_0402_1005Metric`); bodies that
+  share a name are numbered (`case_1`, `case_2`). Every part is an `enclosure` part, at the
+  origin, in the file's own coordinates (millimetres).
 - **Feature tags.** Simple features are recognized on the exact B-rep: a full cylinder (one
   face or several on the same axis and radius) is a `hole_<n>` when it is concave and a
   `boss_<n>` when it is convex; the walls around an inner loop of a flat face are an
@@ -43,7 +48,7 @@ from OCP.TopExp import TopExp
 from OCP.TopoDS import TopoDS_Compound, TopoDS_Shape
 from OCP.TopTools import TopTools_IndexedDataMapOfShapeListOfShape, TopTools_IndexedMapOfShape
 
-from geometry import occ
+from geometry import occ, step_manifest
 from geometry.interface import BuildResult, FaceRef, Feature
 
 STEP_INPUT = "import.step"
@@ -51,16 +56,21 @@ SOURCE_BACKEND = "step"
 
 # Runs in the sandbox: read the file, and return every solid named by its path of labels.
 PARSE_CODE = """\
-from build123d import import_step
+from build123d import import_brep, import_step
 
 
 def _leaves(node, path):
     label = (node.label or "").strip().replace("|", "_")
     path = path + [label] if label else path
+    if params["skip"] is not None and label == params["skip"]:
+        return
     children = list(getattr(node, "children", None) or ())
     if children:
         for child in children:
             yield from _leaves(child, path)
+    elif params["whole"]:
+        if node.solids():
+            yield path, node
     else:
         for solid in node.solids():
             yield path, solid
@@ -70,7 +80,10 @@ _found = list(_leaves(import_step(params["file"]), []))
 if not _found:
     raise ValueError("the file has no solid bodies")
 result = {"%d|%s" % (_i, "|".join(_path)): _solid for _i, (_path, _solid) in enumerate(_found)}
+if params["design"] is not None:
+    result["design"] = import_brep(params["design"])
 """
+DESIGN_INPUT = "design.brep"
 
 # Labels that say nothing about the body (`SOLID`, `SOLID__3_`, `Body1`, `Part 2`, ...).
 _GENERIC_LABEL = re.compile(
@@ -78,6 +91,8 @@ _GENERIC_LABEL = re.compile(
 )
 FULL_TURN = 2 * math.pi * 0.98  # a cylinder group spanning this much is a whole hole or boss
 _TOL = 1e-4
+BBOX_TOL = 1e-3  # mm: a recorded part read back from the file is where it was
+SIZE_TOL = 1e-4  # relative: and has the volume and area it had
 
 
 class ImportFailed(Exception):
@@ -124,8 +139,9 @@ def part_names(paths: list[list[str]]) -> list[str]:
     return names
 
 
-def parts_from_sandbox(shapes: dict[str, TopoDS_Shape]) -> dict[str, TopoDS_Shape]:
-    """The sandbox's `<index>|<label>|<label>...` shapes as named parts, in file order."""
+def _entries(shapes: dict[str, TopoDS_Shape]) -> list[tuple[list[str], TopoDS_Shape]]:
+    """The sandbox's `<index>|<label>|<label>...` shapes as (path of labels, shape), in file
+    order."""
     entries = []
     for key, shape in shapes.items():
         index, _, path = key.partition("|")
@@ -133,8 +149,14 @@ def parts_from_sandbox(shapes: dict[str, TopoDS_Shape]) -> dict[str, TopoDS_Shap
             raise ImportFailed("crash", f"the reader returned an unexpected shape name {key!r}")
         entries.append((int(index), [p for p in path.split("|") if p], shape))
     entries.sort(key=lambda e: e[0])
-    names = part_names([e[1] for e in entries])
-    return {name: shape for name, (_, _, shape) in zip(names, entries, strict=True)}
+    return [(path, shape) for _, path, shape in entries]
+
+
+def parts_from_sandbox(shapes: dict[str, TopoDS_Shape]) -> dict[str, TopoDS_Shape]:
+    """The sandbox's `<index>|<label>|<label>...` shapes as named parts, in file order."""
+    entries = _entries(shapes)
+    names = part_names([path for path, _ in entries])
+    return {name: shape for name, (_, shape) in zip(names, entries, strict=True)}
 
 
 # --- Features ------------------------------------------------------------------------------
@@ -308,13 +330,20 @@ def imported_result(parts: dict[str, TopoDS_Shape]) -> ImportedResult:
 # --- The import --------------------------------------------------------------------------------
 
 
-def parse(data: bytes, timeout_s: float) -> dict[str, TopoDS_Shape]:
-    """Read a STEP file's solids in the sandbox. Raises ImportFailed."""
+def _read(
+    data: bytes, timeout_s: float, record: step_manifest.DesignRecord | None = None
+) -> dict[str, TopoDS_Shape]:
+    """Read a STEP file in the sandbox: its solids by `<index>|<path of labels>`, or with a
+    design `record`, each labelled body whole (the board's left out) and the record's shapes
+    (its parts' exact solids, then the features' tools) as `design`. Raises ImportFailed."""
     from geometry.sandbox import MAX_SHAPES, run_build
 
-    run = run_build(
-        PARSE_CODE, {"file": STEP_INPUT}, timeout_s=timeout_s, inputs={STEP_INPUT: data}
-    )
+    inputs = {STEP_INPUT: data}
+    params: dict[str, Any] = {"file": STEP_INPUT, "whole": False, "skip": None, "design": None}
+    if record is not None:
+        params.update(whole=True, skip=record.board_part, design=DESIGN_INPUT)
+        inputs[DESIGN_INPUT] = record.shapes
+    run = run_build(PARSE_CODE, params, timeout_s=timeout_s, inputs=inputs)
     if run.error is not None:
         kind, message = run.error.kind, run.error.message
         if kind == "output" and "shapes" in message:
@@ -322,7 +351,160 @@ def parse(data: bytes, timeout_s: float) -> dict[str, TopoDS_Shape]:
         elif kind == "runtime":
             message = message.removeprefix("ValueError: ")
         raise ImportFailed(kind, message)
-    return parts_from_sandbox(run.shapes)
+    return run.shapes
+
+
+def parse(data: bytes, timeout_s: float) -> dict[str, TopoDS_Shape]:
+    """Read a STEP file's solids in the sandbox, as named parts. Raises ImportFailed."""
+    return parts_from_sandbox(_read(data, timeout_s))
+
+
+def _children(shape: TopoDS_Shape) -> list[TopoDS_Shape]:
+    from OCP.TopoDS import TopoDS_Iterator
+
+    out = []
+    it = TopoDS_Iterator(shape)
+    while it.More():
+        out.append(it.Value())
+        it.Next()
+    return out
+
+
+def _compound(shapes: list[TopoDS_Shape]) -> TopoDS_Shape:
+    if len(shapes) == 1:
+        return shapes[0]
+    compound = TopoDS_Compound()
+    builder = BRep_Builder()
+    builder.MakeCompound(compound)
+    for s in shapes:
+        builder.Add(compound, s)
+    return compound
+
+
+def _near(a, b) -> bool:
+    pairs = zip((c for p in a for c in p), (c for q in b for c in q), strict=True)
+    return all(abs(x - y) <= BBOX_TOL for x, y in pairs)
+
+
+def _area(shape: TopoDS_Shape) -> float:
+    from OCP.BRepGProp import BRepGProp
+    from OCP.GProp import GProp_GProps
+
+    props = GProp_GProps()
+    BRepGProp.SurfaceProperties_s(shape, props)
+    return props.Mass()
+
+
+def _same_body(read: TopoDS_Shape, recorded: TopoDS_Shape) -> bool:
+    """Whether a body read from the STEP file is the recorded part: the same faces, bounding
+    box, volume and area (a STEP writer keeps the shape, not its parametrization)."""
+    if len(occ.faces(read)) != len(occ.faces(recorded)):
+        return False
+    if not _near(occ.bbox(read), occ.bbox(recorded)):
+        return False
+    for measure in (occ.volume, _area):
+        a, b = measure(read), measure(recorded)
+        if abs(a - b) > SIZE_TOL * max(abs(a), abs(b), 1.0):
+            return False
+    return True
+
+
+def recorded_result(
+    shapes: dict[str, TopoDS_Shape], record: step_manifest.DesignRecord
+) -> ImportedResult:
+    """The build a design record describes: its parts' exact solids from the record, each
+    checked against the body of that name read from the file. Raises BadRecord when the file's
+    bodies aren't the ones it describes (the file was changed after export)."""
+    design = _children(shapes.pop("design")) if "design" in shapes else []
+    if len(design) < len(record.parts):
+        raise step_manifest.BadRecord("the record's shapes are missing")
+    exact = dict(zip((p.name for p in record.parts), design, strict=False))
+    tools = design[len(record.parts) :]
+    names = {p.name for p in record.parts}
+    found: dict[str, list[TopoDS_Shape]] = {}
+    for path, shape in _entries(shapes):
+        owner = next((label for label in reversed(path) if label in names), None)
+        if owner is None:
+            raise step_manifest.BadRecord(f"a body the record doesn't name: {path}")
+        found.setdefault(owner, []).append(shape)
+    parts = {}
+    for p in record.parts:
+        if p.name not in found:
+            raise step_manifest.BadRecord(f"part {p.name} is not in the file")
+        shape = exact[p.name]
+        if (
+            len(occ.faces(shape)) != len(p.faces)
+            or not _near(occ.bbox(shape), p.bbox)
+            or not _same_body(_compound(found[p.name]), shape)
+        ):
+            raise step_manifest.BadRecord(f"part {p.name} is not the part the record describes")
+        parts[p.name] = shape
+    if sum(f.tools for f in record.features) != len(tools):
+        raise step_manifest.BadRecord("the features' tools don't match the record")
+    features, start = [], 0
+    for f in record.features:
+        features.append(Feature(f.tag, f.part, tuple(tools[start : start + f.tools])))
+        start += f.tools
+    return ImportedResult(
+        SOURCE_BACKEND,
+        parts,
+        features,
+        {p.name: p.material for p in record.parts if p.material is not None},
+        {p.name: p.kind for p in record.parts},
+        {p.name: p.placement for p in record.parts if p.placement is not None},
+        face_tags={p.name: list(p.faces) for p in record.parts},
+    )
+
+
+def read_design(
+    data: bytes, timeout_s: float
+) -> tuple[ImportedResult, step_manifest.DesignRecord | None]:
+    """Read a STEP file as a build. A file this app exported carries its design record
+    (`geometry.step_manifest`), and comes back as the build it was: the same parts, materials,
+    kinds, placements, features and face tags, without the board's bodies (the board joins the
+    assembly from the board data, as for any build). Any other file, or one changed since it
+    was exported, has its features recognized (`recognize`). Raises ImportFailed."""
+    record = step_manifest.read(data)
+    if record is None:
+        return imported_result(parse(data, timeout_s)), None
+    shapes = _read(data, timeout_s, record)
+    try:
+        return recorded_result(dict(shapes), record), record
+    except step_manifest.BadRecord:
+        shapes.pop("design", None)
+        entries = [(path, s) for path, shape in _entries(shapes) for s in occ.solids(shape)]
+        names = part_names([path for path, _ in entries])
+        parts = {name: s for name, (_, s) in zip(names, entries, strict=True)}
+        return imported_result(parts), None
+
+
+def _board_for(board, record: step_manifest.DesignRecord | None):
+    """The board to check against: the session's, else the one the file was made for."""
+    if board is not None or record is None or record.board is None:
+        return board
+    from app.boards import find_board
+
+    try:
+        return find_board(*record.board)
+    except LookupError:
+        return None
+
+
+def _tessellate(result: ImportedResult, record, source: dict[str, Any]):
+    """The build's mesh, with the face IDs it had when it was exported if it has a record."""
+    from geometry.tessellate import tessellate
+
+    if record is None:
+        return tessellate(result, source=source)
+    ids = {p.name: p.ids for p in record.parts}
+    previous = {"faces": {}, "counters": record.counters}
+    return tessellate(result, previous=previous, source=source, face_ids=ids)
+
+
+def _fit_object(record: step_manifest.DesignRecord | None):
+    from geometry.fit_object import FitObject
+
+    return FitObject.from_params({"object": record.fit_object}) if record else None
 
 
 def source_code(name: str, result: ImportedResult) -> tuple[str, list[dict[str, Any]]]:
@@ -357,12 +539,12 @@ def import_step(
     from app.contracts.mesh import validate_mesh
     from geometry.analysis import analysis_maps, analyze
     from geometry.report import check_report
-    from geometry.tessellate import tessellate
 
-    result = imported_result(parse(data, parse_timeout_s))
-    mesh = tessellate(result, source={"imported_from": name, "build": build_id})
+    result, record = read_design(data, parse_timeout_s)
+    board = _board_for(board, record)
+    mesh = _tessellate(result, record, {"imported_from": name, "build": build_id})
     gltf = mesh.to_gltf()
-    report = check_report(board, standards, result, build_id, mesh)
+    report = check_report(board, standards, result, build_id, mesh, _fit_object(record))
     maps = analysis_maps(analyze(result, standards), standards, validate_mesh(gltf), build_id)
     code, features = source_code(name, result)
     return {
@@ -402,12 +584,13 @@ def export_step(
     """Export an imported build in `formats` (`geometry.export`) to `out`, with its check
     `report` as the build note."""
     from geometry.export import export_build
-    from geometry.tessellate import tessellate
 
-    result = imported_result(parse(data, parse_timeout_s))
-    mesh = tessellate(result, source={"imported_from": name, "build": build_id})
+    result, record = read_design(data, parse_timeout_s)
+    board = _board_for(board, record)
+    mesh = _tessellate(result, record, {"imported_from": name, "build": build_id})
     code, _ = source_code(name, result)
-    files = export_build(board, standards, result, code, {}, out, report, mesh, formats=formats)
+    params = {"object": record.fit_object} if record and record.fit_object else {}
+    files = export_build(board, standards, result, code, params, out, report, mesh, formats=formats)
     return [{"format": f.format, "name": f.name, "media_type": f.media_type} for f in files]
 
 

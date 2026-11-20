@@ -4,7 +4,7 @@
 
 | Format | File | What |
 |---|---|---|
-| `step` | `enclosure.step` | Every part (the board too) as a separate exact body, labelled |
+| `step` | `enclosure.step` | Each part (and the board) an exact labelled body; a design record |
 | `stl` | `enclosure.stl` | Binary STL of every part (mm) |
 | `3mf` | `enclosure.3mf` | One mesh object per part, named, in millimetres |
 | `glb` | `enclosure.glb` | The contract mesh (`contracts/README.md`), face and edge IDs included |
@@ -103,6 +103,7 @@ def export_build(
     parts: Iterable[str] | None = None,
     history: Sequence[Revision] | None = None,
     units: str = "mm",
+    face_ids: dict[str, list[str]] | None = None,
 ) -> list[ExportedFile]:
     """Write the build in every requested format (default: all) to `out_dir`.
 
@@ -114,6 +115,8 @@ def export_build(
     the drawing's revision table lists (`revision_table`).
     `units` (`mm` or `in`) is the length unit of the build note, the one file read by people
     rather than CAD tools; every other format stays in its native unit, millimetres.
+    `face_ids` are the build's face IDs by part (`geometry.tessellate`), for a `mesh` made here:
+    the IDs the session's mesh has, which the STEP file records for an import to keep.
     """
     if units not in NOTE_UNITS:
         raise ValueError(f"unknown units {units!r}; choose from {list(NOTE_UNITS)}")
@@ -137,14 +140,14 @@ def export_build(
             )
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    if mesh is None and {"stl", "3mf", "glb", "obj"} & set(wanted):
-        mesh = tessellate(result, source={"build_id": report["build_id"]})
+    if mesh is None and {"stl", "3mf", "glb", "obj", "step"} & set(wanted):
+        mesh = tessellate(result, source={"build_id": report["build_id"]}, face_ids=face_ids)
     board_body = (
         {BOARD_PART: board_shape(board)} if board is not None and BOARD_PART in chosen else {}
     )
 
     writers = {
-        "step": lambda: [result.export_step(out / FILE_NAMES["step"][0], built, extra=board_body)],
+        "step": lambda: [write_step(board, result, params, built, board_body, mesh, out)],
         "stl": lambda: [write_stl(mesh, out / FILE_NAMES["stl"][0])],
         "3mf": lambda: [write_3mf(mesh, out / FILE_NAMES["3mf"][0])],
         "glb": lambda: [write_glb(mesh, out / FILE_NAMES["glb"][0])],
@@ -164,6 +167,35 @@ def export_build(
         note.write_text(build_note(board, result, report, files, units))
         files.append(ExportedFile("build_note", note.name, FORMATS["build_note"].media_type, note))
     return files
+
+
+def write_step(
+    board: Board | None,
+    result: BuildResult,
+    params: dict[str, Any],
+    built: list[str],
+    board_body: dict[str, Any],
+    mesh: Tessellation,
+    out: Path,
+) -> Path:
+    """The STEP file of `built` parts (and the board's bodies, if `board_body`), with the design
+    record an import reads back (`geometry.step_manifest`): every part's material, kind,
+    placement and face features, the features' tools, the board and the object it fits. So a
+    design exported and imported again is the same build, and checks the same."""
+    from geometry import step_manifest
+
+    path = result.export_step(out / FILE_NAMES["step"][0], built, extra=board_body)
+    fit_object = params.get("object") if isinstance(params.get("object"), dict) else None
+    record = step_manifest.describe(
+        result,
+        built,
+        (board.name, board.revision) if board is not None else None,
+        BOARD_PART if board_body else None,
+        fit_object,
+        mesh,
+    )
+    step_manifest.embed(path, record)
+    return path
 
 
 def _media_type(fmt: str, path: Path) -> str:

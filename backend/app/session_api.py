@@ -250,6 +250,7 @@ from app.exports import (
     fixture_face_ids,
     fixture_mesh_parts,
     fixtures_dir,
+    mesh_face_ids,
     session_revisions,
     store_revisions,
     write_exports,
@@ -471,6 +472,7 @@ def export_files(
         chosen,
         store_revisions(CONFIG.store(), record.id),
         units,
+        mesh_face_ids(stored_mesh(CONFIG.store(), record)),  # the IDs a STEP import keeps
     )
     if isinstance(written, dict):
         log.warning("export of build %s failed: %s", record.id, written)
@@ -2743,6 +2745,9 @@ async def import_file(session_id: str, file: UploadField) -> Build:
             to_payload(state.ws.standards),
             state.new_build_id(),
         )
+        checked = imported.result["checks"].get("board")
+        if board is None and checked:  # a design exported with its board, into a boardless session
+            board = find_board(checked["name"], checked["revision"])
         attachment = state.attachments.store(
             f"{API}/sessions/{session_id}/attachments", name, STEP_MEDIA_TYPE, data
         )
